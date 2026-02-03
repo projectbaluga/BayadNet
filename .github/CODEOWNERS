@@ -1,0 +1,5 @@
+* @your-org/maintainers
+
+/.github/workflows/ @your-org/devops
+/server/ @your-org/backend
+/client/ @your-org/frontend

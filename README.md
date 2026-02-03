@@ -66,6 +66,10 @@ Marks a subscriber as paid for the current month.
 ### `GET /health`
 Basic health check endpoint that returns status and timestamp.
 
+## Documentation
+
+See the [docs](docs/README.md) folder for architecture notes and API guidance.
+
 ## Tests
 
 Server tests are located in `server/__tests__`. Run:
