@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - name: Install server dependencies
+        working-directory: server
+        run: npm install
+      - name: Lint server
+        working-directory: server
+        run: npm run lint
+      - name: Test server
+        working-directory: server
+        run: npm test -- --coverage
+      - name: Install client dependencies
+        working-directory: client
+        run: npm install
+      - name: Lint client
+        working-directory: client
+        run: npm run lint
+      - name: Build client
+        working-directory: client
+        run: npm run build
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: server/coverage
