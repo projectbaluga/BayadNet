@@ -11,6 +11,15 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSubscriber, setEditingSubscriber] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    rate: 0,
+    cycle: 1,
+    creditType: 'None',
+    creditPreference: 'None'
+  });
 
   useEffect(() => {
     if (token) {
@@ -64,6 +73,56 @@ function App() {
       fetchData();
     } catch (error) {
       console.error('Error paying:', error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this subscriber?')) return;
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.delete(`${API_BASE}/subscribers/${id}`, config);
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting:', error);
+    }
+  };
+
+  const handleOpenModal = (subscriber = null) => {
+    if (subscriber) {
+      setEditingSubscriber(subscriber);
+      setFormData({
+        name: subscriber.name,
+        rate: subscriber.rate,
+        cycle: subscriber.cycle,
+        creditType: subscriber.creditType,
+        creditPreference: subscriber.creditPreference || 'None'
+      });
+    } else {
+      setEditingSubscriber(null);
+      setFormData({
+        name: '',
+        rate: 0,
+        cycle: 1,
+        creditType: 'None',
+        creditPreference: 'None'
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      if (editingSubscriber) {
+        await axios.put(`${API_BASE}/subscribers/${editingSubscriber._id}`, formData, config);
+      } else {
+        await axios.post(`${API_BASE}/subscribers`, formData, config);
+      }
+      setIsModalOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error saving subscriber:', error);
     }
   };
 
@@ -145,14 +204,115 @@ function App() {
       </section>
 
       <main className="px-6 flex-grow">
-        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          Subscribers
-          <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            Subscribers
+            <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>
+          </h2>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform"
+          >
+            + ADD NEW
+          </button>
+        </div>
         {subscribers.map(sub => (
-          <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} />
+          <SubscriberCard
+            key={sub._id}
+            subscriber={sub}
+            onPay={handlePay}
+            onEdit={handleOpenModal}
+            onDelete={handleDelete}
+          />
         ))}
       </main>
+
+      {/* CRUD Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in duration-200">
+            <h2 className="text-2xl font-black text-gray-900 mb-6">
+              {editingSubscriber ? 'Edit Subscriber' : 'Add Subscriber'}
+            </h2>
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Rate (₱)</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.rate}
+                    onChange={(e) => setFormData({...formData, rate: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Cycle Day</label>
+                  <input
+                    type="number"
+                    min="1" max="31"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.cycle}
+                    onChange={(e) => setFormData({...formData, cycle: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Credit Type</label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={formData.creditType}
+                  onChange={(e) => setFormData({...formData, creditType: e.target.value})}
+                >
+                  <option value="None">None</option>
+                  <option value="2 Weeks">2 Weeks (Storm Credit)</option>
+                  <option value="1 Month">1 Month Free</option>
+                </select>
+              </div>
+              {formData.creditType === '2 Weeks' && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Credit Preference</label>
+                  <select
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.creditPreference}
+                    onChange={(e) => setFormData({...formData, creditPreference: e.target.value})}
+                  >
+                    <option value="None">Choose Preference...</option>
+                    <option value="Discount">50% Off Discount</option>
+                    <option value="Extension">14 Days Extension</option>
+                  </select>
+                </div>
+              )}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl active:scale-95 transition-transform"
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform"
+                >
+                  {editingSubscriber ? 'UPDATE' : 'SAVE'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SubscriberCard = ({ subscriber, onPay }) => {
+const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Paid': return 'bg-green-100 text-green-800 border-green-200';
@@ -19,9 +19,27 @@ const SubscriberCard = ({ subscriber, onPay }) => {
           <h3 className="font-bold text-lg text-gray-800">{subscriber.name}</h3>
           <p className="text-sm text-gray-500">Cycle: {subscriber.cycle}th of the month</p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(subscriber.status)}`}>
-          {subscriber.status.toUpperCase()}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(subscriber.status)}`}>
+            {subscriber.status.toUpperCase()}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEdit(subscriber)}
+              className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              title="Edit"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => onDelete(subscriber._id)}
+              className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+              title="Delete"
+            >
+              🗑️
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-between items-end mt-2">
