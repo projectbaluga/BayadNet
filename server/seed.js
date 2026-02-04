@@ -3,7 +3,7 @@ const Subscriber = require('./models/Subscriber');
 const User = require('./models/User');
 require('dotenv').config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/internet_billing';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 
 const seedData = [
   { name: 'Bonete', rate: 500, cycle: 7, daysDown: 30 },

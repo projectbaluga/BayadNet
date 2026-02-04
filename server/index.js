@@ -17,7 +17,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/internet_billing';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 mongoose.connect(MONGO_URI)

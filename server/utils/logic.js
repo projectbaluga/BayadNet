@@ -24,10 +24,15 @@ const processSubscriber = (sub, now) => {
   const dueDateAtMidnight = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate());
 
   // Calculate Status based on full date comparison
-  if (status === 'Unpaid' || status === 'Partial') {
-    if (dueDateAtMidnight < todayAtMidnight) status = 'Overdue';
-    else if (dueDateAtMidnight.getTime() === todayAtMidnight.getTime()) status = 'Due Today';
-    else if (status === 'Unpaid') status = 'Upcoming';
+  if (status !== 'Paid') {
+    if (dueDateAtMidnight < todayAtMidnight) {
+      status = 'Overdue';
+    } else if (dueDateAtMidnight.getTime() === todayAtMidnight.getTime()) {
+      status = 'Due Today';
+    } else {
+      // If it's not yet due, it's either Upcoming or Partial (stays Partial if it was already set)
+      if (status === 'Unpaid') status = 'Upcoming';
+    }
   }
 
   const formattedDueDate = `${dueDateObj.getFullYear()}-${(dueDateObj.getMonth() + 1).toString().padStart(2, '0')}-${dueDateObj.getDate().toString().padStart(2, '0')}`;
