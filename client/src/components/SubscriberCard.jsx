@@ -5,8 +5,8 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
     switch (status) {
       case 'Paid': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
       case 'Overdue': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
-      case 'Due Today': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'Partial': return 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
+      case 'Due Today': return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+      case 'Partial': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
       default: return 'bg-slate-500/10 text-slate-600 border-slate-500/20';
     }
   };

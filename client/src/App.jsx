@@ -199,7 +199,7 @@ function App() {
   );
 
   const groups = {
-    overdue: filteredSubscribers.filter(sub => sub.status === 'Overdue' || sub.status === 'Due Today'),
+    overdue: filteredSubscribers.filter(sub => sub.status === 'Overdue' || sub.status === 'Due Today' || sub.status === 'Partial'),
     upcoming: filteredSubscribers.filter(sub => sub.status === 'Upcoming'),
     paid: filteredSubscribers.filter(sub => sub.status === 'Paid')
   };
@@ -344,12 +344,12 @@ function App() {
 
         {/* Responsive Grouped Grid */}
         <main className="space-y-16">
-          {/* Overdue / Due Today Section */}
+          {/* Overdue / Due / Partial Section */}
           <section>
             <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-4">
                 <div className="bg-rose-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Overdue & Due Today</h2>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
                 <span className="bg-rose-100 text-rose-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
                   {groups.overdue.length} Accounts
                 </span>
