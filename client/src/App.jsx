@@ -170,60 +170,87 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-700">
       {/* Desktop Header/Navbar */}
-      <header className="bg-white sticky top-0 z-10 shadow-sm border-b border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-xl text-white">
+            <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-200">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-black text-gray-900 leading-tight uppercase tracking-tight">BayadNet</h1>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Subscriber MGMT System</p>
+              <h1 className="text-xl font-black text-slate-900 leading-tight tracking-tight">BAYADNET</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Subscriber Management</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={() => handleOpenModal()}
-              className="bg-indigo-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
             >
-              <span className="text-lg">+</span> ADD SUBSCRIBER
+              + Add Subscriber
             </button>
             <button
               onClick={handleLogout}
-              className="text-xs font-bold text-red-500 bg-red-50 px-4 py-2.5 rounded-xl hover:bg-red-100 transition-colors"
+              className="text-[11px] font-black text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
             >
-              LOGOUT
+              Logout
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Horizontal Stats Bar */}
-        <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Subscribers</p>
-            <p className="text-2xl font-black text-gray-900">{stats.totalSubscribers || subscribers.length}</p>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Horizontal Stats Bar - Premium Minimalist */}
+        <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Subscribers</p>
+            <p className="text-3xl font-black text-slate-900">{stats.totalSubscribers || subscribers.length}</p>
           </div>
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Revenue</p>
-            <p className="text-2xl font-black text-indigo-600">₱{(stats.totalMonthlyRevenue || 0).toLocaleString()}</p>
+
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-indigo-500">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monthly Revenue</p>
+            <p className="text-3xl font-black text-indigo-600">₱{(stats.totalMonthlyRevenue || 0).toLocaleString()}</p>
           </div>
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Collected</p>
-            <p className="text-2xl font-black text-green-600">₱{stats.totalCollections.toLocaleString()}</p>
+
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-emerald-500">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Collected</p>
+            <p className="text-3xl font-black text-emerald-600">₱{stats.totalCollections.toLocaleString()}</p>
           </div>
-          <div className="bg-red-500 p-5 rounded-3xl shadow-lg shadow-red-100 text-white">
-            <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider mb-1">Overdue Accounts</p>
-            <p className="text-2xl font-black">{stats.overdue}</p>
+
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-red-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Overdue</p>
+                <p className="text-3xl font-black text-red-500">{stats.overdue}</p>
+              </div>
+              <div className="bg-red-50 p-2 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="bg-yellow-400 p-5 rounded-3xl shadow-lg shadow-yellow-100 text-white">
-            <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider mb-1">Due Today</p>
-            <p className="text-2xl font-black">{stats.dueToday}</p>
+
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-amber-400">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Due Today</p>
+                <p className="text-3xl font-black text-amber-500">{stats.dueToday}</p>
+              </div>
+              <div className="bg-amber-50 p-2 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -250,19 +277,20 @@ function App() {
         </main>
       </div>
 
-      {/* CRUD Modal */}
+      {/* CRUD Modal - Premium Glassmorphism */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in duration-200">
-            <h2 className="text-2xl font-black text-gray-900 mb-6">
-              {editingSubscriber ? 'Edit Subscriber' : 'Add Subscriber'}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
+            <h2 className="text-3xl font-black text-slate-900 mb-8 tracking-tight">
+              {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+            <form onSubmit={handleFormSubmit} className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Full Name</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                  placeholder="e.g. Juan Dela Cruz"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   required
@@ -270,21 +298,21 @@ function App() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Rate (₱)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Rate (₱)</label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
                     value={formData.rate}
                     onChange={(e) => setFormData({...formData, rate: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Cycle Day</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cycle Day</label>
                   <input
                     type="number"
                     min="1" max="31"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
                     value={formData.cycle}
                     onChange={(e) => setFormData({...formData, cycle: e.target.value})}
                     required
@@ -292,22 +320,22 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Credit Type</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Credit Type</label>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-white"
                   value={formData.creditType}
                   onChange={(e) => setFormData({...formData, creditType: e.target.value})}
                 >
-                  <option value="None">None</option>
+                  <option value="None">No Credit</option>
                   <option value="2 Weeks">2 Weeks (Storm Credit)</option>
                   <option value="1 Month">1 Month Free</option>
                 </select>
               </div>
               {formData.creditType === '2 Weeks' && (
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Credit Preference</label>
+                <div className="animate-in slide-in-from-top-4 duration-300">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Credit Preference</label>
                   <select
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-white"
                     value={formData.creditPreference}
                     onChange={(e) => setFormData({...formData, creditPreference: e.target.value})}
                   >
@@ -317,19 +345,19 @@ function App() {
                   </select>
                 </div>
               )}
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl active:scale-95 transition-transform"
+                  className="flex-1 bg-slate-50 text-slate-400 font-black py-4 rounded-2xl hover:bg-slate-100 hover:text-slate-600 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
                 >
-                  CANCEL
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
                 >
-                  {editingSubscriber ? 'UPDATE' : 'SAVE'}
+                  {editingSubscriber ? 'Update' : 'Confirm'}
                 </button>
               </div>
             </form>
