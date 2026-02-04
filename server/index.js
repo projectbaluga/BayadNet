@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const Subscriber = require('./models/Subscriber');
 const User = require('./models/User');
+const { getCurrentDate } = require('./config/time');
 
 const app = express();
 app.use(cors());
@@ -41,34 +42,65 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ token });
 });
 
-const CURRENT_DATE = process.env.SIMULATION_DATE ? new Date(process.env.SIMULATION_DATE) : new Date('2026-02-15');
-const CURRENT_DAY = CURRENT_DATE.getDate();
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const validateObjectId = (req, res, next) => {
+  if (req.params.id && !mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
+  next();
+};
+
+app.post('/api/subscribers', authenticateToken, async (req, res) => {
+  try {
+    const subscriber = new Subscriber(req.body);
+    await subscriber.save();
+    res.status(201).json(subscriber);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
 app.get('/api/subscribers', authenticateToken, async (req, res) => {
   try {
+    const now = getCurrentDate();
+    const currentDay = now.getDate();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
     const subscribers = await Subscriber.find();
     const processedSubscribers = subscribers.map(sub => {
       let amountDue = sub.rate;
+      let effectiveCycle = sub.cycle;
       let status = sub.isPaidFeb2026 ? 'Paid' : 'Unpaid';
 
-      if (sub.creditType === '2 Weeks') amountDue = sub.rate * 0.5;
-      if (sub.creditType === '1 Month') {
+      // Apply Credit Logic
+      if (sub.creditType === '2 Weeks') {
+        if (sub.creditPreference === 'Discount') {
+          amountDue = sub.rate * 0.5;
+        } else if (sub.creditPreference === 'Extension') {
+          effectiveCycle = sub.cycle + 14;
+        }
+      } else if (sub.creditType === '1 Month') {
         amountDue = 0;
         status = 'Paid';
       }
 
+      // Calculate Status based on Effective Cycle
       if (status === 'Unpaid') {
-        if (sub.cycle < CURRENT_DAY) status = 'Overdue';
-        else if (sub.cycle === CURRENT_DAY) status = 'Due Today';
+        if (effectiveCycle < currentDay) status = 'Overdue';
+        else if (effectiveCycle === currentDay) status = 'Due Today';
         else status = 'Upcoming';
       }
+
+      // Format Due Date (handle month overflow if extension goes to next month)
+      const dueDateObj = new Date(currentYear, currentMonth, effectiveCycle);
+      const formattedDueDate = dueDateObj.toISOString().split('T')[0];
 
       return {
         ...sub.toObject(),
         amountDue,
         status,
-        dueDate: `2026-02-${sub.cycle.toString().padStart(2, '0')}`
+        effectiveCycle,
+        dueDate: formattedDueDate
       };
     });
     res.json(processedSubscribers);
@@ -77,11 +109,28 @@ app.get('/api/subscribers', authenticateToken, async (req, res) => {
   }
 });
 
-app.patch('/api/subscribers/:id/pay', authenticateToken, async (req, res) => {
+app.put('/api/subscribers/:id', authenticateToken, validateObjectId, async (req, res) => {
   try {
-    if (!isValidObjectId(req.params.id)) {
-      return res.status(400).json({ message: 'Invalid Subscriber ID format' });
-    }
+    const subscriber = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    res.json(subscriber);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.delete('/api/subscribers/:id', authenticateToken, validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findByIdAndDelete(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    res.json({ message: 'Subscriber deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async (req, res) => {
+  try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
     subscriber.isPaidFeb2026 = true;
@@ -94,19 +143,31 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, async (req, res) => {
 
 app.get('/api/stats', authenticateToken, async (req, res) => {
   try {
+    const now = getCurrentDate();
+    const currentDay = now.getDate();
+
     const subscribers = await Subscriber.find();
     let dueToday = 0, overdue = 0, totalCollections = 0;
 
     subscribers.forEach(sub => {
       let amount = sub.rate;
-      if (sub.creditType === '2 Weeks') amount *= 0.5;
-      if (sub.creditType === '1 Month') amount = 0;
+      let effectiveCycle = sub.cycle;
+
+      if (sub.creditType === '2 Weeks') {
+        if (sub.creditPreference === 'Discount') {
+          amount *= 0.5;
+        } else if (sub.creditPreference === 'Extension') {
+          effectiveCycle = sub.cycle + 14;
+        }
+      } else if (sub.creditType === '1 Month') {
+        amount = 0;
+      }
 
       if (sub.isPaidFeb2026 || sub.creditType === '1 Month') {
         totalCollections += amount;
       } else {
-        if (sub.cycle < CURRENT_DAY) overdue++;
-        else if (sub.cycle === CURRENT_DAY) dueToday++;
+        if (effectiveCycle < currentDay) overdue++;
+        else if (effectiveCycle === currentDay) dueToday++;
       }
     });
     res.json({ dueToday, overdue, totalCollections });

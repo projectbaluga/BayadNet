@@ -9,6 +9,11 @@ const subscriberSchema = new mongoose.Schema({
     enum: ['1 Month', '2 Weeks', 'None'],
     default: 'None'
   },
+  creditPreference: {
+    type: String,
+    enum: ['Discount', 'Extension', 'None'],
+    default: 'None'
+  },
   isPaidFeb2026: { type: Boolean, default: false }
 });
 

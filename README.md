@@ -72,6 +72,11 @@ Ensure you have **Docker** and **Docker Compose** installed.
 
 ---
 
+## 🗄️ Database Management
+For detailed instructions on how to manage the MongoDB database, connect via Compass, or perform backups, please refer to the [DB_MANAGEMENT.md](./DB_MANAGEMENT.md) guide.
+
+---
+
 ## 🛡 Production Considerations
 
 -   **Nginx**: Serves the frontend static files and proxies API requests to the backend.
