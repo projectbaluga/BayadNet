@@ -170,62 +170,85 @@ function App() {
   }
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col pb-10 bg-gray-50">
-      <header className="bg-white p-6 sticky top-0 z-10 shadow-sm border-b border-gray-100 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-black text-gray-900 leading-tight">Subscriber MGMT</h1>
-          <p className="text-xs text-gray-500 font-medium">Feb 2026 • Billing Dashboard</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Desktop Header/Navbar */}
+      <header className="bg-white sticky top-0 z-10 shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-600 p-2 rounded-xl text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-gray-900 leading-tight uppercase tracking-tight">BayadNet</h1>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Subscriber MGMT System</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-indigo-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <span className="text-lg">+</span> ADD SUBSCRIBER
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-xs font-bold text-red-500 bg-red-50 px-4 py-2.5 rounded-xl hover:bg-red-100 transition-colors"
+            >
+              LOGOUT
+            </button>
+          </div>
         </div>
-        <button onClick={handleLogout} className="text-xs font-bold text-red-500 bg-red-50 px-3 py-2 rounded-lg">
-          LOGOUT
-        </button>
       </header>
 
-      <section className="p-6 grid grid-cols-2 gap-4">
-        <div className="bg-red-500 p-4 rounded-3xl text-white shadow-lg shadow-red-100">
-          <p className="text-xs font-bold opacity-80 uppercase">Overdue</p>
-          <p className="text-3xl font-black">{stats.overdue}</p>
-        </div>
-        <div className="bg-yellow-400 p-4 rounded-3xl text-white shadow-lg shadow-yellow-100">
-          <p className="text-xs font-bold opacity-80 uppercase">Due Today</p>
-          <p className="text-3xl font-black">{stats.dueToday}</p>
-        </div>
-        <div className="bg-indigo-600 col-span-2 p-5 rounded-3xl text-white shadow-lg shadow-indigo-100 flex justify-between items-center">
-          <div>
-            <p className="text-xs font-bold opacity-80 uppercase">Total Collections</p>
-            <p className="text-3xl font-black">₱{stats.totalCollections.toLocaleString()}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Horizontal Stats Bar */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Subscribers</p>
+            <p className="text-2xl font-black text-gray-900">{stats.totalSubscribers || subscribers.length}</p>
           </div>
-          <div className="bg-white/20 p-2 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Revenue</p>
+            <p className="text-2xl font-black text-indigo-600">₱{(stats.totalMonthlyRevenue || 0).toLocaleString()}</p>
           </div>
-        </div>
-      </section>
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Collected</p>
+            <p className="text-2xl font-black text-green-600">₱{stats.totalCollections.toLocaleString()}</p>
+          </div>
+          <div className="bg-red-500 p-5 rounded-3xl shadow-lg shadow-red-100 text-white">
+            <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider mb-1">Overdue Accounts</p>
+            <p className="text-2xl font-black">{stats.overdue}</p>
+          </div>
+          <div className="bg-yellow-400 p-5 rounded-3xl shadow-lg shadow-yellow-100 text-white">
+            <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider mb-1">Due Today</p>
+            <p className="text-2xl font-black">{stats.dueToday}</p>
+          </div>
+        </section>
 
-      <main className="px-6 flex-grow">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            Subscribers
-            <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{subscribers.length}</span>
-          </h2>
-          <button
-            onClick={() => handleOpenModal()}
-            className="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform"
-          >
-            + ADD NEW
-          </button>
-        </div>
-        {subscribers.map(sub => (
-          <SubscriberCard
-            key={sub._id}
-            subscriber={sub}
-            onPay={handlePay}
-            onEdit={handleOpenModal}
-            onDelete={handleDelete}
-          />
-        ))}
-      </main>
+        {/* Responsive Grid */}
+        <main>
+          <div className="flex items-center gap-2 mb-6">
+            <h2 className="text-lg font-black text-gray-800 uppercase tracking-tight">Active Subscribers</h2>
+            <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              February 2026
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {subscribers.map(sub => (
+              <SubscriberCard
+                key={sub._id}
+                subscriber={sub}
+                onPay={handlePay}
+                onEdit={handleOpenModal}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
 
       {/* CRUD Modal */}
       {isModalOpen && (

@@ -13,69 +13,78 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
   const isPaid = subscriber.status === 'Paid';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 flex flex-col gap-3">
+    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl hover:shadow-indigo-50 transition-all duration-300 group">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-bold text-lg text-gray-800">{subscriber.name}</h3>
-          <p className="text-sm text-gray-500">Cycle: {subscriber.cycle}th of the month</p>
+        <div className="max-w-[70%]">
+          <h3 className="font-black text-xl text-gray-900 truncate leading-tight mb-1 group-hover:text-indigo-600 transition-colors">
+            {subscriber.name}
+          </h3>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            Cycle: {subscriber.cycle}th Day
+          </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(subscriber.status)}`}>
-            {subscriber.status.toUpperCase()}
+        <div className="flex flex-col items-end gap-3">
+          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border-2 ${getStatusColor(subscriber.status)}`}>
+            {subscriber.status}
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <button
               onClick={() => onEdit(subscriber)}
-              className="p-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
               title="Edit"
             >
-              ✏️
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </button>
             <button
               onClick={() => onDelete(subscriber._id)}
-              className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+              className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all"
               title="Delete"
             >
-              🗑️
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-end mt-2">
-        <div>
-          <p className="text-xs text-gray-400 uppercase font-semibold">Due Date</p>
-          <p className="font-medium">{subscriber.dueDate}</p>
+      <div className="grid grid-cols-2 gap-4 mt-2">
+        <div className="bg-gray-50 p-3 rounded-2xl">
+          <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">Due Date</p>
+          <p className="text-sm font-black text-gray-700">{subscriber.dueDate}</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-400 uppercase font-semibold">Amount</p>
-          <p className="text-xl font-bold text-indigo-600">₱{subscriber.amountDue}</p>
+        <div className="bg-indigo-50 p-3 rounded-2xl">
+          <p className="text-[9px] text-indigo-300 uppercase font-black tracking-widest mb-1">Amount</p>
+          <p className="text-lg font-black text-indigo-600 leading-none">₱{subscriber.amountDue.toLocaleString()}</p>
         </div>
       </div>
 
       {subscriber.creditType !== 'None' && (
-        <div className="bg-indigo-50 px-3 py-2 rounded-lg">
-          <p className="text-xs text-indigo-700">
-            ✨ <span className="font-semibold">Credit:</span> {subscriber.creditType}
+        <div className="bg-yellow-50 px-3 py-2 rounded-xl border border-yellow-100">
+          <p className="text-[10px] text-yellow-700 font-bold flex items-center gap-1">
+            <span className="text-xs">✨</span>
+            <span className="uppercase">Credit:</span> {subscriber.creditType}
             {subscriber.creditPreference !== 'None' && (
-              <span> ({subscriber.creditPreference})</span>
+              <span className="opacity-60 italic"> - {subscriber.creditPreference}</span>
             )}
           </p>
-          {subscriber.creditPreference === 'Extension' && (
-            <p className="text-[10px] text-indigo-500 mt-0.5">
-              Due date extended by 14 days from original cycle ({subscriber.cycle}th)
-            </p>
-          )}
         </div>
       )}
 
       {!isPaid && (
         <button
           onClick={() => onPay(subscriber._id)}
-          className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl mt-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
+          className="w-full bg-gray-900 text-white text-xs font-black py-4 rounded-2xl mt-auto hover:bg-indigo-600 active:scale-95 transition-all shadow-lg shadow-gray-200 uppercase tracking-widest"
         >
-          MARK AS PAID
+          Confirm Payment
         </button>
+      )}
+      {isPaid && (
+        <div className="w-full bg-green-50 text-green-600 text-[10px] font-black py-4 rounded-2xl mt-auto text-center border-2 border-green-100 uppercase tracking-widest">
+          ✓ Account Settled
+        </div>
       )}
     </div>
   );

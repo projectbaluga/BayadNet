@@ -148,6 +148,7 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
 
     const subscribers = await Subscriber.find();
     let dueToday = 0, overdue = 0, totalCollections = 0;
+    let totalMonthlyRevenue = 0;
 
     subscribers.forEach(sub => {
       let amount = sub.rate;
@@ -163,6 +164,8 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
         amount = 0;
       }
 
+      totalMonthlyRevenue += amount;
+
       if (sub.isPaidFeb2026 || sub.creditType === '1 Month') {
         totalCollections += amount;
       } else {
@@ -170,7 +173,13 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
         else if (effectiveCycle === currentDay) dueToday++;
       }
     });
-    res.json({ dueToday, overdue, totalCollections });
+    res.json({
+      dueToday,
+      overdue,
+      totalCollections,
+      totalSubscribers: subscribers.length,
+      totalMonthlyRevenue
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
