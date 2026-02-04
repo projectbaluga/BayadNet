@@ -3,21 +3,14 @@ const processSubscriber = (sub, now) => {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  let amountDue = sub.rate;
+  // Rebate Calculation
+  const dailyRate = sub.rate / 30;
+  const rebate = dailyRate * (sub.daysDown || 0);
+  let amountDue = Math.round((sub.rate - rebate) * 100) / 100;
+  if (amountDue === 0) amountDue = 0; // Fix -0 issue
+
   let effectiveCycle = sub.cycle;
   let status = sub.isPaidFeb2026 ? 'Paid' : 'Unpaid';
-
-  // Apply Credit Logic
-  if (sub.creditType === '2 Weeks') {
-    if (sub.creditPreference === 'Discount') {
-      amountDue = sub.rate * 0.5;
-    } else if (sub.creditPreference === 'Extension') {
-      effectiveCycle = sub.cycle + 14;
-    }
-  } else if (sub.creditType === '1 Month') {
-    amountDue = 0;
-    status = 'Paid';
-  }
 
   // Handle Date Overflow (e.g. Feb 29 -> March 1)
   const dueDateObj = new Date(currentYear, currentMonth, effectiveCycle);
@@ -34,6 +27,8 @@ const processSubscriber = (sub, now) => {
 
   return {
     amountDue,
+    rebate: Math.round(rebate * 100) / 100,
+    dailyRate: Math.round(dailyRate * 100) / 100,
     status,
     effectiveCycle,
     dueDate: formattedDueDate,
@@ -51,7 +46,7 @@ const calculateStats = (subscribers, now) => {
 
     totalMonthlyRevenue += amountDue;
 
-    if (sub.isPaidFeb2026 || sub.creditType === '1 Month') {
+    if (sub.isPaidFeb2026) {
       totalCollections += amountDue;
     } else {
       if (status === 'Overdue') overdue++;
@@ -62,9 +57,9 @@ const calculateStats = (subscribers, now) => {
   return {
     dueToday,
     overdue,
-    totalCollections,
+    totalCollections: Math.round(totalCollections * 100) / 100,
     totalSubscribers: subscribers.length,
-    totalMonthlyRevenue
+    totalMonthlyRevenue: Math.round(totalMonthlyRevenue * 100) / 100
   };
 };
 

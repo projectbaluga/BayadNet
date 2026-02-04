@@ -4,16 +4,7 @@ const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   rate: { type: Number, required: true },
   cycle: { type: Number, required: true },
-  creditType: {
-    type: String,
-    enum: ['1 Month', '2 Weeks', 'None'],
-    default: 'None'
-  },
-  creditPreference: {
-    type: String,
-    enum: ['Discount', 'Extension', 'None'],
-    default: 'None'
-  },
+  daysDown: { type: Number, default: 0 },
   isPaidFeb2026: { type: Boolean, default: false }
 });
 

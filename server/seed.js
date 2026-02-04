@@ -6,19 +6,19 @@ require('dotenv').config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/internet_billing';
 
 const seedData = [
-  { name: 'Bonete', rate: 500, cycle: 7, creditType: '1 Month', creditPreference: 'None' },
-  { name: 'Villano Ceasar', rate: 400, cycle: 3, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'Villano Loriegen', rate: 400, cycle: 6, creditType: '2 Weeks', creditPreference: 'Extension' },
-  { name: 'Kuya Glenn Store', rate: 300, cycle: 11, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'MCGI', rate: 400, cycle: 13, creditType: '2 Weeks', creditPreference: 'Extension' },
-  { name: 'Collantes', rate: 400, cycle: 13, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'Viray Kim Ashley', rate: 400, cycle: 15, creditType: '2 Weeks', creditPreference: 'Extension' },
-  { name: 'Villano Julie', rate: 400, cycle: 16, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'Gilbert Lombz', rate: 400, cycle: 16, creditType: '2 Weeks', creditPreference: 'Extension' },
-  { name: 'Melgar', rate: 400, cycle: 17, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'Kuya Colin', rate: 400, cycle: 18, creditType: '2 Weeks', creditPreference: 'Extension' },
-  { name: 'Ate Edna', rate: 400, cycle: 26, creditType: '2 Weeks', creditPreference: 'Discount' },
-  { name: 'Imperial', rate: 400, cycle: 27, creditType: '2 Weeks', creditPreference: 'Extension' }
+  { name: 'Bonete', rate: 500, cycle: 7, daysDown: 30 },
+  { name: 'Villano Ceasar', rate: 400, cycle: 3, daysDown: 14 },
+  { name: 'Villano Loriegen', rate: 400, cycle: 6, daysDown: 14 },
+  { name: 'Kuya Glenn Store', rate: 300, cycle: 11, daysDown: 14 },
+  { name: 'MCGI', rate: 400, cycle: 13, daysDown: 14 },
+  { name: 'Collantes', rate: 400, cycle: 13, daysDown: 14 },
+  { name: 'Viray Kim Ashley', rate: 400, cycle: 15, daysDown: 14 },
+  { name: 'Villano Julie', rate: 400, cycle: 16, daysDown: 14 },
+  { name: 'Gilbert Lombz', rate: 400, cycle: 16, daysDown: 14 },
+  { name: 'Melgar', rate: 400, cycle: 17, daysDown: 14 },
+  { name: 'Kuya Colin', rate: 400, cycle: 18, daysDown: 14 },
+  { name: 'Ate Edna', rate: 400, cycle: 26, daysDown: 14 },
+  { name: 'Imperial', rate: 400, cycle: 27, daysDown: 14 }
 ];
 
 const seedDB = async () => {

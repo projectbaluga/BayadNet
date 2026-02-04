@@ -17,8 +17,7 @@ function App() {
     name: '',
     rate: 0,
     cycle: 1,
-    creditType: 'None',
-    creditPreference: 'None'
+    daysDown: 0
   });
 
   useEffect(() => {
@@ -94,8 +93,7 @@ function App() {
         name: subscriber.name,
         rate: subscriber.rate,
         cycle: subscriber.cycle,
-        creditType: subscriber.creditType,
-        creditPreference: subscriber.creditPreference || 'None'
+        daysDown: subscriber.daysDown || 0
       });
     } else {
       setEditingSubscriber(null);
@@ -103,8 +101,7 @@ function App() {
         name: '',
         rate: 0,
         cycle: 1,
-        creditType: 'None',
-        creditPreference: 'None'
+        daysDown: 0
       });
     }
     setIsModalOpen(true);
@@ -172,7 +169,7 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-700">
       {/* Desktop Header/Navbar */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+      <header className="bg-white/70 backdrop-blur-md sticky top-0 z-50 border-b border-white/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-200">
@@ -205,7 +202,7 @@ function App() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Horizontal Stats Bar - Premium Minimalist */}
         <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+          <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -215,23 +212,23 @@ function App() {
             <p className="text-3xl font-black text-slate-900">{stats.totalSubscribers || subscribers.length}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-indigo-500">
+          <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-indigo-500">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monthly Revenue</p>
             <p className="text-3xl font-black text-indigo-600">₱{(stats.totalMonthlyRevenue || 0).toLocaleString()}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-emerald-500">
+          <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-emerald-500">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Collected</p>
             <p className="text-3xl font-black text-emerald-600">₱{stats.totalCollections.toLocaleString()}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-red-500">
+          <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-red-500">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Overdue</p>
                 <p className="text-3xl font-black text-red-500">{stats.overdue}</p>
               </div>
-              <div className="bg-red-50 p-2 rounded-xl">
+              <div className="bg-red-50/50 p-2 rounded-xl">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -239,13 +236,13 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden border-t-4 border-t-amber-400">
+          <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-amber-400">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Due Today</p>
                 <p className="text-3xl font-black text-amber-500">{stats.dueToday}</p>
               </div>
-              <div className="bg-amber-50 p-2 rounded-xl">
+              <div className="bg-amber-50/50 p-2 rounded-xl">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -263,7 +260,7 @@ function App() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {subscribers.map(sub => (
               <SubscriberCard
                 key={sub._id}
@@ -320,31 +317,16 @@ function App() {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Credit Type</label>
-                <select
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-white"
-                  value={formData.creditType}
-                  onChange={(e) => setFormData({...formData, creditType: e.target.value})}
-                >
-                  <option value="None">No Credit</option>
-                  <option value="2 Weeks">2 Weeks (Storm Credit)</option>
-                  <option value="1 Month">1 Month Free</option>
-                </select>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Days Without Internet</label>
+                <input
+                  type="number"
+                  min="0" max="30"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                  value={formData.daysDown}
+                  onChange={(e) => setFormData({...formData, daysDown: parseInt(e.target.value) || 0})}
+                  required
+                />
               </div>
-              {formData.creditType === '2 Weeks' && (
-                <div className="animate-in slide-in-from-top-4 duration-300">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Credit Preference</label>
-                  <select
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-white"
-                    value={formData.creditPreference}
-                    onChange={(e) => setFormData({...formData, creditPreference: e.target.value})}
-                  >
-                    <option value="None">Choose Preference...</option>
-                    <option value="Discount">50% Off Discount</option>
-                    <option value="Extension">14 Days Extension</option>
-                  </select>
-                </div>
-              )}
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
