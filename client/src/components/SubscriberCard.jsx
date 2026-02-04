@@ -13,14 +13,15 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
   const isPaid = subscriber.status === 'Paid';
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-xl hover:shadow-indigo-50 transition-all duration-300 group">
-      <div className="flex justify-between items-start">
-        <div className="max-w-[70%]">
-          <h3 className="font-black text-xl text-gray-900 truncate leading-tight mb-1 group-hover:text-indigo-600 transition-colors">
+    <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 flex flex-col gap-6 hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-500 group relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+      <div className="flex justify-between items-start relative z-10">
+        <div className="max-w-[65%]">
+          <h3 className="font-black text-2xl text-gray-900 truncate leading-none mb-2 group-hover:text-indigo-600 transition-colors tracking-tight">
             {subscriber.name}
           </h3>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            Cycle: {subscriber.cycle}th Day
+          <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            Billing Cycle: {subscriber.cycle}th
           </p>
         </div>
         <div className="flex flex-col items-end gap-3">
@@ -50,14 +51,14 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-2">
-        <div className="bg-gray-50 p-3 rounded-2xl">
-          <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">Due Date</p>
-          <p className="text-sm font-black text-gray-700">{subscriber.dueDate}</p>
+      <div className="grid grid-cols-2 gap-4 relative z-10">
+        <div className="bg-gray-50/50 p-4 rounded-3xl border border-gray-100">
+          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Next Due</p>
+          <p className="text-base font-black text-gray-800">{subscriber.dueDate}</p>
         </div>
-        <div className="bg-indigo-50 p-3 rounded-2xl">
-          <p className="text-[9px] text-indigo-300 uppercase font-black tracking-widest mb-1">Amount</p>
-          <p className="text-lg font-black text-indigo-600 leading-none">₱{subscriber.amountDue.toLocaleString()}</p>
+        <div className="bg-indigo-50/50 p-4 rounded-3xl border border-indigo-100">
+          <p className="text-[10px] text-indigo-300 uppercase font-black tracking-widest mb-1">Amount</p>
+          <p className="text-xl font-black text-indigo-600 leading-none">₱{subscriber.amountDue.toLocaleString()}</p>
         </div>
       </div>
 

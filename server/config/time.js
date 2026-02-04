@@ -8,12 +8,7 @@ const getCurrentDate = () => {
     return new Date(process.env.SIMULATION_DATE);
   }
 
-  // Default Simulation for the task requirements
-  // Remove this line in a real "always-live" production environment
-  if (process.env.NODE_ENV !== 'production') {
-    return new Date('2026-02-15');
-  }
-
+  // Default is now the actual server time (Today)
   return new Date();
 };
 

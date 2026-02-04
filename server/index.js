@@ -7,6 +7,7 @@ require('dotenv').config();
 const Subscriber = require('./models/Subscriber');
 const User = require('./models/User');
 const { getCurrentDate } = require('./config/time');
+const { processSubscriber, calculateStats } = require('./utils/logic');
 
 const app = express();
 app.use(cors());
@@ -62,45 +63,12 @@ app.post('/api/subscribers', authenticateToken, async (req, res) => {
 app.get('/api/subscribers', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
-    const currentDay = now.getDate();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
     const subscribers = await Subscriber.find();
     const processedSubscribers = subscribers.map(sub => {
-      let amountDue = sub.rate;
-      let effectiveCycle = sub.cycle;
-      let status = sub.isPaidFeb2026 ? 'Paid' : 'Unpaid';
-
-      // Apply Credit Logic
-      if (sub.creditType === '2 Weeks') {
-        if (sub.creditPreference === 'Discount') {
-          amountDue = sub.rate * 0.5;
-        } else if (sub.creditPreference === 'Extension') {
-          effectiveCycle = sub.cycle + 14;
-        }
-      } else if (sub.creditType === '1 Month') {
-        amountDue = 0;
-        status = 'Paid';
-      }
-
-      // Calculate Status based on Effective Cycle
-      if (status === 'Unpaid') {
-        if (effectiveCycle < currentDay) status = 'Overdue';
-        else if (effectiveCycle === currentDay) status = 'Due Today';
-        else status = 'Upcoming';
-      }
-
-      // Format Due Date (handle month overflow if extension goes to next month)
-      const dueDateObj = new Date(currentYear, currentMonth, effectiveCycle);
-      const formattedDueDate = dueDateObj.toISOString().split('T')[0];
-
+      const processed = processSubscriber(sub, now);
       return {
         ...sub.toObject(),
-        amountDue,
-        status,
-        effectiveCycle,
-        dueDate: formattedDueDate
+        ...processed
       };
     });
     res.json(processedSubscribers);
@@ -144,42 +112,9 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async
 app.get('/api/stats', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
-    const currentDay = now.getDate();
-
     const subscribers = await Subscriber.find();
-    let dueToday = 0, overdue = 0, totalCollections = 0;
-    let totalMonthlyRevenue = 0;
-
-    subscribers.forEach(sub => {
-      let amount = sub.rate;
-      let effectiveCycle = sub.cycle;
-
-      if (sub.creditType === '2 Weeks') {
-        if (sub.creditPreference === 'Discount') {
-          amount *= 0.5;
-        } else if (sub.creditPreference === 'Extension') {
-          effectiveCycle = sub.cycle + 14;
-        }
-      } else if (sub.creditType === '1 Month') {
-        amount = 0;
-      }
-
-      totalMonthlyRevenue += amount;
-
-      if (sub.isPaidFeb2026 || sub.creditType === '1 Month') {
-        totalCollections += amount;
-      } else {
-        if (effectiveCycle < currentDay) overdue++;
-        else if (effectiveCycle === currentDay) dueToday++;
-      }
-    });
-    res.json({
-      dueToday,
-      overdue,
-      totalCollections,
-      totalSubscribers: subscribers.length,
-      totalMonthlyRevenue
-    });
+    const stats = calculateStats(subscribers, now);
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
