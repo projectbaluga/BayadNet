@@ -47,7 +47,7 @@ function App() {
       setToken(res.data.token);
       setError('');
     } catch (err) {
-      setError('Invalid username or password');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };
 

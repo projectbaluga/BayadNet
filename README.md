@@ -67,7 +67,8 @@ Ensure you have **Docker** and **Docker Compose** installed.
 
 -   **Storm Credit**: Subscribers with "2 Weeks" credit receive a **50% discount** on their monthly rate for Feb 2026.
 -   **1 Month Free**: Subscribers with "1 Month" credit (e.g., "Bonete") are automatically marked as **Paid** with an amount due of **₱0**.
--   **Cycle Logic**: Status is calculated by comparing the subscriber's billing cycle (e.g., 7th) against the current date (mocked as Feb 15, 2026).
+-   **Cycle Logic**: Status is calculated by comparing the subscriber's billing cycle (e.g., 7th) against the current date.
+-   **Simulation Date**: You can change the "current date" by setting the `SIMULATION_DATE` environment variable in the `docker-compose.yml` (e.g., `SIMULATION_DATE=2026-03-01`).
 
 ---
 

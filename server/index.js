@@ -19,7 +19,6 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Middleware to protect routes
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -32,7 +31,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Auth Routes
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -43,9 +41,9 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ token });
 });
 
-// Reference date for Feb 2026
-const CURRENT_DATE = new Date('2026-02-15');
+const CURRENT_DATE = process.env.SIMULATION_DATE ? new Date(process.env.SIMULATION_DATE) : new Date('2026-02-15');
 const CURRENT_DAY = CURRENT_DATE.getDate();
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 app.get('/api/subscribers', authenticateToken, async (req, res) => {
   try {
@@ -81,6 +79,9 @@ app.get('/api/subscribers', authenticateToken, async (req, res) => {
 
 app.patch('/api/subscribers/:id/pay', authenticateToken, async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid Subscriber ID format' });
+    }
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
     subscriber.isPaidFeb2026 = true;

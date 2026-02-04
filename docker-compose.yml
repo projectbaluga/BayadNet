@@ -18,8 +18,6 @@ services:
       - JWT_SECRET=prod_secret_123_change_me
     depends_on:
       - mongo
-    # Seed data on first start or as needed.
-    # For prod, you might want to run this manually once.
     command: sh -c "node seed.js && node index.js"
 
   frontend:
