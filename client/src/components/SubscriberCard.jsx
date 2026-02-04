@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SubscriberCard = ({ subscriber, onPay, onHistory, onEdit, onDelete }) => {
+const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Paid': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
@@ -31,11 +31,20 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onEdit, onDelete }) => {
             {subscriber.status}
           </span>
           {subscriber.hasReceipt && (
-            <div className="bg-emerald-50 text-emerald-500 p-1.5 rounded-lg border border-emerald-100 animate-bounce" title="Receipt Uploaded">
+            <button
+              onClick={() => {
+                const latestReceipt = subscriber.payments
+                  .filter(p => p.month === 'February 2026' && p.receiptImage)
+                  .pop();
+                if (latestReceipt) onViewReceipt(latestReceipt.receiptImage);
+              }}
+              className="bg-emerald-50 text-emerald-500 p-1.5 rounded-lg border border-emerald-100 animate-bounce hover:bg-emerald-100 transition-all"
+              title="View Latest Receipt"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
-            </div>
+            </button>
           )}
         </div>
       </div>

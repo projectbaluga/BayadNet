@@ -15,6 +15,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [receiptToView, setReceiptToView] = useState(null);
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [editingSubscriber, setEditingSubscriber] = useState(null);
   const [formData, setFormData] = useState({
@@ -84,6 +85,31 @@ function App() {
       month: 'February 2026'
     });
     setIsPaymentModalOpen(true);
+  };
+
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large! Please select an image under 5MB.");
+        return;
+      }
+      try {
+        const base64 = await convertToBase64(file);
+        setPaymentData({ ...paymentData, receiptImage: base64 });
+      } catch (error) {
+        console.error("Error converting file:", error);
+      }
+    }
   };
 
   const handleOpenHistoryModal = (subscriber) => {
@@ -337,6 +363,7 @@ function App() {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                   />
@@ -368,6 +395,7 @@ function App() {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                   />
@@ -399,6 +427,7 @@ function App() {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                   />
@@ -525,19 +554,37 @@ function App() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Receipt Image (Simulated)</label>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentData({...paymentData, receiptImage: 'receipt_' + Date.now() + '.png'})}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed transition-all font-bold text-xs uppercase tracking-widest ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100'}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {paymentData.receiptImage ? 'Receipt Captured' : 'Upload Receipt'}
-                  </button>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Proof of Payment (Image)</label>
+                <div className="space-y-4">
+                  <label className={`flex flex-col items-center justify-center w-full h-32 rounded-3xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      {!paymentData.receiptImage ? (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Receipt Image</p>
+                        </>
+                      ) : (
+                        <div className="relative group">
+                          <img src={paymentData.receiptImage} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
+                          <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p className="text-[8px] font-black text-white uppercase tracking-widest">Change Image</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                  </label>
+                  {paymentData.receiptImage && (
+                    <button
+                      type="button"
+                      onClick={() => setPaymentData({...paymentData, receiptImage: ''})}
+                      className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline"
+                    >
+                      Remove Image
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -591,11 +638,15 @@ function App() {
                       </p>
                     </div>
                     {p.receiptImage && (
-                      <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-500 cursor-help" title="View Receipt (Simulated)">
+                      <button
+                        onClick={() => setReceiptToView(p.receiptImage)}
+                        className="bg-emerald-50 p-3 rounded-2xl text-emerald-500 hover:bg-emerald-100 transition-all cursor-pointer"
+                        title="View Receipt"
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                      </div>
+                      </button>
                     )}
                   </div>
                 ))
@@ -605,6 +656,26 @@ function App() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Image Viewer Modal */}
+      {receiptToView && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="relative max-w-3xl w-full flex flex-col items-center animate-in zoom-in duration-300">
+            <button
+              onClick={() => setReceiptToView(null)}
+              className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="bg-white p-2 rounded-[2rem] shadow-2xl overflow-hidden max-h-[80vh]">
+              <img src={receiptToView} className="max-w-full h-auto object-contain rounded-[1.5rem]" alt="Receipt" />
+            </div>
+            <p className="mt-6 text-white/60 text-xs font-black uppercase tracking-widest">Digital Proof of Payment</p>
           </div>
         </div>
       )}
