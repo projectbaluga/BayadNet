@@ -15,10 +15,11 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/internet_billing
       - PORT=5000
+      - JWT_SECRET=prod_secret_123_change_me
     depends_on:
       - mongo
-    # We run seed.js then index.js.
-    # In a real app, you might want to run migrations or seed only once.
+    # Seed data on first start or as needed.
+    # For prod, you might want to run this manually once.
     command: sh -c "node seed.js && node index.js"
 
   frontend:

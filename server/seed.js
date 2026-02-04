@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Subscriber = require('./models/Subscriber');
+const User = require('./models/User');
 require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/internet_billing';
@@ -25,11 +26,21 @@ const seedDB = async () => {
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB for seeding...');
 
-    await Subscriber.deleteMany({});
-    console.log('Cleared existing subscribers.');
+    const subCount = await Subscriber.countDocuments();
+    if (subCount === 0) {
+      await Subscriber.insertMany(seedData);
+      console.log('Subscribers seeded.');
+    } else {
+      console.log('Subscribers already exist, skipping seed.');
+    }
 
-    await Subscriber.insertMany(seedData);
-    console.log('Seed data inserted successfully.');
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      await User.create({ username: 'admin', password: 'password123' });
+      console.log('Admin user created (admin / password123).');
+    } else {
+      console.log('Admin user already exists, skipping seed.');
+    }
 
     process.exit();
   } catch (error) {
