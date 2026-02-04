@@ -16,7 +16,6 @@ services:
       - MONGO_URI=mongodb://mongo:27017/internet_billing
       - PORT=5000
       - JWT_SECRET=prod_secret_123_change_me
-      - SIMULATION_DATE=2026-02-15
     depends_on:
       - mongo
     command: sh -c "node seed.js && node index.js"
