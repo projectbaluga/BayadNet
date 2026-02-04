@@ -37,13 +37,29 @@ describe('Subscriber Rebate Logic', () => {
 
   test('Stats calculation with rebates', () => {
     const subscribers = [
-      { rate: 600, cycle: 10, daysDown: 2, isPaidFeb2026: false }, // 560 due, Overdue
-      { rate: 600, cycle: 15, daysDown: 0, isPaidFeb2026: true }   // 600 due, Paid
+      {
+        rate: 600, cycle: 10, daysDown: 2, isPaidFeb2026: false,
+        payments: [{ amountPaid: 100, month: 'February 2026' }]
+      }, // 560 due, 100 paid -> Partial/Overdue
+      {
+        rate: 600, cycle: 15, daysDown: 0, isPaidFeb2026: true,
+        payments: [{ amountPaid: 600, month: 'February 2026' }]
+      }   // 600 due, 600 paid -> Paid
     ];
 
     const stats = calculateStats(subscribers, mockNow);
     expect(stats.overdue).toBe(1);
     expect(stats.totalMonthlyRevenue).toBe(1160); // 560 + 600
-    expect(stats.totalCollections).toBe(600);
+    expect(stats.totalCollections).toBe(700); // 100 + 600
+  });
+
+  test('Partial payment status', () => {
+    const sub = {
+      rate: 600, cycle: 25, daysDown: 0, isPaidFeb2026: false,
+      remainingBalance: 300
+    };
+    const processed = processSubscriber(sub, mockNow);
+    expect(processed.status).toBe('Partial');
+    expect(processed.remainingBalance).toBe(300);
   });
 });

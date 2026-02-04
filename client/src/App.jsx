@@ -13,12 +13,21 @@ function App() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [editingSubscriber, setEditingSubscriber] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     rate: 0,
     cycle: 1,
     daysDown: 0
+  });
+  const [paymentData, setPaymentData] = useState({
+    amountPaid: 0,
+    referenceNo: '',
+    receiptImage: '',
+    month: 'February 2026'
   });
 
   useEffect(() => {
@@ -66,7 +75,35 @@ function App() {
     setSubscribers([]);
   };
 
-  const handlePay = async (id) => {
+  const handleOpenPaymentModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setPaymentData({
+      amountPaid: subscriber.remainingBalance !== undefined ? subscriber.remainingBalance : subscriber.amountDue,
+      referenceNo: '',
+      receiptImage: '',
+      month: 'February 2026'
+    });
+    setIsPaymentModalOpen(true);
+  };
+
+  const handleOpenHistoryModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setIsHistoryModalOpen(true);
+  };
+
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post(`${API_BASE}/subscribers/${activeSubscriber._id}/payments`, paymentData, config);
+      setIsPaymentModalOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+    }
+  };
+
+  const handleQuickPay = async (id) => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await axios.patch(`${API_BASE}/subscribers/${id}/pay`, {}, config);
@@ -295,7 +332,14 @@ function App() {
             {groups.overdue.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {groups.overdue.map(sub => (
-                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                  <SubscriberCard
+                    key={sub._id}
+                    subscriber={sub}
+                    onPay={handleOpenPaymentModal}
+                    onHistory={handleOpenHistoryModal}
+                    onEdit={handleOpenModal}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             ) : (
@@ -319,7 +363,14 @@ function App() {
             {groups.upcoming.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {groups.upcoming.map(sub => (
-                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                  <SubscriberCard
+                    key={sub._id}
+                    subscriber={sub}
+                    onPay={handleOpenPaymentModal}
+                    onHistory={handleOpenHistoryModal}
+                    onEdit={handleOpenModal}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             ) : (
@@ -343,7 +394,14 @@ function App() {
             {groups.paid.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
                 {groups.paid.map(sub => (
-                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                  <SubscriberCard
+                    key={sub._id}
+                    subscriber={sub}
+                    onPay={handleOpenPaymentModal}
+                    onHistory={handleOpenHistoryModal}
+                    onEdit={handleOpenModal}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             ) : (
@@ -424,6 +482,129 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
+            <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Payment</h2>
+            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">{activeSubscriber?.name}</p>
+
+            <form onSubmit={handlePaymentSubmit} className="space-y-6">
+              <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 mb-6">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
+                  <span className="text-xl font-black text-indigo-600">₱{(activeSubscriber?.remainingBalance !== undefined ? activeSubscriber.remainingBalance : activeSubscriber?.amountDue).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Amount to Pay (₱)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                  value={paymentData.amountPaid}
+                  onChange={(e) => setPaymentData({...paymentData, amountPaid: parseFloat(e.target.value) || 0})}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Reference No. (e.g. GCash)</label>
+                <input
+                  type="text"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                  placeholder="Optional reference number"
+                  value={paymentData.referenceNo}
+                  onChange={(e) => setPaymentData({...paymentData, referenceNo: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Receipt Image (Simulated)</label>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentData({...paymentData, receiptImage: 'receipt_' + Date.now() + '.png'})}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed transition-all font-bold text-xs uppercase tracking-widest ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100'}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {paymentData.receiptImage ? 'Receipt Captured' : 'Upload Receipt'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsPaymentModalOpen(false)}
+                  className="flex-1 bg-slate-50 text-slate-400 font-black py-4 rounded-2xl hover:bg-slate-100 hover:text-slate-600 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                >
+                  Post Payment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100 max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
+                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{activeSubscriber?.name}</p>
+              </div>
+              <button onClick={() => setIsHistoryModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {activeSubscriber?.payments?.length > 0 ? (
+                activeSubscriber.payments.slice().reverse().map((p, idx) => (
+                  <div key={idx} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-lg font-black text-slate-900">₱{p.amountPaid.toLocaleString()}</span>
+                        <span className="bg-indigo-100 text-indigo-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">{p.month}</span>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {new Date(p.date).toLocaleDateString()} • Ref: {p.referenceNo || 'N/A'}
+                      </p>
+                    </div>
+                    {p.receiptImage && (
+                      <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-500 cursor-help" title="View Receipt (Simulated)">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-20">
+                  <p className="text-slate-300 font-black uppercase tracking-widest">No payment records found</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

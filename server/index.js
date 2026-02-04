@@ -97,10 +97,65 @@ app.delete('/api/subscribers/:id', authenticateToken, validateObjectId, async (r
   }
 });
 
+app.post('/api/subscribers/:id/payments', authenticateToken, validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    const { amountPaid, referenceNo, receiptImage, month } = req.body;
+    const now = getCurrentDate();
+    const processed = processSubscriber(subscriber, now);
+
+    // Initialize remainingBalance if it's the first payment or not set correctly
+    if (subscriber.remainingBalance === undefined || subscriber.remainingBalance === subscriber.rate) {
+      // If it matches the original rate, it might need pro-rating
+      // But we must be careful not to overwrite a manual balance if it was intended.
+      // For this system, we'll assume the pro-rated amount is the starting point for Feb 2026.
+      if (!subscriber.payments || subscriber.payments.length === 0) {
+        subscriber.remainingBalance = processed.amountDue;
+      }
+    }
+
+    subscriber.remainingBalance = Math.max(0, subscriber.remainingBalance - amountPaid);
+
+    if (subscriber.remainingBalance <= 0) {
+      subscriber.isPaidFeb2026 = true;
+    }
+
+    subscriber.payments.push({
+      amountPaid,
+      referenceNo,
+      receiptImage,
+      month: month || 'February 2026',
+      date: now
+    });
+
+    await subscriber.save();
+    res.json(subscriber);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    const now = getCurrentDate();
+    const processed = processSubscriber(subscriber, now);
+
+    // Quick pay assumes full payment of remaining balance
+    const amountToPay = subscriber.remainingBalance !== undefined ? subscriber.remainingBalance : processed.amountDue;
+
+    subscriber.payments.push({
+      amountPaid: amountToPay,
+      referenceNo: 'QUICK-PAY',
+      month: 'February 2026',
+      date: now
+    });
+
+    subscriber.remainingBalance = 0;
     subscriber.isPaidFeb2026 = true;
     await subscriber.save();
     res.json(subscriber);

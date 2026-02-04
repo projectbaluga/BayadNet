@@ -1,11 +1,12 @@
 import React from 'react';
 
-const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
+const SubscriberCard = ({ subscriber, onPay, onHistory, onEdit, onDelete }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Paid': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
       case 'Overdue': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
       case 'Due Today': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+      case 'Partial': return 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
       default: return 'bg-slate-500/10 text-slate-600 border-slate-500/20';
     }
   };
@@ -29,6 +30,13 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
           <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${getStatusColor(subscriber.status)} shadow-sm`}>
             {subscriber.status}
           </span>
+          {subscriber.hasReceipt && (
+            <div className="bg-emerald-50 text-emerald-500 p-1.5 rounded-lg border border-emerald-100 animate-bounce" title="Receipt Uploaded">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 
@@ -47,8 +55,12 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
         )}
 
         <div className="pt-2 border-t border-slate-200/50 flex justify-between items-end">
-          <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Total Due</span>
-          <span className="text-xl font-black text-indigo-600 leading-none">₱{subscriber.amountDue.toLocaleString()}</span>
+          <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
+            {subscriber.status === 'Partial' ? 'Remaining Balance' : 'Total Due'}
+          </span>
+          <span className="text-xl font-black text-indigo-600 leading-none">
+            ₱{(subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue).toLocaleString()}
+          </span>
         </div>
       </div>
 
@@ -60,10 +72,10 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
       <div className="flex items-center gap-3 mt-auto relative z-10">
         {!isPaid ? (
           <button
-            onClick={() => onPay(subscriber._id)}
+            onClick={() => onPay(subscriber)}
             className="flex-1 bg-slate-900 text-white text-[11px] font-black py-4 rounded-2xl hover:bg-indigo-600 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-200 uppercase tracking-[0.15em]"
           >
-            Confirm Payment
+            {subscriber.status === 'Partial' ? 'Pay Balance' : 'Confirm Payment'}
           </button>
         ) : (
           <div className="flex-1 bg-emerald-50 text-emerald-600 text-[10px] font-black py-4 rounded-2xl text-center border border-emerald-100 uppercase tracking-widest shadow-inner">
@@ -72,6 +84,15 @@ const SubscriberCard = ({ subscriber, onPay, onEdit, onDelete }) => {
         )}
 
         <div className="flex gap-2">
+          <button
+            onClick={() => onHistory(subscriber)}
+            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-amber-50 hover:text-amber-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            title="History"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
           <button
             onClick={() => onEdit(subscriber)}
             className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
