@@ -7,6 +7,7 @@ require('dotenv').config();
 const Subscriber = require('./models/Subscriber');
 const User = require('./models/User');
 const Setting = require('./models/Setting');
+const MonthlyReport = require('./models/MonthlyReport');
 const { getCurrentDate } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
 
@@ -65,7 +66,7 @@ app.post('/api/subscribers', authenticateToken, async (req, res) => {
 app.get('/api/subscribers', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
-    const subscribers = await Subscriber.find();
+    const subscribers = await Subscriber.find({ isArchived: false });
     const processedSubscribers = subscribers.map(sub => {
       const processed = processSubscriber(sub, now);
       return {
@@ -91,9 +92,12 @@ app.put('/api/subscribers/:id', authenticateToken, validateObjectId, async (req,
 
 app.delete('/api/subscribers/:id', authenticateToken, validateObjectId, async (req, res) => {
   try {
-    const subscriber = await Subscriber.findByIdAndDelete(req.params.id);
+    const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
-    res.json({ message: 'Subscriber deleted' });
+
+    subscriber.isArchived = true;
+    await subscriber.save();
+    res.json({ message: 'Subscriber archived' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -181,7 +185,7 @@ app.get('/api/settings', authenticateToken, async (req, res) => {
   try {
     let settings = await Setting.findOne();
     if (!settings) {
-      settings = await Setting.create({ defaultRate: 500, rebateValue: 30 });
+      settings = await Setting.create({ defaultRate: 500, rebateValue: 30, providerCost: 1500 });
     }
     res.json(settings);
   } catch (error) {
@@ -200,26 +204,43 @@ app.put('/api/settings', authenticateToken, async (req, res) => {
 
 app.post('/api/bulk/reset', authenticateToken, async (req, res) => {
   try {
+    const now = getCurrentDate();
+    const subscribers = await Subscriber.find({ isArchived: false });
+    const settings = await Setting.findOne();
+    const providerCost = settings?.providerCost || 0;
+
+    let totalExpected = 0;
+    let totalCollected = 0;
+
+    subscribers.forEach(sub => {
+      const processed = processSubscriber(sub, now);
+      totalExpected += processed.amountDue;
+      const collected = (sub.payments || [])
+        .filter(p => p.month === 'February 2026')
+        .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+      totalCollected += collected;
+    });
+
+    // Save snapshot to MonthlyReport
+    await MonthlyReport.create({
+      monthYear: "February 2026",
+      totalExpected: Math.round(totalExpected * 100) / 100,
+      totalCollected: Math.round(totalCollected * 100) / 100,
+      totalProfit: Math.round((totalCollected - providerCost) * 100) / 100,
+      subscriberCount: subscribers.length
+    });
+
     // Start New Month logic
-    await Subscriber.updateMany({}, {
+    await Subscriber.updateMany({ isArchived: false }, {
       $set: {
         isPaidFeb2026: false,
         daysDown: 0
       }
     });
 
-    // For each subscriber, we also need to reset remainingBalance to their pro-rated amount (or just unset it)
-    // and effectively "start fresh" with payments for the new month.
-    // The prompt says "Clears receiptImage for the new billing cycle".
-    // In our schema, receiptImage is inside the payments array.
-    // Usually, starting a new month means we don't clear old payments, but the UI shows stats for Feb 2026.
-    // To strictly follow "Clears receiptImage", I'll just reset the status fields.
-    // A real system would transition the "current month" to March 2026.
+    await Subscriber.updateMany({ isArchived: false }, { $unset: { remainingBalance: "" } });
 
-    // We'll reset remainingBalance to undefined so it gets re-calculated
-    await Subscriber.updateMany({}, { $unset: { remainingBalance: "" } });
-
-    res.json({ message: 'System reset for new month successfully.' });
+    res.json({ message: 'System reset for new month successfully and report saved.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -228,22 +249,36 @@ app.post('/api/bulk/reset', authenticateToken, async (req, res) => {
 app.get('/api/analytics', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
-    const subscribers = await Subscriber.find();
+    const subscribers = await Subscriber.find({ isArchived: false });
+    const settings = await Setting.findOne();
+    const providerCost = settings?.providerCost || 0;
 
     let totalExpected = 0;
     let totalCollected = 0;
+    let groupCounts = { Overdue: 0, Partial: 0, Upcoming: 0, Paid: 0 };
 
     subscribers.forEach(sub => {
       const processed = processSubscriber(sub, now);
       totalExpected += processed.amountDue;
 
-      const collected = (sub.payments || []).reduce((sum, p) => sum + (p.amountPaid || 0), 0);
+      const collected = (sub.payments || [])
+        .filter(p => p.month === 'February 2026')
+        .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
       totalCollected += collected;
+
+      if (processed.status === 'Due Today') {
+        groupCounts['Overdue']++; // Or group as you wish, prompt says Overdue/Partial/Upcoming/Paid
+      } else if (groupCounts.hasOwnProperty(processed.status)) {
+        groupCounts[processed.status]++;
+      }
     });
 
     res.json({
       totalExpected: Math.round(totalExpected * 100) / 100,
-      totalCollected: Math.round(totalCollected * 100) / 100
+      totalCollected: Math.round(totalCollected * 100) / 100,
+      providerCost,
+      currentProfit: Math.round((totalCollected - providerCost) * 100) / 100,
+      groupCounts
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

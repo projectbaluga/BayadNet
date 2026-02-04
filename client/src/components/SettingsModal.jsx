@@ -4,8 +4,8 @@ import axios from 'axios';
 const API_BASE = '/api';
 
 const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
-  const [settings, setSettings] = useState({ defaultRate: 500, rebateValue: 30 });
-  const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0 });
+  const [settings, setSettings] = useState({ defaultRate: 500, rebateValue: 30, providerCost: 0 });
+  const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, providerCost: 0, currentProfit: 0 });
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem('token');
 
@@ -107,6 +107,15 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
                   onChange={(e) => setSettings({...settings, rebateValue: parseInt(e.target.value) || 0})}
                 />
               </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Provider Cost (₱)</label>
+                <input
+                  type="number"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                  value={settings.providerCost}
+                  onChange={(e) => setSettings({...settings, providerCost: parseInt(e.target.value) || 0})}
+                />
+              </div>
               <button
                 type="submit"
                 disabled={loading}
@@ -128,6 +137,10 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
               <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100">
                 <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total Actually Collected</p>
                 <p className="text-2xl font-black text-emerald-600">₱{analytics.totalCollected.toLocaleString()}</p>
+              </div>
+              <div className="bg-amber-50/50 p-6 rounded-3xl border border-amber-100">
+                <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-1">Estimated Net Profit</p>
+                <p className="text-2xl font-black text-amber-600">₱{analytics.currentProfit.toLocaleString()}</p>
               </div>
             </div>
           </section>
