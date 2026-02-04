@@ -6,6 +6,7 @@ const API_BASE = '/api';
 
 function App() {
   const [subscribers, setSubscribers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -129,6 +130,17 @@ function App() {
     </div>
   );
 
+  const filteredSubscribers = subscribers.filter(sub =>
+    sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.cycle.toString().includes(searchTerm)
+  );
+
+  const groups = {
+    overdue: filteredSubscribers.filter(sub => sub.status === 'Overdue' || sub.status === 'Due Today'),
+    upcoming: filteredSubscribers.filter(sub => sub.status === 'Upcoming'),
+    paid: filteredSubscribers.filter(sub => sub.status === 'Paid')
+  };
+
   if (!token) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
@@ -251,26 +263,95 @@ function App() {
           </div>
         </section>
 
-        {/* Responsive Grid */}
-        <main>
-          <div className="flex items-center gap-2 mb-6">
-            <h2 className="text-lg font-black text-gray-800 uppercase tracking-tight">Active Subscribers</h2>
-            <span className="bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-              February 2026
-            </span>
+        {/* Search Bar - Glassmorphism */}
+        <div className="relative mb-12">
+          <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
+          <input
+            type="text"
+            placeholder="Search by name or billing cycle (e.g. 'Bonete' or '7')..."
+            className="w-full bg-white/50 backdrop-blur-md border border-white/40 rounded-[2.5rem] py-6 pl-16 pr-8 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-400 shadow-xl shadow-slate-200/20 text-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {subscribers.map(sub => (
-              <SubscriberCard
-                key={sub._id}
-                subscriber={sub}
-                onPay={handlePay}
-                onEdit={handleOpenModal}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+        {/* Responsive Grouped Grid */}
+        <main className="space-y-16">
+          {/* Overdue / Due Today Section */}
+          <section>
+            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-rose-500 w-2 h-8 rounded-full"></div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Overdue & Due Today</h2>
+                <span className="bg-rose-100 text-rose-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  {groups.overdue.length} Accounts
+                </span>
+              </div>
+            </div>
+            {groups.overdue.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {groups.overdue.map(sub => (
+                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No overdue accounts found</p>
+              </div>
+            )}
+          </section>
+
+          {/* Upcoming Section */}
+          <section>
+            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-indigo-500 w-2 h-8 rounded-full"></div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
+                <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  {groups.upcoming.length} Accounts
+                </span>
+              </div>
+            </div>
+            {groups.upcoming.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {groups.upcoming.map(sub => (
+                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No upcoming bills found</p>
+              </div>
+            )}
+          </section>
+
+          {/* Paid Section */}
+          <section>
+            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-emerald-500 w-2 h-8 rounded-full"></div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
+                <span className="bg-emerald-100 text-emerald-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  {groups.paid.length} Accounts
+                </span>
+              </div>
+            </div>
+            {groups.paid.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+                {groups.paid.map(sub => (
+                  <SubscriberCard key={sub._id} subscriber={sub} onPay={handlePay} onEdit={handleOpenModal} onDelete={handleDelete} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No settled accounts found</p>
+              </div>
+            )}
+          </section>
         </main>
       </div>
 
