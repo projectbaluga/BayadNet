@@ -1,47 +1,80 @@
-# 🌐 Internet Subscriber Management System (PWA)
+# 🌐 BayadNet: Internet Subscriber Management System
 
-A modern, mobile-first Web Application for managing internet subscribers, billing cycles, and payment adjustments.
+BayadNet is a modern, mobile-first Web Application (PWA) designed for ISPs to manage subscriber billing, track payments, and automate outage-related credits. Built with the MERN stack and fully containerized with Docker.
 
-## 🚀 Features
+---
 
-- **Mobile-First Design**: Optimized for mobile devices with a card-based layout and large interactive elements.
-- **PWA Ready**: Installable on home screens and includes offline caching via Service Workers.
-- **Automated Billing**: Automatically calculates status (Paid, Due Today, Overdue) for February 2026.
-- **Special Credit Rules**:
-    - **Storm Credit**: Automatically applies a 50% discount to eligible subscribers.
-    - **Free Month**: Handles 100% credit for specific subscribers (e.g., "Bonete").
-- **Dashboard**: Real-time summary of Collections, Overdue accounts, and Today's dues.
-- **Secure Authentication**: JWT-based admin login.
-- **Dockerized**: Ready for production with multi-stage builds and Nginx.
+## ✨ Features
+
+### 💎 Premium Modern UI (Glassmorphism)
+- **Glassmorphism Design**: Minimalist SaaS dashboard with `backdrop-blur` effects, soft shadows, and a clean `bg-slate-50` aesthetic.
+- **Mobile-First & Responsive**: Adapts seamlessly from handheld devices to high-end desktops (4-column grid layout).
+- **Visual Status Indicators**: Instant recognition of account status with color-coded badges (Green: Paid, Red: Overdue, Orange: Due Today).
+- **Smart Filtering**: Filter subscribers by payment status (All, Paid, Overdue, Upcoming).
+
+### 🧮 Pro-rated Rebate System
+The system features an automated, fair billing logic that replaces fixed credits with a daily pro-rated rebate system.
+- **Formula**: `Rebate = (Monthly Rate / 30) * Days Down`
+- **Automatic Calculation**: The total amount due is automatically calculated by deducting the rebate from the base monthly rate.
+- **Precision**: Calculations are rounded to 2 decimal places to ensure financial accuracy.
+
+### 📊 Comprehensive Dashboard
+- **Total Subscribers**: Real-time count of all active users.
+- **Monthly Revenue**: Projected revenue after all rebates are applied.
+- **Total Collected**: Real-time tracking of payments received.
+- **Overdue/Due Today**: Critical metrics highlighted for immediate action.
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React.js, Vite, Tailwind CSS, Axios.
+- **Frontend**: React.js (Vite), Tailwind CSS (Glassmorphism theme), Headless UI.
 - **Backend**: Node.js, Express, Mongoose.
-- **Database**: MongoDB.
-- **Deployment**: Docker, Docker Compose, Nginx.
+- **Database**: MongoDB (with persistent volume).
+- **Security**: JWT Authentication, Bcrypt password hashing.
+- **Deployment**: Docker, Docker Compose, Nginx (Multi-stage builds).
 
 ---
 
-## 🏃 Quick Start (Docker)
+## 🏃 Installation & Deployment
 
-Ensure you have **Docker** and **Docker Compose** installed.
+### Prerequisites
+- Docker and Docker Compose installed on your system.
 
-1.  **Clone the project** and navigate to the root directory.
-2.  **Run the application**:
-    ```bash
-    docker-compose up --build
-    ```
-3.  **Access the App**:
-    -   Frontend: `http://localhost:3000`
-    -   Backend API: `http://localhost:5000`
-4.  **Login Credentials**:
-    -   **Username**: `admin`
-    -   **Password**: `password123`
+### Quick Start
+1. **Clone the repository** and navigate to the project root.
+2. **Launch the system**:
+   ```bash
+   sudo docker compose up --build -d
+   ```
+3. **Access the Application**:
+   - **Frontend**: `http://localhost:3000`
+   - **Backend API**: `http://localhost:5000`
 
-*Note: The database is automatically seeded with initial subscriber data on startup.*
+### Admin Credentials
+- **Username**: `admin`
+- **Password**: `password123`
+
+---
+
+## ⚙️ Environment Variables
+
+The system uses environment variables in the `docker-compose.yml` for configuration:
+
+| Variable | Description | Recommended Value |
+| :--- | :--- | :--- |
+| `TZ` | System Timezone for accurate billing cycles | `Asia/Manila` |
+| `SIMULATION_DATE` | Mock date for testing billing logic (e.g. Feb 2026) | `2026-02-15` |
+| `JWT_SECRET` | Secret key for token generation | `your_secret_string` |
+| `MONGO_URI` | MongoDB Connection String | `mongodb://mongo:27017/internet_billing` |
+
+---
+
+## 🗄️ Database Management
+
+- **Automated Seeding**: The `seed.js` script automatically populates the database with initial subscriber data if the collection is empty.
+- **Persistence**: A Docker volume `mongo-data` is used to ensure payment history and subscriber data persist across container restarts.
+- **Manual Management**: For detailed DB operations, see [DB_MANAGEMENT.md](./DB_MANAGEMENT.md).
 
 ---
 
@@ -49,40 +82,16 @@ Ensure you have **Docker** and **Docker Compose** installed.
 
 ```text
 ├── client/                 # React Frontend
-│   ├── src/                # UI Components & Logic
-│   ├── public/             # PWA Assets (Manifest, Service Worker)
-│   ├── Dockerfile          # Multi-stage production build
-│   └── nginx.conf          # Production Nginx configuration
+│   ├── src/                # UI Components (Glassmorphism theme)
+│   ├── Dockerfile          # Multi-stage production build (Nginx)
+│   └── nginx.conf          # Reverse proxy configuration
 ├── server/                 # Node.js Backend
-│   ├── models/             # Mongoose Schemas (Subscriber, User)
-│   ├── index.js            # Express API & Business Logic
-│   ├── seed.js             # Data seeding script
+│   ├── models/             # Mongoose Schemas
+│   ├── utils/              # Rebate & Billing Logic
+│   ├── tests/              # Jest Unit Tests
 │   └── Dockerfile          # Backend production build
-└── docker-compose.yml       # Orchestration
+└── docker-compose.yml       # Service Orchestration
 ```
-
----
-
-## ⚖️ Business Logic (Feb 2026)
-
--   **Storm Credit**: Subscribers with "2 Weeks" credit receive a **50% discount** on their monthly rate for Feb 2026.
--   **1 Month Free**: Subscribers with "1 Month" credit (e.g., "Bonete") are automatically marked as **Paid** with an amount due of **₱0**.
--   **Cycle Logic**: Status is calculated by comparing the subscriber's billing cycle (e.g., 7th) against the current date.
--   **Simulation Date**: You can change the "current date" by setting the `SIMULATION_DATE` environment variable in the `docker-compose.yml` (e.g., `SIMULATION_DATE=2026-03-01`).
-
----
-
-## 🗄️ Database Management
-For detailed instructions on how to manage the MongoDB database, connect via Compass, or perform backups, please refer to the [DB_MANAGEMENT.md](./DB_MANAGEMENT.md) guide.
-
----
-
-## 🛡 Production Considerations
-
--   **Nginx**: Serves the frontend static files and proxies API requests to the backend.
--   **JWT**: All sensitive endpoints are protected by Bearer Token authentication.
--   **Bcrypt**: Admin passwords are salted and hashed before being stored in MongoDB.
--   **Security Headers**: Dockerized setup uses standard production-grade images.
 
 ---
 
