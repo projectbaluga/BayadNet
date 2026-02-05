@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete }) => {
+const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole }) => {
   const handleSendReminder = () => {
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
     const message = `Hi ${subscriber.name}, your bill for February 2026 is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
@@ -133,12 +133,14 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
       <div className="flex flex-col gap-6 mt-auto relative z-10">
         {!isPaid ? (
-          <button
-            onClick={() => onPay(subscriber)}
-            className="w-full bg-indigo-600 text-white text-[11px] font-black py-5 rounded-2xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-100 uppercase tracking-[0.2em]"
-          >
-            {subscriber.status === 'Partial' ? 'Pay Balance' : 'Confirm Payment'}
-          </button>
+          (userRole === 'admin' || userRole === 'staff') && (
+            <button
+              onClick={() => onPay(subscriber)}
+              className="w-full bg-indigo-600 text-white text-[11px] font-black py-5 rounded-2xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-100 uppercase tracking-[0.2em]"
+            >
+              {subscriber.status === 'Partial' ? 'Pay Balance' : 'Confirm Payment'}
+            </button>
+          )
         ) : (
           <div className="w-full bg-emerald-50 text-emerald-600 text-[10px] font-black py-5 rounded-2xl text-center border border-emerald-100 uppercase tracking-widest shadow-inner">
             ✓ Account Settled
@@ -155,42 +157,50 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
-          <button
-            onClick={() => onEdit(subscriber)}
-            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
-            title="Edit"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          <button
-            onClick={handleSendReminder}
-            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
-            title="Send Reminder"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-          </button>
-          <button
-            onClick={handleDownloadSOA}
-            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
-            title="Download SOA"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => onDelete(subscriber._id)}
-            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
-            title="Archive Account"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-            </svg>
-          </button>
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onEdit(subscriber)}
+              className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+              title="Edit"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
+          {(userRole === 'admin' || userRole === 'staff') && (
+            <>
+              <button
+                onClick={handleSendReminder}
+                className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+                title="Send Reminder"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </button>
+              <button
+                onClick={handleDownloadSOA}
+                className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+                title="Download SOA"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            </>
+          )}
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onDelete(subscriber._id)}
+              className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+              title="Archive Account"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </div>

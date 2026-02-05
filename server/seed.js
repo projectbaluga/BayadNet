@@ -36,8 +36,10 @@ const seedDB = async () => {
 
     const userCount = await User.countDocuments();
     if (userCount === 0) {
-      await User.create({ username: 'admin', password: 'password123' });
-      console.log('Admin user created (admin / password123).');
+      await User.create({ username: 'admin', password: 'password123', role: 'admin' });
+      await User.create({ username: 'staff', password: 'password123', role: 'staff' });
+      await User.create({ username: 'tech', password: 'password123', role: 'technician' });
+      console.log('Users created: admin/password123, staff/password123, tech/password123.');
     } else {
       console.log('Admin user already exists, skipping seed.');
     }
