@@ -123,7 +123,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
         {!isPaid ? (
           <button
             onClick={() => onPay(subscriber)}
-            className="w-full bg-red-600 text-white text-[11px] font-black py-5 rounded-2xl hover:bg-red-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-100 uppercase tracking-[0.2em]"
+            className="w-full bg-indigo-600 text-white text-[11px] font-black py-5 rounded-2xl hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-100 uppercase tracking-[0.2em]"
           >
             {subscriber.status === 'Partial' ? 'Pay Balance' : 'Confirm Payment'}
           </button>

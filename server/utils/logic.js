@@ -1,18 +1,19 @@
-const processSubscriber = (sub, now) => {
+const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
   // Rebate Calculation
-  const dailyRate = sub.rate / 30;
+  const divisor = settings.rebateValue || 30;
+  const dailyRate = sub.rate / divisor;
   const rebate = dailyRate * (sub.daysDown || 0);
   let amountDue = Math.round((sub.rate - rebate) * 100) / 100;
-  if (amountDue === 0) amountDue = 0; // Fix -0 issue
+  if (amountDue <= 0) amountDue = 0; // Fix -0 issue and ensure no negative due
 
   let effectiveCycle = sub.cycle;
 
   // New logic for Partial Payments
-  let status = sub.isPaidFeb2026 ? 'Paid' : 'Unpaid';
+  let status = sub.isPaidFeb2026 || amountDue === 0 ? 'Paid' : 'Unpaid';
   const remaining = sub.remainingBalance !== undefined ? sub.remainingBalance : amountDue;
 
   if (!sub.isPaidFeb2026 && remaining < amountDue && remaining > 0) {
@@ -50,13 +51,15 @@ const processSubscriber = (sub, now) => {
   };
 };
 
-const calculateStats = (subscribers, now) => {
+const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let dueToday = 0, overdue = 0, totalCollections = 0;
   let totalMonthlyRevenue = 0;
 
   subscribers.forEach(sub => {
-    const processed = processSubscriber(sub, now);
+    if (sub.isArchived) return; // Exclude archived from stats
+
+    const processed = processSubscriber(sub, now, settings);
     const { amountDue, status } = processed;
 
     totalMonthlyRevenue += amountDue;

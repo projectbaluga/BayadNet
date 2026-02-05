@@ -66,9 +66,10 @@ app.post('/api/subscribers', authenticateToken, async (req, res) => {
 app.get('/api/subscribers', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
+    const settings = await Setting.findOne() || { rebateValue: 30 };
     const subscribers = await Subscriber.find({ isArchived: false });
     const processedSubscribers = subscribers.map(sub => {
-      const processed = processSubscriber(sub, now);
+      const processed = processSubscriber(sub, now, settings);
       return {
         ...sub.toObject(),
         ...processed
@@ -110,7 +111,8 @@ app.post('/api/subscribers/:id/payments', authenticateToken, validateObjectId, a
 
     const { amountPaid, referenceNo, receiptImage, month } = req.body;
     const now = getCurrentDate();
-    const processed = processSubscriber(subscriber, now);
+    const settings = await Setting.findOne() || { rebateValue: 30 };
+    const processed = processSubscriber(subscriber, now, settings);
 
     // Initialize remainingBalance if it's the first payment or not set correctly
     if (subscriber.remainingBalance === undefined || subscriber.remainingBalance === subscriber.rate) {
@@ -149,7 +151,8 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
     const now = getCurrentDate();
-    const processed = processSubscriber(subscriber, now);
+    const settings = await Setting.findOne() || { rebateValue: 30 };
+    const processed = processSubscriber(subscriber, now, settings);
 
     // Quick pay assumes full payment of remaining balance
     const amountToPay = subscriber.remainingBalance !== undefined ? subscriber.remainingBalance : processed.amountDue;
@@ -173,8 +176,9 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async
 app.get('/api/stats', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
+    const settings = await Setting.findOne() || { rebateValue: 30 };
     const subscribers = await Subscriber.find();
-    const stats = calculateStats(subscribers, now);
+    const stats = calculateStats(subscribers, now, settings);
     res.json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -206,14 +210,14 @@ app.post('/api/bulk/reset', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
-    const settings = await Setting.findOne();
-    const providerCost = settings?.providerCost || 0;
+    const settings = await Setting.findOne() || { rebateValue: 30, providerCost: 0 };
+    const providerCost = settings.providerCost || 0;
 
     let totalExpected = 0;
     let totalCollected = 0;
 
     subscribers.forEach(sub => {
-      const processed = processSubscriber(sub, now);
+      const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
       const collected = (sub.payments || [])
         .filter(p => p.month === 'February 2026')
@@ -250,15 +254,15 @@ app.get('/api/analytics', authenticateToken, async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
-    const settings = await Setting.findOne();
-    const providerCost = settings?.providerCost || 0;
+    const settings = await Setting.findOne() || { rebateValue: 30, providerCost: 0 };
+    const providerCost = settings.providerCost || 0;
 
     let totalExpected = 0;
     let totalCollected = 0;
     let groupCounts = { Overdue: 0, Partial: 0, Upcoming: 0, Paid: 0 };
 
     subscribers.forEach(sub => {
-      const processed = processSubscriber(sub, now);
+      const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
 
       const collected = (sub.payments || [])
