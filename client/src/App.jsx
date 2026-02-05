@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
+import UserManagement from './components/UserManagement';
 
 const API_BASE = '/api';
 
@@ -11,6 +12,7 @@ function App() {
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('dashboard'); // 'dashboard' or 'users'
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('role'));
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -86,6 +88,7 @@ function App() {
     setToken(null);
     setUserRole(null);
     setSubscribers([]);
+    setView('dashboard');
   };
 
   const handleOpenPaymentModal = (subscriber) => {
@@ -274,6 +277,24 @@ function App() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Management & Analytics</p>
             </div>
           </div>
+
+          <nav className="hidden md:flex items-center gap-8 ml-12 mr-auto">
+            <button
+              onClick={() => setView('dashboard')}
+              className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Dashboard
+            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setView('users')}
+                className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'users' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Users
+              </button>
+            )}
+          </nav>
+
           <div className="flex items-center gap-4">
             {userRole === 'admin' && (
               <>
@@ -306,6 +327,10 @@ function App() {
       </header>
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {view === 'users' && userRole === 'admin' ? (
+          <UserManagement token={token} />
+        ) : (
+          <>
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           {/* Collection Efficiency Chart */}
           <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 shadow-2xl shadow-indigo-100/50 flex items-center gap-8 group hover:scale-[1.02] transition-transform duration-500">
@@ -476,6 +501,8 @@ function App() {
             )}
           </section>
         </main>
+        </>
+        )}
       </div>
 
       {isModalOpen && (
