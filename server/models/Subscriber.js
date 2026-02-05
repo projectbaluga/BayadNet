@@ -4,6 +4,8 @@ const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   rate: { type: Number, required: true }, // Base monthly rate
   cycle: { type: Number, required: true },
+  messengerId: { type: String, default: '' },
+  contactNo: { type: String, default: '' },
   daysDown: { type: Number, default: 0 },
   remainingBalance: { type: Number }, // Amount left to pay for the current month
   isPaidFeb2026: { type: Boolean, default: false },

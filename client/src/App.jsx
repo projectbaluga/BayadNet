@@ -25,6 +25,8 @@ function App() {
     name: '',
     rate: 0,
     cycle: 1,
+    messengerId: '',
+    contactNo: '',
     daysDown: 0
   });
   const [paymentData, setPaymentData] = useState({
@@ -162,6 +164,8 @@ function App() {
         name: subscriber.name,
         rate: subscriber.rate,
         cycle: subscriber.cycle,
+        messengerId: subscriber.messengerId || '',
+        contactNo: subscriber.contactNo || '',
         daysDown: subscriber.daysDown || 0
       });
     } else {
@@ -170,6 +174,8 @@ function App() {
         name: '',
         rate: 0,
         cycle: 1,
+        messengerId: '',
+        contactNo: '',
         daysDown: 0
       });
     }
@@ -498,6 +504,28 @@ function App() {
                     value={formData.cycle}
                     onChange={(e) => setFormData({...formData, cycle: e.target.value})}
                     required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Messenger ID/User</label>
+                  <input
+                    type="text"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                    placeholder="e.g. juan.delacruz"
+                    value={formData.messengerId}
+                    onChange={(e) => setFormData({...formData, messengerId: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Number</label>
+                  <input
+                    type="text"
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
+                    placeholder="e.g. 09123456789"
+                    value={formData.contactNo}
+                    onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
                   />
                 </div>
               </div>

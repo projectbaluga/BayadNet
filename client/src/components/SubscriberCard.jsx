@@ -4,8 +4,20 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
   const handleSendReminder = () => {
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
     const message = `Hi ${subscriber.name}, your bill for February 2026 is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
-    const url = `https://m.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+
+    if (subscriber.messengerId) {
+      const url = `https://m.me/${subscriber.messengerId}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    } else {
+      // Fallback if no Messenger ID, try SMS or just generic Messenger
+      if (subscriber.contactNo) {
+        const smsUrl = `sms:${subscriber.contactNo}?body=${encodeURIComponent(message)}`;
+        window.open(smsUrl, '_blank');
+      } else {
+        const url = `https://m.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+      }
+    }
   };
 
   const handleDownloadSOA = () => {
