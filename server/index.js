@@ -57,7 +57,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
   const token = jwt.sign(
-    { id: user._id, username: user.username, role: user.role },
+    { id: user._id, username: user.username, role: user.role, name: user.name || user.username },
     JWT_SECRET,
     { expiresIn: '1d' }
   );
@@ -309,5 +309,29 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
+
+app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ message: 'Message is required' });
+
+    const report = {
+      reporterName: req.user.name || req.user.username,
+      reporterRole: req.user.role,
+      message,
+      timestamp: new Date()
+    };
+
+    subscriber.reports.push(report);
+    await subscriber.save();
+
+    res.status(201).json(report);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
