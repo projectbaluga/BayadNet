@@ -55,7 +55,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
   const isPaid = subscriber.status === 'Paid';
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white/20 p-8 flex flex-col gap-6 hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-500 group relative overflow-hidden hover:-translate-y-1">
+    <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white/20 p-10 flex flex-col gap-8 hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-500 group relative overflow-hidden hover:-translate-y-1">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
 
       <div className="flex justify-between items-start relative z-10">
@@ -91,24 +91,24 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       </div>
 
       {/* Breakdown Section */}
-      <div className="space-y-3 relative z-10 bg-slate-50/50 p-5 rounded-3xl border border-slate-100 group-hover:bg-white transition-colors">
-        <div className="flex justify-between items-center text-[11px]">
-          <span className="text-slate-500 font-medium">Monthly Rate</span>
-          <span className="text-slate-700 font-bold">₱{subscriber.rate.toLocaleString()}</span>
+      <div className="space-y-4 relative z-10 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 group-hover:bg-white transition-colors">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Monthly Rate</span>
+          <span className="text-slate-900 font-black text-right">₱{subscriber.rate.toLocaleString()}</span>
         </div>
 
         {subscriber.daysDown > 0 && (
-          <div className="flex justify-between items-center text-[11px] text-rose-500">
-            <span className="font-medium">Outage ({subscriber.daysDown} days)</span>
-            <span className="font-bold">-₱{subscriber.rebate.toLocaleString()}</span>
+          <div className="flex justify-between items-center text-sm text-rose-500">
+            <span className="font-medium uppercase tracking-wider text-[10px]">Outage ({subscriber.daysDown} days)</span>
+            <span className="font-black text-right">-₱{subscriber.rebate.toLocaleString()}</span>
           </div>
         )}
 
-        <div className="pt-2 border-t border-slate-200/50 flex justify-between items-end">
+        <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
           <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
             {subscriber.status === 'Partial' ? 'Remaining Balance' : 'Total Due'}
           </span>
-          <span className="text-xl font-black text-indigo-600 leading-none">
+          <span className="text-2xl font-black text-indigo-600 leading-none text-right">
             ₱{(subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue).toLocaleString()}
           </span>
         </div>
@@ -119,63 +119,63 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
         <p className="text-sm font-black text-slate-700 tracking-tight">{subscriber.dueDate}</p>
       </div>
 
-      <div className="flex items-center gap-3 mt-auto relative z-10">
+      <div className="flex flex-col gap-6 mt-auto relative z-10">
         {!isPaid ? (
           <button
             onClick={() => onPay(subscriber)}
-            className="flex-1 bg-slate-900 text-white text-[11px] font-black py-4 rounded-2xl hover:bg-indigo-600 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-200 uppercase tracking-[0.15em]"
+            className="w-full bg-red-600 text-white text-[11px] font-black py-5 rounded-2xl hover:bg-red-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-red-100 uppercase tracking-[0.2em]"
           >
             {subscriber.status === 'Partial' ? 'Pay Balance' : 'Confirm Payment'}
           </button>
         ) : (
-          <div className="flex-1 bg-emerald-50 text-emerald-600 text-[10px] font-black py-4 rounded-2xl text-center border border-emerald-100 uppercase tracking-widest shadow-inner">
+          <div className="w-full bg-emerald-50 text-emerald-600 text-[10px] font-black py-5 rounded-2xl text-center border border-emerald-100 uppercase tracking-widest shadow-inner">
             ✓ Account Settled
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex items-center justify-center gap-4">
           <button
             onClick={() => onHistory(subscriber)}
-            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-amber-50 hover:text-amber-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-amber-50 hover:text-amber-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
             title="History"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
           <button
             onClick={() => onEdit(subscriber)}
-            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
             title="Edit"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
           <button
             onClick={handleSendReminder}
-            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-indigo-50 hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
             title="Send Reminder"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
           </button>
           <button
             onClick={handleDownloadSOA}
-            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
             title="Download SOA"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </button>
           <button
             onClick={() => onDelete(subscriber._id)}
-            className="p-3.5 bg-white text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
+            className="p-4 bg-white text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-600 hover:scale-110 active:scale-95 transition-all border border-slate-100 shadow-sm"
             title="Archive Account"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
           </button>
