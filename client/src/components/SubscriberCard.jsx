@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import ReportTimeline from './ReportTimeline';
+import ReportForm from './ReportForm';
 
 const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
 
@@ -274,104 +275,19 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       {isExpanded && (
         <div className="relative z-10 -mt-4 animate-in slide-in-from-top-4 duration-300">
           <div className="bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-6">
-        <div
-          ref={chatContainerRef}
-          className="max-h-60 overflow-y-auto space-y-4 pr-2 custom-scrollbar scroll-smooth"
-        >
-          {localReports.length > 0 ? (
-            localReports.map((report, idx) => {
-                  const isTech = report.reporterRole === 'technician';
-                  return (
-                <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
-                        isTech
-                          ? 'bg-blue-600 text-white rounded-tl-none'
-                          : 'bg-violet-600 text-white rounded-tr-none'
-                      }`}>
-                        {report.attachmentUrl && (
-                          <div className="mb-2 overflow-hidden rounded-lg">
-                            <img
-                              src={report.attachmentUrl}
-                              alt="Attachment"
-                              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => onViewReceipt(report.attachmentUrl)}
-                            />
-                          </div>
-                        )}
-                        <p className="font-medium leading-relaxed">{report.message}</p>
-                        <div className={`flex items-center gap-2 mt-2 pt-2 border-t border-white/20 text-[9px] font-black uppercase tracking-widest ${
-                          isTech ? 'text-blue-100' : 'text-violet-100'
-                        }`}>
-                          {isTech ? <User className="w-2.5 h-2.5" /> : <ShieldCheck className="w-2.5 h-2.5" />}
-                          {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
-                        </div>
-                      </div>
-                      {/* Seen Indicator */}
-                      {idx === localReports.length - 1 && report.readBy && report.readBy.length > 1 && (
-                        <div className="flex items-center gap-1 mt-1 px-1 opacity-60">
-                          <Eye className="w-2.5 h-2.5 text-slate-400" />
-                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                            Seen by {report.readBy.filter(r => r.name !== report.reporterName).map(r => r.name).join(', ')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">No reports yet</p>
-                </div>
-              )}
+            <div ref={chatContainerRef}>
+              <ReportTimeline reports={localReports} onViewReceipt={onViewReceipt} />
             </div>
 
-            <form onSubmit={handleSendReport} className="space-y-3 mt-4">
-              {attachment && (
-                <div className="relative inline-block">
-                  <img src={attachment} className="h-20 w-auto rounded-xl shadow-md border-2 border-indigo-200" alt="Preview" />
-                  <button
-                    type="button"
-                    onClick={() => setAttachment(null)}
-                    className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:bg-rose-600 transition-colors"
-                  >
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Type your report..."
-                  className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-5 pr-28 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
-                  value={reportMessage}
-                  onChange={(e) => setReportMessage(e.target.value)}
-                />
-                <div className="absolute right-2 top-2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                    title="Attach Image"
-                  >
-                    <Image className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
-                    className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-indigo-100"
-                  >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </button>
-                </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </div>
-            </form>
+            <ReportForm
+              reportMessage={reportMessage}
+              setReportMessage={setReportMessage}
+              attachment={attachment}
+              setAttachment={setAttachment}
+              isSubmitting={isSubmitting}
+              handleSendReport={handleSendReport}
+              handleFileChange={handleFileChange}
+            />
           </div>
         </div>
       )}

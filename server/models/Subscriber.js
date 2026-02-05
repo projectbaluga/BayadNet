@@ -11,6 +11,8 @@ const subscriberSchema = new mongoose.Schema({
   contactNo: { type: String, default: '' },
   daysDown: { type: Number, default: 0 },
   remainingBalance: { type: Number }, // Amount left to pay for the current month
+  // NOTE: isPaidFeb2026 is currently hardcoded but represents the payment status
+  // for the current active billing cycle. Future refactor should make this dynamic.
   isPaidFeb2026: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false },
   payments: [{

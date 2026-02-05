@@ -13,6 +13,7 @@ const Setting = require('./models/Setting');
 const MonthlyReport = require('./models/MonthlyReport');
 const { getCurrentDate, getCurrentMonthYear } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
+const { authenticateToken, authorize } = require('./middleware/auth');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
@@ -46,30 +47,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
-
-const authorize = (roles = []) => {
-  if (typeof roles === 'string') {
-    roles = [roles];
-  }
-  return (req, res, next) => {
-    if (!req.user || (roles.length && !roles.includes(req.user.role))) {
-      return res.status(403).json({ message: 'Forbidden: You do not have the required role' });
-    }
-    next();
-  };
-};
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -332,7 +309,7 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
   }
 });
 
-app.use('/api/users', userRoutes(authenticateToken, authorize));
+app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
 
 // Image Upload Route
