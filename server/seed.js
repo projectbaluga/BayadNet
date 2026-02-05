@@ -6,19 +6,19 @@ require('dotenv').config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 
 const seedData = [
-  { name: 'Bonete', rate: 500, cycle: 7, daysDown: 30 },
-  { name: 'Villano Ceasar', rate: 400, cycle: 3, daysDown: 14 },
-  { name: 'Villano Loriegen', rate: 400, cycle: 6, daysDown: 14 },
-  { name: 'Kuya Glenn Store', rate: 300, cycle: 11, daysDown: 14 },
-  { name: 'MCGI', rate: 400, cycle: 13, daysDown: 14 },
-  { name: 'Collantes', rate: 400, cycle: 13, daysDown: 14 },
-  { name: 'Viray Kim Ashley', rate: 400, cycle: 15, daysDown: 14 },
-  { name: 'Villano Julie', rate: 400, cycle: 16, daysDown: 14 },
-  { name: 'Gilbert Lombz', rate: 400, cycle: 16, daysDown: 14 },
-  { name: 'Melgar', rate: 400, cycle: 17, daysDown: 14 },
-  { name: 'Kuya Colin', rate: 400, cycle: 18, daysDown: 14 },
-  { name: 'Ate Edna', rate: 400, cycle: 26, daysDown: 14 },
-  { name: 'Imperial', rate: 400, cycle: 27, daysDown: 14 }
+  { name: 'Bonete', accountId: 'ACC-101', planName: 'Residential Plus', bandwidth: '50Mbps', rate: 500, cycle: 7, daysDown: 30 },
+  { name: 'Villano Ceasar', accountId: 'ACC-102', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 3, daysDown: 14 },
+  { name: 'Villano Loriegen', accountId: 'ACC-103', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 6, daysDown: 14 },
+  { name: 'Kuya Glenn Store', accountId: 'ACC-104', planName: 'Commercial Lite', bandwidth: '20Mbps', rate: 300, cycle: 11, daysDown: 14 },
+  { name: 'MCGI', accountId: 'ACC-105', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 14 },
+  { name: 'Collantes', accountId: 'ACC-106', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 14 },
+  { name: 'Viray Kim Ashley', accountId: 'ACC-107', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 15, daysDown: 14 },
+  { name: 'Villano Julie', accountId: 'ACC-108', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 14 },
+  { name: 'Gilbert Lombz', accountId: 'ACC-109', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 14 },
+  { name: 'Melgar', accountId: 'ACC-110', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 17, daysDown: 14 },
+  { name: 'Kuya Colin', accountId: 'ACC-111', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 18, daysDown: 14 },
+  { name: 'Ate Edna', accountId: 'ACC-112', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 26, daysDown: 14 },
+  { name: 'Imperial', accountId: 'ACC-113', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 27, daysDown: 14 }
 ];
 
 const seedDB = async () => {
@@ -36,8 +36,10 @@ const seedDB = async () => {
 
     const userCount = await User.countDocuments();
     if (userCount === 0) {
-      await User.create({ username: 'admin', password: 'password123' });
-      console.log('Admin user created (admin / password123).');
+      await User.create({ username: 'admin', password: 'password123', role: 'admin' });
+      await User.create({ username: 'staff', password: 'password123', role: 'staff' });
+      await User.create({ username: 'tech', password: 'password123', role: 'technician' });
+      console.log('Users created: admin/password123, staff/password123, tech/password123.');
     } else {
       console.log('Admin user already exists, skipping seed.');
     }
