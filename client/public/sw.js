@@ -47,6 +47,14 @@ self.addEventListener('fetch', event => {
       .then(response => {
         // If valid response, clone and store in cache
         if (response && response.status === 200) {
+          const contentType = response.headers.get('content-type');
+
+          // Safety check: don't cache index.html content for JS/CSS requests
+          // This happens if Nginx is misconfigured to serve index.html for missing assets
+          if (event.request.url.match(/\.(js|css)$/) && contentType && contentType.includes('text/html')) {
+            return response;
+          }
+
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
