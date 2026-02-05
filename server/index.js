@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -14,6 +16,14 @@ const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -328,10 +338,20 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     subscriber.reports.push(report);
     await subscriber.save();
 
+    // Emit real-time event
+    io.emit('report-added', { subscriberId: subscriber._id, report });
+
     res.status(201).json(report);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+io.on('connection', (socket) => {
+  console.log('A user connected');
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

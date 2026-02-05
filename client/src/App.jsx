@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
@@ -7,6 +8,8 @@ import UserManagement from './components/UserManagement';
 import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
+
+const socket = io(window.location.origin.replace('3000', '5000'));
 
 const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
@@ -430,6 +433,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     userRole={userRole}
                     token={token}
+                    socket={socket}
                     onRefresh={fetchData}
                   />
                 ))}
@@ -464,6 +468,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     userRole={userRole}
                     token={token}
+                    socket={socket}
                     onRefresh={fetchData}
                   />
                 ))}
@@ -498,6 +503,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     userRole={userRole}
                     token={token}
+                    socket={socket}
                     onRefresh={fetchData}
                   />
                 ))}

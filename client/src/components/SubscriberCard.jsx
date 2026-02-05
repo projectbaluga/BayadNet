@@ -1,12 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2 } from 'lucide-react';
 
-const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, onRefresh }) => {
+const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localReports, setLocalReports] = useState(subscriber.reports || []);
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    setLocalReports(subscriber.reports || []);
+  }, [subscriber.reports]);
+
+  useEffect(() => {
+    if (socket) {
+      const handleReportAdded = ({ subscriberId, report }) => {
+        if (subscriberId === subscriber._id) {
+          setLocalReports(prev => [...prev, report]);
+        }
+      };
+
+      socket.on('report-added', handleReportAdded);
+      return () => socket.off('report-added', handleReportAdded);
+    }
+  }, [socket, subscriber._id]);
+
+  useEffect(() => {
+    if (isExpanded) {
+      scrollToBottom();
+    }
+  }, [localReports, isExpanded]);
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
 
   const handleSendReminder = () => {
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
@@ -73,8 +104,8 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
   const isPaid = subscriber.status === 'Paid';
 
-  const latestReport = subscriber.reports && subscriber.reports.length > 0
-    ? subscriber.reports[subscriber.reports.length - 1]
+  const latestReport = localReports.length > 0
+    ? localReports[localReports.length - 1]
     : null;
 
   const handleSendReport = async (e) => {
@@ -183,12 +214,15 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       {isExpanded && (
         <div className="relative z-10 -mt-4 animate-in slide-in-from-top-4 duration-300">
           <div className="bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-6">
-            <div className="max-h-60 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-              {subscriber.reports && subscriber.reports.length > 0 ? (
-                subscriber.reports.map((report, idx) => {
+        <div
+          ref={chatContainerRef}
+          className="max-h-60 overflow-y-auto space-y-4 pr-2 custom-scrollbar scroll-smooth"
+        >
+          {localReports.length > 0 ? (
+            localReports.map((report, idx) => {
                   const isTech = report.reporterRole === 'technician';
                   return (
-                    <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'}`}>
+                <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                       <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
                         isTech
                           ? 'bg-blue-600 text-white rounded-tl-none'
