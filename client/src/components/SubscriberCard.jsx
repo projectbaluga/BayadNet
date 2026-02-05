@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
+import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2 } from 'lucide-react';
 
-const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole }) => {
+const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, onRefresh }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSendReminder = () => {
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
     const message = `Hi ${subscriber.name}, your bill for February 2026 is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
@@ -66,6 +73,28 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
   const isPaid = subscriber.status === 'Paid';
 
+  const latestReport = subscriber.reports && subscriber.reports.length > 0
+    ? subscriber.reports[subscriber.reports.length - 1]
+    : null;
+
+  const handleSendReport = async (e) => {
+    e.preventDefault();
+    if (!reportMessage.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post(`/api/subscribers/${subscriber._id}/report`, { message: reportMessage }, config);
+      setReportMessage('');
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Error sending report:', error);
+      alert('Failed to send report');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white/20 p-10 flex flex-col gap-8 hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-500 group relative overflow-hidden hover:-translate-y-1">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
@@ -126,10 +155,82 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
         </div>
       </div>
 
-      <div className="bg-slate-50/30 px-5 py-4 rounded-2xl border border-slate-100/50 relative overflow-hidden z-10">
-        <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1.5">Next Due Date</p>
-        <p className="text-sm font-black text-slate-700 tracking-tight">{subscriber.dueDate}</p>
+      <div className="grid grid-cols-2 gap-4 relative z-10">
+        <div className="bg-slate-50/30 px-5 py-4 rounded-2xl border border-slate-100/50 relative overflow-hidden">
+          <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1.5">Next Due Date</p>
+          <p className="text-sm font-black text-slate-700 tracking-tight">{subscriber.dueDate}</p>
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={`flex flex-col items-start justify-center px-5 py-4 rounded-2xl border transition-all ${
+            latestReport ? 'bg-amber-50/50 border-amber-100 text-amber-700' : 'bg-slate-50/30 border-slate-100/50 text-slate-400'
+          }`}
+        >
+          <div className="flex items-center justify-between w-full mb-1.5">
+            <p className="text-[9px] uppercase font-black tracking-widest">Issues</p>
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </div>
+          <div className="flex items-center gap-2 overflow-hidden w-full">
+            <AlertCircle className={`w-3 h-3 flex-shrink-0 ${latestReport ? 'text-amber-500' : 'text-slate-300'}`} />
+            <p className="text-[10px] font-bold truncate">
+              {latestReport ? latestReport.message : 'No issues'}
+            </p>
+          </div>
+        </button>
       </div>
+
+      {/* Expandable Report Timeline */}
+      {isExpanded && (
+        <div className="relative z-10 -mt-4 animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-6">
+            <div className="max-h-60 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {subscriber.reports && subscriber.reports.length > 0 ? (
+                subscriber.reports.map((report, idx) => {
+                  const isTech = report.reporterRole === 'technician';
+                  return (
+                    <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
+                        isTech
+                          ? 'bg-blue-600 text-white rounded-tl-none'
+                          : 'bg-violet-600 text-white rounded-tr-none'
+                      }`}>
+                        <p className="font-medium leading-relaxed">{report.message}</p>
+                        <div className={`flex items-center gap-2 mt-2 pt-2 border-t border-white/20 text-[9px] font-black uppercase tracking-widest ${
+                          isTech ? 'text-blue-100' : 'text-violet-100'
+                        }`}>
+                          {isTech ? <User className="w-2.5 h-2.5" /> : <ShieldCheck className="w-2.5 h-2.5" />}
+                          {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">No reports yet</p>
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSendReport} className="relative mt-4">
+              <input
+                type="text"
+                placeholder="Type your report..."
+                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-5 pr-14 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                value={reportMessage}
+                onChange={(e) => setReportMessage(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={!reportMessage.trim() || isSubmitting}
+                className="absolute right-2 top-2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
+              >
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-6 mt-auto relative z-10">
         {!isPaid ? (

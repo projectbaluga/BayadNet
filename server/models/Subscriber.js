@@ -19,6 +19,12 @@ const subscriberSchema = new mongoose.Schema({
     referenceNo: String,
     receiptImage: String,
     month: { type: String, default: 'February 2026' }
+  }],
+  reports: [{
+    reporterName: String,
+    reporterRole: String,
+    message: String,
+    timestamp: { type: Date, default: Date.now }
   }]
 });
 

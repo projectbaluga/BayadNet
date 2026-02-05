@@ -429,6 +429,8 @@ const Dashboard = () => {
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                     userRole={userRole}
+                    token={token}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
@@ -461,6 +463,8 @@ const Dashboard = () => {
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                     userRole={userRole}
+                    token={token}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
@@ -493,6 +497,8 @@ const Dashboard = () => {
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
                     userRole={userRole}
+                    token={token}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
