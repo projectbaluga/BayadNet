@@ -84,6 +84,7 @@ const Dashboard = () => {
     setToken(null);
     setUserRole(null);
     setSubscribers([]);
+    setView('dashboard');
   };
 
   const handleOpenPaymentModal = (subscriber) => {
