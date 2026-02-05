@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye } from 'lucide-react';
+import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye, XCircle } from 'lucide-react';
 
 const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
 
@@ -163,15 +163,9 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      let attachmentUrl = '';
-      if (attachment) {
-        const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
-        attachmentUrl = uploadRes.data.url;
-      }
-
       await axios.post(`/api/subscribers/${subscriber._id}/report`, {
         message: reportMessage,
-        attachmentUrl
+        attachmentUrl: attachment // Directly send base64 image
       }, config);
 
       setReportMessage('');
