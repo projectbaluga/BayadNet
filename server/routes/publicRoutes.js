@@ -3,6 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const Subscriber = require('../models/Subscriber');
 const { processSubscriber } = require('../utils/logic');
+const { getCurrentDate } = require('../config/time');
 
 // Rate limiter: max 5 requests per minute per IP
 const publicLimiter = rateLimit({
@@ -17,13 +18,16 @@ const publicLimiter = rateLimit({
 const maskName = (fullName) => {
   if (!fullName) return '';
   const parts = fullName.trim().split(/\s+/);
-  if (parts.length <= 1) return fullName;
-  if (parts.length === 2) return fullName; // Or "J. Cruz"? Let's stick to Juan Cruz
+  if (parts.length <= 1) return parts[0];
 
   const firstName = parts[0];
   const lastName = parts[parts.length - 1];
-  const middleInitial = parts[1][0].toUpperCase();
 
+  if (parts.length === 2) {
+    return `${firstName} ${lastName[0]}.`;
+  }
+
+  const middleInitial = parts[1][0].toUpperCase();
   return `${firstName} ${middleInitial}. ${lastName}`;
 };
 
@@ -40,7 +44,7 @@ router.get('/subscriber/:accountId', publicLimiter, async (req, res) => {
     }
 
     // Use internal logic to get billing info
-    const now = new Date(); // Or use getCurrentDate if imported
+    const now = getCurrentDate();
     const processed = processSubscriber(subscriber, now);
 
     const lastPayment = subscriber.payments && subscriber.payments.length > 0

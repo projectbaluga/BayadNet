@@ -11,8 +11,9 @@ const Subscriber = require('./models/Subscriber');
 const User = require('./models/User');
 const Setting = require('./models/Setting');
 const MonthlyReport = require('./models/MonthlyReport');
-const { getCurrentDate } = require('./config/time');
+const { getCurrentDate, getCurrentMonthYear } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
+const { authenticateToken, authorize } = require('./middleware/auth');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
@@ -46,30 +47,6 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
-
-const authorize = (roles = []) => {
-  if (typeof roles === 'string') {
-    roles = [roles];
-  }
-  return (req, res, next) => {
-    if (!req.user || (roles.length && !roles.includes(req.user.role))) {
-      return res.status(403).json({ message: 'Forbidden: You do not have the required role' });
-    }
-    next();
-  };
-};
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -150,6 +127,7 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
 
     const { amountPaid, referenceNo, receiptImage, month } = req.body;
     const now = getCurrentDate();
+    const currentMonthLabel = getCurrentMonthYear();
     const settings = await Setting.findOne() || { rebateValue: 30 };
     const processed = processSubscriber(subscriber, now, settings);
 
@@ -173,7 +151,7 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
       amountPaid,
       referenceNo,
       receiptImage,
-      month: month || 'February 2026',
+      month: month || currentMonthLabel,
       date: now
     });
 
@@ -190,6 +168,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
     const now = getCurrentDate();
+    const currentMonthLabel = getCurrentMonthYear();
     const settings = await Setting.findOne() || { rebateValue: 30 };
     const processed = processSubscriber(subscriber, now, settings);
 
@@ -199,7 +178,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     subscriber.payments.push({
       amountPaid: amountToPay,
       referenceNo: 'QUICK-PAY',
-      month: 'February 2026',
+      month: currentMonthLabel,
       date: now
     });
 
@@ -255,18 +234,19 @@ app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, r
     let totalExpected = 0;
     let totalCollected = 0;
 
+    const currentMonthLabel = getCurrentMonthYear();
     subscribers.forEach(sub => {
       const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
       const collected = (sub.payments || [])
-        .filter(p => p.month === 'February 2026')
+        .filter(p => p.month === currentMonthLabel)
         .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
       totalCollected += collected;
     });
 
     // Save snapshot to MonthlyReport
     await MonthlyReport.create({
-      monthYear: "February 2026",
+      monthYear: currentMonthLabel,
       totalExpected: Math.round(totalExpected * 100) / 100,
       totalCollected: Math.round(totalCollected * 100) / 100,
       totalProfit: Math.round((totalCollected - providerCost) * 100) / 100,
@@ -300,12 +280,13 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
     let totalCollected = 0;
     let groupCounts = { Overdue: 0, Partial: 0, Upcoming: 0, Paid: 0 };
 
+    const currentMonthLabel = getCurrentMonthYear();
     subscribers.forEach(sub => {
       const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
 
       const collected = (sub.payments || [])
-        .filter(p => p.month === 'February 2026')
+        .filter(p => p.month === currentMonthLabel)
         .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
       totalCollected += collected;
 
@@ -328,7 +309,7 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
   }
 });
 
-app.use('/api/users', userRoutes(authenticateToken, authorize));
+app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
 
 // Image Upload Route
