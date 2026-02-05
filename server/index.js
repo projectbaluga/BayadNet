@@ -1,5 +1,7 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
+const multer = require('multer');
 const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
@@ -26,6 +28,25 @@ app.use((req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+
+// Multer Configuration for Local Uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// Serve static uploads
+app.use('/uploads', express.static('uploads'));
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -341,7 +362,23 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
 
-// Image Upload Route
+// Local Image Upload Route
+app.post('/api/reports/upload', authenticateToken, upload.single('reportImage'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No image provided' });
+
+    // Use absolute URL for Cloudflare Tunnel compatibility
+    const fileUrl = `http://mgt.bojex.online/uploads/${req.file.filename}`;
+    console.log(`[Local Upload] Upload success: ${fileUrl}`);
+
+    res.json({ url: fileUrl });
+  } catch (error) {
+    console.error(`[Local Upload] Error:`, error);
+    res.status(500).json({ message: 'Local upload failed: ' + error.message });
+  }
+});
+
+// Legacy Cloudinary Route (kept for compatibility or until fully migrated)
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {
     const { image } = req.body;
@@ -399,18 +436,18 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
 io.on('connection', (socket) => {
   console.log('A user connected');
 
-  socket.on('mark-as-read', async ({ subscriberId, user }) => {
+  socket.on('mark-as-read', async ({ subscriberId, adminName, role }) => {
     try {
       const subscriber = await Subscriber.findById(subscriberId);
       if (!subscriber) return;
 
       let updated = false;
       subscriber.reports.forEach(report => {
-        const alreadyRead = report.readBy.some(r => r.name === user.name);
+        const alreadyRead = report.readBy.some(r => r.name === adminName);
         if (!alreadyRead) {
           report.readBy.push({
-            name: user.name,
-            role: user.role,
+            name: adminName,
+            role: role,
             timestamp: new Date()
           });
           updated = true;

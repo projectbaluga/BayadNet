@@ -8,7 +8,8 @@ const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2571
 const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
-  const [attachment, setAttachment] = useState(null);
+  const [attachment, setAttachment] = useState(null); // Base64 for preview
+  const [attachmentFile, setAttachmentFile] = useState(null); // Actual file for upload
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localReports, setLocalReports] = useState(subscriber.reports || []);
   const chatContainerRef = useRef(null);
@@ -60,7 +61,11 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
           currentUser = JSON.parse(localStorage.getItem('user')) || {};
         } catch (e) {}
         if (currentUser.name) {
-          socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+          socket.emit('mark-as-read', {
+            subscriberId: subscriber._id,
+            adminName: currentUser.name,
+            role: currentUser.role
+          });
         }
       }
     }
@@ -153,10 +158,11 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large! Max 5MB.");
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File is too large! Max 10MB.");
         return;
       }
+      setAttachmentFile(file);
       const base64 = await convertToBase64(file);
       setAttachment(base64);
     }
@@ -164,19 +170,27 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
   const handleSendReport = async (e) => {
     e.preventDefault();
-    if ((!reportMessage.trim() && !attachment) || isSubmitting) return;
+    if ((!reportMessage.trim() && !attachmentFile) || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       let attachmentUrl = '';
-      if (attachment) {
+      if (attachmentFile) {
         try {
-          console.log('Step 1: Uploading image to Cloudinary...');
-          const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
+          console.log('Step 1: Uploading image to local server...');
+          const formData = new FormData();
+          formData.append('reportImage', attachmentFile);
+
+          const uploadRes = await axios.post('/api/reports/upload', formData, {
+            headers: {
+              ...config.headers,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
           attachmentUrl = uploadRes.data.url;
-          console.log('Cloudinary Upload Success:', attachmentUrl);
+          console.log('Local Upload Success:', attachmentUrl);
         } catch (uploadErr) {
           throw new Error('Image upload failed: ' + (uploadErr.response?.data?.message || uploadErr.message));
         }
@@ -195,6 +209,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
       setReportMessage('');
       setAttachment(null);
+      setAttachmentFile(null);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Report Submission Error:', error);
@@ -359,7 +374,10 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                   <img src={attachment} className="h-20 w-auto rounded-xl shadow-md border-2 border-indigo-200" alt="Preview" />
                   <button
                     type="button"
-                    onClick={() => setAttachment(null)}
+                    onClick={() => {
+                      setAttachment(null);
+                      setAttachmentFile(null);
+                    }}
                     className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:bg-rose-600 transition-colors"
                   >
                     <XCircle className="w-4 h-4" />
