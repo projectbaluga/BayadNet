@@ -18,6 +18,15 @@ const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Fix: Add Cache-Control to prevent Ctrl+F5 requirement
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

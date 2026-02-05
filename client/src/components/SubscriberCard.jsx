@@ -12,7 +12,6 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localReports, setLocalReports] = useState(subscriber.reports || []);
   const chatContainerRef = useRef(null);
-  const fileInputRef = useRef(null);
   const notificationSoundRef = useRef(new Audio(NOTIFICATION_SOUND_URL));
 
   useEffect(() => {
@@ -26,7 +25,10 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
           setLocalReports(prev => [...prev, report]);
 
           // Play notification sound if not the sender
-          const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+          let currentUser = {};
+          try {
+            currentUser = JSON.parse(localStorage.getItem('user')) || {};
+          } catch (e) {}
           if (report.reporterName !== (currentUser.name || currentUser.username)) {
             notificationSoundRef.current.play().catch(e => console.log('Sound blocked by browser'));
           }
@@ -53,8 +55,13 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       scrollToBottom();
       // Emit mark-as-read
       if (socket && (userRole === 'admin' || userRole === 'staff')) {
-        const currentUser = JSON.parse(localStorage.getItem('user')) || {};
-        socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+        let currentUser = {};
+        try {
+          currentUser = JSON.parse(localStorage.getItem('user')) || {};
+        } catch (e) {}
+        if (currentUser.name) {
+          socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+        }
       }
     }
   }, [localReports, isExpanded, socket, userRole, subscriber._id]);
@@ -312,7 +319,14 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
                             Seen by {report.readBy
                               .filter(r => r.name !== report.reporterName)
-                              .map(r => r.name === (JSON.parse(localStorage.getItem('user'))?.name) ? 'You' : r.name)
+                              .map(r => {
+                                let currentName = '';
+                                try {
+                                  currentName = JSON.parse(localStorage.getItem('user'))?.name;
+                                } catch (e) {}
+                                return r.name === currentName ? 'You' : r.name;
+                              })
+                              .filter(name => !!name)
                               .join(', ')}
                           </span>
                         </div>
@@ -349,14 +363,18 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                   onChange={(e) => setReportMessage(e.target.value)}
                 />
                 <div className="absolute right-2 top-2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                  <label
+                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer"
                     title="Attach Image"
                   >
                     <Image className="w-4 h-4" />
-                  </button>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </label>
                   <button
                     type="submit"
                     disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
@@ -365,13 +383,6 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
               </div>
             </form>
           </div>
