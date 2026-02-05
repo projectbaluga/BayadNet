@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Search, Loader2, AlertCircle, CheckCircle2, XCircle, Info, PhoneCall } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Check, XCircle, Info, PhoneCall } from 'lucide-react';
 
 const CheckStatus = () => {
   const [accountId, setAccountId] = useState('');
@@ -38,41 +38,45 @@ const CheckStatus = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-violet-100 selection:text-violet-700 p-6 flex flex-col items-center justify-center">
       {/* Header / Logo */}
-      <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-200 mb-4">
-          <CheckCircle2 className="w-8 h-8" />
+      <div className="mb-10 text-center flex flex-col items-center">
+        <div className="w-20 h-20 rounded-[1.5rem] bg-violet-600 flex items-center justify-center text-white shadow-2xl shadow-violet-400/50 mb-6 border-4 border-white/20">
+          <div className="w-10 h-10 rounded-full border-4 border-white flex items-center justify-center">
+            <Check className="w-6 h-6 stroke-[4]" />
+          </div>
         </div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">BAYADNET</h1>
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Subscriber Portal</p>
+        <h1 className="text-4xl font-black text-[#1a1a3a] tracking-tight mb-2">BAYADNET</h1>
+        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em]">Subscriber Portal</p>
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md px-2">
         {/* Search Section */}
-        <form onSubmit={handleSearch} className="relative mb-8 group">
-          <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
+        <form onSubmit={handleSearch} className="relative mb-6 group">
+          <div className="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
+            <Search className="h-6 w-6 text-slate-300 group-focus-within:text-violet-500 transition-colors" />
           </div>
           <input
             type="text"
-            placeholder="Enter Account ID (e.g. ACC-101)"
-            className="w-full bg-white border-2 border-slate-100 rounded-[2rem] py-5 pl-14 pr-6 focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300 shadow-xl shadow-slate-200/40 text-lg"
+            placeholder="ACC-102"
+            className="w-full bg-white border border-slate-100 rounded-full py-6 pl-16 pr-32 focus:ring-8 focus:ring-violet-500/5 focus:border-violet-500/30 outline-none transition-all font-black text-[#1a1a3a] placeholder:text-slate-200 shadow-2xl shadow-slate-200/50 text-xl"
             value={accountId}
             onChange={(e) => setAccountId(e.target.value.toUpperCase())}
           />
           <button
             type="submit"
             disabled={loading}
-            className="absolute inset-y-2 right-2 px-6 bg-violet-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-violet-700 active:scale-95 transition-all disabled:opacity-50"
+            className="absolute inset-y-2.5 right-2.5 px-8 bg-[#7c3aed] text-white rounded-full font-black text-sm uppercase tracking-wider hover:bg-[#6d28d9] active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-violet-200"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check'}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'CHECK'}
           </button>
         </form>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-rose-50 border border-rose-100 text-rose-600 p-5 rounded-3xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="font-bold text-sm">{error}</p>
+          <div className="bg-[#fff1f1] border border-rose-100 text-[#e11d48] p-6 rounded-[2rem] flex items-center gap-4 animate-in slide-in-from-top-4 duration-300 mb-8 shadow-sm">
+            <div className="w-10 h-10 rounded-full border-2 border-[#e11d48] flex items-center justify-center flex-shrink-0">
+              <span className="font-black text-xl">!</span>
+            </div>
+            <p className="font-black text-lg tracking-tight">{error}</p>
           </div>
         )}
 
@@ -165,8 +169,8 @@ const CheckStatus = () => {
 
         {/* Footer info when no subscriber loaded */}
         {!subscriber && !loading && (
-          <p className="text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-12 px-6 leading-loose">
-            Please enter your Account ID provided during installation to view your current billing status and payment history.
+          <p className="text-center text-[#a0a0c0] text-[11px] font-black uppercase tracking-[0.2em] mt-16 px-10 leading-relaxed opacity-60">
+            Please enter your account id provided during installation to view your current billing status and payment history.
           </p>
         )}
       </div>
