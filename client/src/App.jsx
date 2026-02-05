@@ -12,6 +12,7 @@ function App() {
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(localStorage.getItem('role'));
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,7 +71,9 @@ function App() {
     try {
       const res = await axios.post(`${API_BASE}/auth/login`, credentials);
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('role', res.data.role);
       setToken(res.data.token);
+      setUserRole(res.data.role);
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -79,7 +82,9 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     setToken(null);
+    setUserRole(null);
     setSubscribers([]);
   };
 
@@ -270,22 +275,26 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSettingsModalOpen(true)}
-              className="p-3.5 bg-white text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
-              title="Admin Settings"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
-            >
-              + Add Subscriber
-            </button>
+            {userRole === 'admin' && (
+              <>
+                <button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="p-3.5 bg-white text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
+                  title="Admin Settings"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
+                >
+                  + Add Subscriber
+                </button>
+              </>
+            )}
             <button
               onClick={handleLogout}
               className="text-[11px] font-black text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
@@ -392,6 +401,7 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
                   />
                 ))}
               </div>
@@ -423,6 +433,7 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
                   />
                 ))}
               </div>
@@ -454,6 +465,7 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
                   />
                 ))}
               </div>
