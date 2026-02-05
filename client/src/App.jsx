@@ -52,6 +52,21 @@ const Dashboard = () => {
     month: ''
   });
 
+  const paymentPreviewUrl = React.useMemo(() => {
+    if (paymentData.receiptImage instanceof File) {
+      return URL.createObjectURL(paymentData.receiptImage);
+    }
+    return paymentData.receiptImage;
+  }, [paymentData.receiptImage]);
+
+  useEffect(() => {
+    return () => {
+      if (paymentPreviewUrl && paymentPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(paymentPreviewUrl);
+      }
+    };
+  }, [paymentPreviewUrl]);
+
   useEffect(() => {
     if (token) {
       fetchData();
@@ -124,19 +139,14 @@ const Dashboard = () => {
     });
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large! Please select an image under 5MB.");
         return;
       }
-      try {
-        const base64 = await convertToBase64(file);
-        setPaymentData({ ...paymentData, receiptImage: base64 });
-      } catch (error) {
-        console.error("Error converting file:", error);
-      }
+      setPaymentData({ ...paymentData, receiptImage: file });
     }
   };
 
@@ -149,11 +159,27 @@ const Dashboard = () => {
     e.preventDefault();
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`${API_BASE}/subscribers/${activeSubscriber._id}/payments`, paymentData, config);
+
+      let finalPaymentData = { ...paymentData };
+
+      if (paymentData.receiptImage instanceof File) {
+        const formData = new FormData();
+        formData.append('file', paymentData.receiptImage);
+        const uploadRes = await axios.post(`${API_BASE}/payments/upload`, formData, {
+          headers: {
+            ...config.headers,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        finalPaymentData.receiptImage = uploadRes.data.url;
+      }
+
+      await axios.post(`${API_BASE}/subscribers/${activeSubscriber._id}/payments`, finalPaymentData, config);
       setIsPaymentModalOpen(false);
       fetchData();
     } catch (error) {
       console.error('Error submitting payment:', error);
+      alert('Failed to post payment');
     }
   };
 
@@ -672,7 +698,7 @@ const Dashboard = () => {
                         </>
                       ) : (
                         <div className="relative group">
-                          <img src={paymentData.receiptImage} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
+                          <img src={paymentPreviewUrl} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
                           <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <p className="text-[8px] font-black text-white uppercase tracking-widest">Change Image</p>
                           </div>

@@ -136,24 +136,14 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
     ? localReports[localReports.length - 1]
     : null;
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large! Max 5MB.");
         return;
       }
-      const base64 = await convertToBase64(file);
-      setAttachment(base64);
+      setAttachment(file);
     }
   };
 
@@ -167,7 +157,14 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
       let attachmentUrl = '';
       if (attachment) {
-        const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
+        const formData = new FormData();
+        formData.append('file', attachment);
+        const uploadRes = await axios.post('/api/reports/upload', formData, {
+          headers: {
+            ...config.headers,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
         attachmentUrl = uploadRes.data.url;
       }
 
