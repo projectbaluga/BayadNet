@@ -19,9 +19,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: ["https://mgt.bojex.online", "http://localhost:3000"],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['polling', 'websocket'], // Ensure compatibility with Cloudflare proxy
+  allowEIO3: true // Compatibility for some clients if needed
 });
 
 app.use(cors());

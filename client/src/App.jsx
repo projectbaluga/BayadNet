@@ -9,7 +9,15 @@ import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
 
-const socket = io(window.location.origin.replace('3000', '5000'));
+// Connect to socket. If localhost:3000, point to 5000. Otherwise, use same origin (proxied by Nginx)
+const socketURL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : window.location.origin;
+
+const socket = io(socketURL, {
+  transports: ['polling', 'websocket'], // Matching backend
+  withCredentials: true
+});
 
 const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
