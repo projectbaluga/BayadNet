@@ -9,7 +9,8 @@ const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358
 const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
-  const [attachment, setAttachment] = useState(null);
+  const [attachment, setAttachment] = useState(null); // Preview URL
+  const [attachmentFile, setAttachmentFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localReports, setLocalReports] = useState(subscriber.reports || []);
   const chatContainerRef = useRef(null);
@@ -136,38 +137,38 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
     ? localReports[localReports.length - 1]
     : null;
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large! Max 5MB.");
         return;
       }
-      const base64 = await convertToBase64(file);
-      setAttachment(base64);
+      if (attachment) URL.revokeObjectURL(attachment);
+      const url = URL.createObjectURL(file);
+      setAttachment(url);
+      setAttachmentFile(file);
     }
   };
 
   const handleSendReport = async (e) => {
     e.preventDefault();
-    if ((!reportMessage.trim() && !attachment) || isSubmitting) return;
+    if ((!reportMessage.trim() && !attachmentFile) || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       let attachmentUrl = '';
-      if (attachment) {
-        const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
+      if (attachmentFile) {
+        const formData = new FormData();
+        formData.append('file', attachmentFile);
+        const uploadRes = await axios.post('/api/reports/upload', formData, {
+          headers: {
+            ...config.headers,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
         attachmentUrl = uploadRes.data.url;
       }
 
@@ -177,7 +178,9 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       }, config);
 
       setReportMessage('');
+      if (attachment) URL.revokeObjectURL(attachment);
       setAttachment(null);
+      setAttachmentFile(null);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error sending report:', error);
@@ -283,7 +286,11 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
               reportMessage={reportMessage}
               setReportMessage={setReportMessage}
               attachment={attachment}
-              setAttachment={setAttachment}
+              setAttachment={(val) => {
+                if (!val && attachment) URL.revokeObjectURL(attachment);
+                setAttachment(val);
+                if (!val) setAttachmentFile(null);
+              }}
               isSubmitting={isSubmitting}
               handleSendReport={handleSendReport}
               handleFileChange={handleFileChange}

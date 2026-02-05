@@ -1,9 +1,11 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -18,6 +20,7 @@ const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -45,12 +48,36 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Cloudinary Configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+// Multer Configuration for Local Storage
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
 });
+
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed!'), false);
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Serve uploads statically
+app.use('/uploads', express.static(uploadDir));
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -316,20 +343,17 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
 
-// Image Upload Route
-app.post('/api/upload', authenticateToken, async (req, res) => {
-  try {
-    const { image } = req.body;
-    if (!image) return res.status(400).json({ message: 'No image provided' });
+// File Upload Routes
+app.post('/api/reports/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({ url });
+});
 
-    const uploadRes = await cloudinary.uploader.upload(image, {
-      folder: 'bayadnet_reports'
-    });
-
-    res.json({ url: uploadRes.secure_url });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+app.post('/api/payments/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({ url });
 });
 
 app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, async (req, res) => {
