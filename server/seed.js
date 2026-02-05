@@ -6,19 +6,29 @@ require('dotenv').config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 
 const seedData = [
-  { name: 'Bonete', accountId: 'ACC-101', planName: 'Residential Plus', bandwidth: '50Mbps', rate: 500, cycle: 7, daysDown: 30 },
-  { name: 'Villano Ceasar', accountId: 'ACC-102', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 3, daysDown: 14 },
-  { name: 'Villano Loriegen', accountId: 'ACC-103', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 6, daysDown: 14 },
-  { name: 'Kuya Glenn Store', accountId: 'ACC-104', planName: 'Commercial Lite', bandwidth: '20Mbps', rate: 300, cycle: 11, daysDown: 14 },
-  { name: 'MCGI', accountId: 'ACC-105', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 14 },
-  { name: 'Collantes', accountId: 'ACC-106', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 14 },
-  { name: 'Viray Kim Ashley', accountId: 'ACC-107', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 15, daysDown: 14 },
-  { name: 'Villano Julie', accountId: 'ACC-108', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 14 },
-  { name: 'Gilbert Lombz', accountId: 'ACC-109', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 14 },
-  { name: 'Melgar', accountId: 'ACC-110', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 17, daysDown: 14 },
-  { name: 'Kuya Colin', accountId: 'ACC-111', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 18, daysDown: 14 },
-  { name: 'Ate Edna', accountId: 'ACC-112', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 26, daysDown: 14 },
-  { name: 'Imperial', accountId: 'ACC-113', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 27, daysDown: 14 }
+  { name: 'Bonete', accountId: 'ACC-101', planName: 'Residential Plus', bandwidth: '50Mbps', rate: 500, cycle: 7, daysDown: 0 },
+  { name: 'Ate Pinang', accountId: 'ACC-114', planName: 'Residential Basic', bandwidth: '10Mbps', rate: 100, cycle: 7, daysDown: 0 },
+  { name: 'Villano Julie', accountId: 'ACC-108', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 0 },
+  { name: 'Villano Clariz', accountId: 'ACC-115', planName: 'Commercial Lite', bandwidth: '20Mbps', rate: 300, cycle: 15, daysDown: 0 },
+  { name: 'Villano Loriegen', accountId: 'ACC-103', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 6, daysDown: 0 },
+  { name: 'Mamlor', accountId: 'ACC-116', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 11, daysDown: 0 },
+  { name: 'MCGI', accountId: 'ACC-105', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 0 },
+  { name: 'De Leon', accountId: 'ACC-117', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 31, daysDown: 0 },
+  { name: 'De Leon R', accountId: 'ACC-118', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 31, daysDown: 0 },
+  { name: 'Zaragoza Joy', accountId: 'ACC-119', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 14, daysDown: 0 },
+  { name: 'Viray Kim Ashley', accountId: 'ACC-107', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 15, daysDown: 0 },
+  { name: 'Callao', accountId: 'ACC-120', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 21, daysDown: 0 },
+  { name: 'Estacio', accountId: 'ACC-121', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 28, daysDown: 0 },
+  { name: 'Ate Edna', accountId: 'ACC-112', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 26, daysDown: 0 },
+  { name: 'Amparado', accountId: 'ACC-122', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 19, daysDown: 0 },
+  { name: 'Pelonio', accountId: 'ACC-123', planName: 'Residential Plus', bandwidth: '50Mbps', rate: 500, cycle: 26, daysDown: 0 },
+  { name: 'Villano Ceasar', accountId: 'ACC-102', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 30, daysDown: 0 },
+  { name: 'Kuya Colin', accountId: 'ACC-111', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 18, daysDown: 0 },
+  { name: 'Collantes', accountId: 'ACC-106', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 13, daysDown: 0 },
+  { name: 'Melgar', accountId: 'ACC-110', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 17, daysDown: 0 },
+  { name: 'Imperial', accountId: 'ACC-113', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 27, daysDown: 0 },
+  { name: 'Kuya Glenn Store', accountId: 'ACC-104', planName: 'Commercial Lite', bandwidth: '20Mbps', rate: 300, cycle: 11, daysDown: 0 },
+  { name: 'Gilbert Lombz', accountId: 'ACC-109', planName: 'Residential Basic', bandwidth: '25Mbps', rate: 400, cycle: 16, daysDown: 0 }
 ];
 
 const seedDB = async () => {
