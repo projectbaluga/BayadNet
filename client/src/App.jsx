@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
+import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
 
-function App() {
+const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
@@ -767,6 +769,15 @@ function App() {
         </div>
       )}
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/check-status" element={<CheckStatus />} />
+      <Route path="/" element={<Dashboard />} />
+    </Routes>
   );
 }
 

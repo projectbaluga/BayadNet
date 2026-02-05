@@ -11,6 +11,7 @@ const MonthlyReport = require('./models/MonthlyReport');
 const { getCurrentDate } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
 const userRoutes = require('./routes/userRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
 app.use(cors());
@@ -307,5 +308,6 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 });
 
 app.use('/api/users', userRoutes(authenticateToken, authorize));
+app.use('/api/public', publicRoutes);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

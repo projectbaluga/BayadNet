@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 
 const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  accountId: { type: String, required: true, unique: true },
+  planName: { type: String, default: 'Residential Plan' },
+  bandwidth: { type: String, default: '50Mbps' },
   rate: { type: Number, required: true }, // Base monthly rate
   cycle: { type: Number, required: true },
   messengerId: { type: String, default: '' },
