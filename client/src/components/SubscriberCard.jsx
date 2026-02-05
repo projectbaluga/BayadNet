@@ -3,7 +3,7 @@ import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye, XCircle } from 'lucide-react';
 
-const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
+const NOTIFICATION_SOUND_URL = '/pop.mp3';
 
 const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);

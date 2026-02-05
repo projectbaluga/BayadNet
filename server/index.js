@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
@@ -28,6 +29,12 @@ app.use((req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Multer Configuration for Local Uploads
 const storage = multer.diskStorage({
