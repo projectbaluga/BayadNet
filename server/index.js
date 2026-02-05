@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -38,6 +39,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -323,19 +331,41 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
 
+// Image Upload Route
+app.post('/api/upload', authenticateToken, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) return res.status(400).json({ message: 'No image provided' });
+
+    const uploadRes = await cloudinary.uploader.upload(image, {
+      folder: 'bayadnet_reports'
+    });
+
+    res.json({ url: uploadRes.secure_url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ message: 'Message is required' });
+    const { message, attachmentUrl } = req.body;
+    if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
 
     const report = {
       reporterName: req.user.name || req.user.username,
       reporterRole: req.user.role,
       message,
-      timestamp: new Date()
+      attachmentUrl,
+      timestamp: new Date(),
+      readBy: [{
+        name: req.user.name || req.user.username,
+        role: req.user.role,
+        timestamp: new Date()
+      }]
     };
 
     subscriber.reports.push(report);
@@ -352,6 +382,34 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
 
 io.on('connection', (socket) => {
   console.log('A user connected');
+
+  socket.on('mark-as-read', async ({ subscriberId, user }) => {
+    try {
+      const subscriber = await Subscriber.findById(subscriberId);
+      if (!subscriber) return;
+
+      let updated = false;
+      subscriber.reports.forEach(report => {
+        const alreadyRead = report.readBy.some(r => r.name === user.name);
+        if (!alreadyRead) {
+          report.readBy.push({
+            name: user.name,
+            role: user.role,
+            timestamp: new Date()
+          });
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        await subscriber.save();
+        io.emit('reports-read', { subscriberId, reports: subscriber.reports });
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });

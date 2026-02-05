@@ -24,7 +24,13 @@ const subscriberSchema = new mongoose.Schema({
     reporterName: String,
     reporterRole: String,
     message: String,
-    timestamp: { type: Date, default: Date.now }
+    attachmentUrl: String,
+    timestamp: { type: Date, default: Date.now },
+    readBy: [{
+      name: String,
+      role: String,
+      timestamp: { type: Date, default: Date.now }
+    }]
   }]
 });
 

@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2 } from 'lucide-react';
+import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye } from 'lucide-react';
+
+const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
 
 const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+  const [attachment, setAttachment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localReports, setLocalReports] = useState(subscriber.reports || []);
   const chatContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const notificationSoundRef = useRef(new Audio(NOTIFICATION_SOUND_URL));
 
   useEffect(() => {
     setLocalReports(subscriber.reports || []);
@@ -19,19 +24,40 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
       const handleReportAdded = ({ subscriberId, report }) => {
         if (subscriberId === subscriber._id) {
           setLocalReports(prev => [...prev, report]);
+
+          // Play notification sound if not the sender
+          const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+          if (report.reporterName !== (currentUser.name || currentUser.username)) {
+            notificationSoundRef.current.play().catch(e => console.log('Sound blocked by browser'));
+          }
+        }
+      };
+
+      const handleReportsRead = ({ subscriberId, reports }) => {
+        if (subscriberId === subscriber._id) {
+          setLocalReports(reports);
         }
       };
 
       socket.on('report-added', handleReportAdded);
-      return () => socket.off('report-added', handleReportAdded);
+      socket.on('reports-read', handleReportsRead);
+      return () => {
+        socket.off('report-added', handleReportAdded);
+        socket.off('reports-read', handleReportsRead);
+      };
     }
   }, [socket, subscriber._id]);
 
   useEffect(() => {
     if (isExpanded) {
       scrollToBottom();
+      // Emit mark-as-read
+      if (socket && (userRole === 'admin' || userRole === 'staff')) {
+        const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+        socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+      }
     }
-  }, [localReports, isExpanded]);
+  }, [localReports, isExpanded, socket, userRole, subscriber._id]);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -108,15 +134,48 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
     ? localReports[localReports.length - 1]
     : null;
 
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File is too large! Max 5MB.");
+        return;
+      }
+      const base64 = await convertToBase64(file);
+      setAttachment(base64);
+    }
+  };
+
   const handleSendReport = async (e) => {
     e.preventDefault();
-    if (!reportMessage.trim() || isSubmitting) return;
+    if ((!reportMessage.trim() && !attachment) || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`/api/subscribers/${subscriber._id}/report`, { message: reportMessage }, config);
+
+      let attachmentUrl = '';
+      if (attachment) {
+        const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
+        attachmentUrl = uploadRes.data.url;
+      }
+
+      await axios.post(`/api/subscribers/${subscriber._id}/report`, {
+        message: reportMessage,
+        attachmentUrl
+      }, config);
+
       setReportMessage('');
+      setAttachment(null);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error sending report:', error);
@@ -228,6 +287,16 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                           ? 'bg-blue-600 text-white rounded-tl-none'
                           : 'bg-violet-600 text-white rounded-tr-none'
                       }`}>
+                        {report.attachmentUrl && (
+                          <div className="mb-2 overflow-hidden rounded-lg">
+                            <img
+                              src={report.attachmentUrl}
+                              alt="Attachment"
+                              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => onViewReceipt(report.attachmentUrl)}
+                            />
+                          </div>
+                        )}
                         <p className="font-medium leading-relaxed">{report.message}</p>
                         <div className={`flex items-center gap-2 mt-2 pt-2 border-t border-white/20 text-[9px] font-black uppercase tracking-widest ${
                           isTech ? 'text-blue-100' : 'text-violet-100'
@@ -236,6 +305,15 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                           {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
                         </div>
                       </div>
+                      {/* Seen Indicator */}
+                      {idx === localReports.length - 1 && report.readBy && report.readBy.length > 1 && (
+                        <div className="flex items-center gap-1 mt-1 px-1 opacity-60">
+                          <Eye className="w-2.5 h-2.5 text-slate-400" />
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+                            Seen by {report.readBy.filter(r => r.name !== report.reporterName).map(r => r.name).join(', ')}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -246,21 +324,52 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
               )}
             </div>
 
-            <form onSubmit={handleSendReport} className="relative mt-4">
-              <input
-                type="text"
-                placeholder="Type your report..."
-                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-5 pr-14 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
-                value={reportMessage}
-                onChange={(e) => setReportMessage(e.target.value)}
-              />
-              <button
-                type="submit"
-                disabled={!reportMessage.trim() || isSubmitting}
-                className="absolute right-2 top-2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
-              >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </button>
+            <form onSubmit={handleSendReport} className="space-y-3 mt-4">
+              {attachment && (
+                <div className="relative inline-block">
+                  <img src={attachment} className="h-20 w-auto rounded-xl shadow-md border-2 border-indigo-200" alt="Preview" />
+                  <button
+                    type="button"
+                    onClick={() => setAttachment(null)}
+                    className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:bg-rose-600 transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Type your report..."
+                  className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-5 pr-28 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                  value={reportMessage}
+                  onChange={(e) => setReportMessage(e.target.value)}
+                />
+                <div className="absolute right-2 top-2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                    title="Attach Image"
+                  >
+                    <Image className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
+                    className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-indigo-100"
+                  >
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+              </div>
             </form>
           </div>
         </div>
