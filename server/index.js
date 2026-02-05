@@ -1,5 +1,8 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
@@ -32,6 +35,13 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+app.use('/uploads', express.static(uploadsDir));
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
@@ -311,6 +321,53 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
 
 app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
+
+// Multer Setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only images are allowed!'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+// Local Report Attachment Upload Route
+app.post('/api/reports/upload', authenticateToken, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Local Payment Receipt Upload Route
+app.post('/api/payments/upload', authenticateToken, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Image Upload Route
 app.post('/api/upload', authenticateToken, async (req, res) => {

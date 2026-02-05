@@ -12,11 +12,30 @@ const ReportForm = ({
 }) => {
   const fileInputRef = useRef(null);
 
+  const previewUrl = React.useMemo(() => {
+    if (attachment instanceof File) {
+      return URL.createObjectURL(attachment);
+    }
+    return attachment;
+  }, [attachment]);
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   return (
     <form onSubmit={handleSendReport} className="space-y-3 mt-4">
       {attachment && (
         <div className="relative inline-block">
-          <img src={attachment} className="h-20 w-auto rounded-xl shadow-md border-2 border-indigo-200" alt="Preview" />
+          <img
+            src={previewUrl}
+            className="h-20 w-auto rounded-xl shadow-md border-2 border-indigo-200"
+            alt="Preview"
+          />
           <button
             type="button"
             onClick={() => setAttachment(null)}
