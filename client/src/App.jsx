@@ -15,7 +15,7 @@ const socketURL = window.location.hostname === 'localhost'
   : window.location.origin;
 
 const socket = io(socketURL, {
-  transports: ['polling', 'websocket'], // Matching backend
+  transports: ['websocket', 'polling'], // Reordered for better Cloudflare compatibility
   withCredentials: true
 });
 

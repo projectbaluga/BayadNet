@@ -172,21 +172,33 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
       let attachmentUrl = '';
       if (attachment) {
-        const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
-        attachmentUrl = uploadRes.data.url;
+        try {
+          console.log('Step 1: Uploading image to Cloudinary...');
+          const uploadRes = await axios.post('/api/upload', { image: attachment }, config);
+          attachmentUrl = uploadRes.data.url;
+          console.log('Cloudinary Upload Success:', attachmentUrl);
+        } catch (uploadErr) {
+          throw new Error('Image upload failed: ' + (uploadErr.response?.data?.message || uploadErr.message));
+        }
       }
 
-      await axios.post(`/api/subscribers/${subscriber._id}/report`, {
-        message: reportMessage,
-        attachmentUrl
-      }, config);
+      try {
+        console.log('Step 2: Saving report to MongoDB...');
+        await axios.post(`/api/subscribers/${subscriber._id}/report`, {
+          message: reportMessage,
+          attachmentUrl
+        }, config);
+        console.log('MongoDB Save Success');
+      } catch (saveErr) {
+        throw new Error('Database save failed: ' + (saveErr.response?.data?.message || saveErr.message));
+      }
 
       setReportMessage('');
       setAttachment(null);
       if (onRefresh) onRefresh();
     } catch (error) {
-      console.error('Error sending report:', error);
-      alert('Failed to send report');
+      console.error('Report Submission Error:', error);
+      alert(error.message || 'Failed to send report');
     } finally {
       setIsSubmitting(false);
     }

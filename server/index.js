@@ -21,7 +21,7 @@ app.set('trust proxy', 1);
 
 // Fix: Add Cache-Control to prevent Ctrl+F5 requirement
 app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
   next();
@@ -34,8 +34,8 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ['polling', 'websocket'], // Ensure compatibility with Cloudflare proxy
-  allowEIO3: true // Compatibility for some clients if needed
+  transports: ['websocket', 'polling'], // Reordered for better Cloudflare compatibility
+  allowEIO3: true
 });
 
 app.use(cors());
@@ -347,13 +347,16 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ message: 'No image provided' });
 
+    console.log(`[Cloudinary] Starting upload for user: ${req.user.username}`);
     const uploadRes = await cloudinary.uploader.upload(image, {
       folder: 'bayadnet_reports'
     });
+    console.log(`[Cloudinary] Upload success: ${uploadRes.secure_url}`);
 
     res.json({ url: uploadRes.secure_url });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(`[Cloudinary] Upload error:`, error);
+    res.status(500).json({ message: 'Cloudinary upload failed: ' + error.message });
   }
 });
 
@@ -365,6 +368,7 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     const { message, attachmentUrl } = req.body;
     if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
 
+    console.log(`[MongoDB] Saving report for subscriber: ${subscriber.name}`);
     const report = {
       reporterName: req.user.name || req.user.username,
       reporterRole: req.user.role,
@@ -380,13 +384,15 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
 
     subscriber.reports.push(report);
     await subscriber.save();
+    console.log(`[MongoDB] Report saved successfully`);
 
     // Emit real-time event
     io.emit('report-added', { subscriberId: subscriber._id, report });
 
     res.status(201).json(report);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(`[MongoDB] Save report error:`, error);
+    res.status(500).json({ message: 'Failed to save report to database: ' + error.message });
   }
 });
 
