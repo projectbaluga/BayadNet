@@ -87,6 +87,7 @@ const Dashboard = () => {
       const res = await axios.post(`${API_BASE}/auth/login`, credentials);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
+      localStorage.setItem('user', JSON.stringify({ name: res.data.name, role: res.data.role }));
       setToken(res.data.token);
       setUserRole(res.data.role);
       setError('');
@@ -98,6 +99,7 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('user');
     setToken(null);
     setUserRole(null);
     setSubscribers([]);

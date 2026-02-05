@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye } from 'lucide-react';
+import { AlertCircle, Send, ChevronDown, ChevronUp, User, ShieldCheck, Loader2, Image, Paperclip, Eye, XCircle } from 'lucide-react';
 
-const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
+const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3';
 
 const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, onDelete, userRole, token, socket, onRefresh }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -310,7 +310,10 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                         <div className="flex items-center gap-1 mt-1 px-1 opacity-60">
                           <Eye className="w-2.5 h-2.5 text-slate-400" />
                           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                            Seen by {report.readBy.filter(r => r.name !== report.reporterName).map(r => r.name).join(', ')}
+                            Seen by {report.readBy
+                              .filter(r => r.name !== report.reporterName)
+                              .map(r => r.name === (JSON.parse(localStorage.getItem('user'))?.name) ? 'You' : r.name)
+                              .join(', ')}
                           </span>
                         </div>
                       )}

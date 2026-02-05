@@ -17,6 +17,7 @@ const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -82,7 +83,7 @@ app.post('/api/auth/login', async (req, res) => {
     JWT_SECRET,
     { expiresIn: '1d' }
   );
-  res.json({ token, role: user.role });
+  res.json({ token, role: user.role, name: user.name || user.username });
 });
 
 const validateObjectId = (req, res, next) => {
