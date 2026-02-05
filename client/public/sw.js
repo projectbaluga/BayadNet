@@ -1,4 +1,4 @@
-const CACHE_NAME = 'subscriber-v2';
+const CACHE_NAME = 'subscriber-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -8,7 +8,19 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => {
+        // Try to fetch with no-cache to ensure we don't cache stale content during install
+        return Promise.all(
+          urlsToCache.map(url => {
+            return fetch(url, { cache: 'no-store' })
+              .then(response => {
+                if (response.ok) return cache.put(url, response);
+                return cache.add(url);
+              })
+              .catch(() => cache.add(url));
+          })
+        );
+      })
   );
   self.skipWaiting();
 });
@@ -30,9 +42,10 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   // Strategy: Network First for navigation requests (HTML)
+  // We use cache: 'no-store' to bypass any browser/proxy cache when network is available
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .catch(() => {
           return caches.match(event.request) || caches.match('/index.html');
         })
