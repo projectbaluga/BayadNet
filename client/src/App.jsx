@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
@@ -9,10 +10,10 @@ import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
 
-// INFRASTRUCTURE RECOVERY: Ensure Socket uses HTTP internally to match tunnel
+// INFRASTRUCTURE RECOVERY: Ensure Socket respects HTTPS origin for WSS compatibility
 const socketURL = window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
-  : 'http://mgt.bojex.online'; // Force HTTP for tunnel compatibility
+  : window.location.origin;
 
 const socket = io(socketURL, {
   transports: ['websocket', 'polling'],
