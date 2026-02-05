@@ -1,4 +1,7 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -10,8 +13,22 @@ const Setting = require('./models/Setting');
 const MonthlyReport = require('./models/MonthlyReport');
 const { getCurrentDate } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
+const userRoutes = require('./routes/userRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://mgt.bojex.online", "http://localhost:3000"],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['polling', 'websocket'], // Ensure compatibility with Cloudflare proxy
+  allowEIO3: true // Compatibility for some clients if needed
+});
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -23,6 +40,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -36,14 +60,30 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+const authorize = (roles = []) => {
+  if (typeof roles === 'string') {
+    roles = [roles];
+  }
+  return (req, res, next) => {
+    if (!req.user || (roles.length && !roles.includes(req.user.role))) {
+      return res.status(403).json({ message: 'Forbidden: You do not have the required role' });
+    }
+    next();
+  };
+};
+
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
-  const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '1d' });
-  res.json({ token });
+  const token = jwt.sign(
+    { id: user._id, username: user.username, role: user.role, name: user.name || user.username },
+    JWT_SECRET,
+    { expiresIn: '1d' }
+  );
+  res.json({ token, role: user.role, name: user.name || user.username });
 });
 
 const validateObjectId = (req, res, next) => {
@@ -53,7 +93,7 @@ const validateObjectId = (req, res, next) => {
   next();
 };
 
-app.post('/api/subscribers', authenticateToken, async (req, res) => {
+app.post('/api/subscribers', authenticateToken, authorize('admin'), async (req, res) => {
   try {
     const subscriber = new Subscriber(req.body);
     await subscriber.save();
@@ -63,7 +103,7 @@ app.post('/api/subscribers', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/subscribers', authenticateToken, async (req, res) => {
+app.get('/api/subscribers', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
   try {
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
@@ -81,7 +121,7 @@ app.get('/api/subscribers', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/subscribers/:id', authenticateToken, validateObjectId, async (req, res) => {
+app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -91,7 +131,7 @@ app.put('/api/subscribers/:id', authenticateToken, validateObjectId, async (req,
   }
 });
 
-app.delete('/api/subscribers/:id', authenticateToken, validateObjectId, async (req, res) => {
+app.delete('/api/subscribers/:id', authenticateToken, authorize('admin'), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -104,7 +144,7 @@ app.delete('/api/subscribers/:id', authenticateToken, validateObjectId, async (r
   }
 });
 
-app.post('/api/subscribers/:id/payments', authenticateToken, validateObjectId, async (req, res) => {
+app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -145,7 +185,7 @@ app.post('/api/subscribers/:id/payments', authenticateToken, validateObjectId, a
   }
 });
 
-app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async (req, res) => {
+app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -173,7 +213,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, validateObjectId, async
   }
 });
 
-app.get('/api/stats', authenticateToken, async (req, res) => {
+app.get('/api/stats', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
   try {
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
@@ -185,7 +225,7 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/settings', authenticateToken, async (req, res) => {
+app.get('/api/settings', authenticateToken, authorize('admin'), async (req, res) => {
   try {
     let settings = await Setting.findOne();
     if (!settings) {
@@ -197,7 +237,7 @@ app.get('/api/settings', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/settings', authenticateToken, async (req, res) => {
+app.put('/api/settings', authenticateToken, authorize('admin'), async (req, res) => {
   try {
     const settings = await Setting.findOneAndUpdate({}, req.body, { new: true, upsert: true });
     res.json(settings);
@@ -206,7 +246,7 @@ app.put('/api/settings', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/bulk/reset', authenticateToken, async (req, res) => {
+app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
@@ -250,7 +290,7 @@ app.post('/api/bulk/reset', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/analytics', authenticateToken, async (req, res) => {
+app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
@@ -289,4 +329,91 @@ app.get('/api/analytics', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use('/api/users', userRoutes(authenticateToken, authorize));
+app.use('/api/public', publicRoutes);
+
+// Image Upload Route
+app.post('/api/upload', authenticateToken, async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) return res.status(400).json({ message: 'No image provided' });
+
+    const uploadRes = await cloudinary.uploader.upload(image, {
+      folder: 'bayadnet_reports'
+    });
+
+    res.json({ url: uploadRes.secure_url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    const { message, attachmentUrl } = req.body;
+    if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
+
+    const report = {
+      reporterName: req.user.name || req.user.username,
+      reporterRole: req.user.role,
+      message,
+      attachmentUrl,
+      timestamp: new Date(),
+      readBy: [{
+        name: req.user.name || req.user.username,
+        role: req.user.role,
+        timestamp: new Date()
+      }]
+    };
+
+    subscriber.reports.push(report);
+    await subscriber.save();
+
+    // Emit real-time event
+    io.emit('report-added', { subscriberId: subscriber._id, report });
+
+    res.status(201).json(report);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('mark-as-read', async ({ subscriberId, user }) => {
+    try {
+      const subscriber = await Subscriber.findById(subscriberId);
+      if (!subscriber) return;
+
+      let updated = false;
+      subscriber.reports.forEach(report => {
+        const alreadyRead = report.readBy.some(r => r.name === user.name);
+        if (!alreadyRead) {
+          report.readBy.push({
+            name: user.name,
+            role: user.role,
+            timestamp: new Date()
+          });
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        await subscriber.save();
+        io.emit('reports-read', { subscriberId, reports: subscriber.reports });
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

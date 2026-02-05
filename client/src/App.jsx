@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
+import UserManagement from './components/UserManagement';
+import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
 
-function App() {
+// Connect to socket. If localhost:3000, point to 5000. Otherwise, use same origin (proxied by Nginx)
+const socketURL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : window.location.origin;
+
+const socket = io(socketURL, {
+  transports: ['polling', 'websocket'], // Matching backend
+  withCredentials: true
+});
+
+const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('dashboard'); // 'dashboard' or 'users'
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(localStorage.getItem('role'));
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,7 +86,10 @@ function App() {
     try {
       const res = await axios.post(`${API_BASE}/auth/login`, credentials);
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('role', res.data.role);
+      localStorage.setItem('user', JSON.stringify({ name: res.data.name, role: res.data.role }));
       setToken(res.data.token);
+      setUserRole(res.data.role);
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -79,8 +98,12 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user');
     setToken(null);
+    setUserRole(null);
     setSubscribers([]);
+    setView('dashboard');
   };
 
   const handleOpenPaymentModal = (subscriber) => {
@@ -269,23 +292,45 @@ function App() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Management & Analytics</p>
             </div>
           </div>
+
+          <nav className="hidden md:flex items-center gap-8 ml-12 mr-auto">
+            <button
+              onClick={() => setView('dashboard')}
+              className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Dashboard
+            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setView('users')}
+                className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'users' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Users
+              </button>
+            )}
+          </nav>
+
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSettingsModalOpen(true)}
-              className="p-3.5 bg-white text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
-              title="Admin Settings"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
-            >
-              + Add Subscriber
-            </button>
+            {userRole === 'admin' && (
+              <>
+                <button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="p-3.5 bg-white text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
+                  title="Admin Settings"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
+                >
+                  + Add Subscriber
+                </button>
+              </>
+            )}
             <button
               onClick={handleLogout}
               className="text-[11px] font-black text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
@@ -297,6 +342,10 @@ function App() {
       </header>
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {view === 'users' && userRole === 'admin' ? (
+          <UserManagement token={token} />
+        ) : (
+          <>
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           {/* Collection Efficiency Chart */}
           <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 shadow-2xl shadow-indigo-100/50 flex items-center gap-8 group hover:scale-[1.02] transition-transform duration-500">
@@ -392,6 +441,10 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
+                    token={token}
+                    socket={socket}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
@@ -423,6 +476,10 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
+                    token={token}
+                    socket={socket}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
@@ -454,6 +511,10 @@ function App() {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    userRole={userRole}
+                    token={token}
+                    socket={socket}
+                    onRefresh={fetchData}
                   />
                 ))}
               </div>
@@ -464,6 +525,8 @@ function App() {
             )}
           </section>
         </main>
+        </>
+        )}
       </div>
 
       {isModalOpen && (
@@ -728,6 +791,15 @@ function App() {
         </div>
       )}
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/check-status" element={<CheckStatus />} />
+      <Route path="/" element={<Dashboard />} />
+    </Routes>
   );
 }
 
