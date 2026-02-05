@@ -48,9 +48,11 @@ const Dashboard = () => {
   const [paymentData, setPaymentData] = useState({
     amountPaid: 0,
     referenceNo: '',
-    receiptImage: '',
+    receiptImage: '', // This will store the final URL
     month: ''
   });
+  const [paymentFile, setPaymentFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
     if (token) {
@@ -112,31 +114,24 @@ const Dashboard = () => {
       receiptImage: '',
       month: subscriber.currentMonthLabel || 'February 2026'
     });
+    setPaymentFile(null);
+    setPreviewUrl('');
     setIsPaymentModalOpen(true);
   };
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         alert("File is too large! Please select an image under 5MB.");
         return;
       }
-      try {
-        const base64 = await convertToBase64(file);
-        setPaymentData({ ...paymentData, receiptImage: base64 });
-      } catch (error) {
-        console.error("Error converting file:", error);
-      }
+      // Revoke old preview URL if exists
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setPaymentFile(file);
     }
   };
 
@@ -149,11 +144,33 @@ const Dashboard = () => {
     e.preventDefault();
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post(`${API_BASE}/subscribers/${activeSubscriber._id}/payments`, paymentData, config);
+      let finalReceiptImage = '';
+
+      if (paymentFile) {
+        const formData = new FormData();
+        formData.append('file', paymentFile);
+        const uploadRes = await axios.post(`${API_BASE}/payments/upload`, formData, {
+          headers: {
+            ...config.headers,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        finalReceiptImage = uploadRes.data.url;
+      }
+
+      await axios.post(`${API_BASE}/subscribers/${activeSubscriber._id}/payments`, {
+        ...paymentData,
+        receiptImage: finalReceiptImage
+      }, config);
+
       setIsPaymentModalOpen(false);
+      setPaymentFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl('');
       fetchData();
     } catch (error) {
       console.error('Error submitting payment:', error);
+      alert('Failed to post payment');
     }
   };
 
@@ -661,9 +678,9 @@ const Dashboard = () => {
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Proof of Payment (Image)</label>
                 <div className="space-y-4">
-                  <label className={`flex flex-col items-center justify-center w-full h-32 rounded-3xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                  <label className={`flex flex-col items-center justify-center w-full h-32 rounded-3xl border-2 border-dashed transition-all cursor-pointer ${previewUrl ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      {!paymentData.receiptImage ? (
+                      {!previewUrl ? (
                         <>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -672,7 +689,7 @@ const Dashboard = () => {
                         </>
                       ) : (
                         <div className="relative group">
-                          <img src={paymentData.receiptImage} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
+                          <img src={previewUrl} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
                           <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <p className="text-[8px] font-black text-white uppercase tracking-widest">Change Image</p>
                           </div>
@@ -681,10 +698,14 @@ const Dashboard = () => {
                     </div>
                     <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                   </label>
-                  {paymentData.receiptImage && (
+                  {previewUrl && (
                     <button
                       type="button"
-                      onClick={() => setPaymentData({...paymentData, receiptImage: ''})}
+                      onClick={() => {
+                        if (previewUrl) URL.revokeObjectURL(previewUrl);
+                        setPreviewUrl('');
+                        setPaymentFile(null);
+                      }}
                       className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline"
                     >
                       Remove Image
