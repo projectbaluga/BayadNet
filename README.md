@@ -8,31 +8,40 @@ BayadNet is a modern, mobile-first Web Application (PWA) designed for ISPs to ma
 
 ### 💎 Premium Modern UI (Glassmorphism)
 - **Glassmorphism Design**: Minimalist SaaS dashboard with `backdrop-blur` effects, soft shadows, and a clean `bg-slate-50` aesthetic.
-- **Mobile-First & Responsive**: Adapts seamlessly from handheld devices to high-end desktops (4-column grid layout).
-- **Visual Status Indicators**: Instant recognition of account status with color-coded badges (Green: Paid, Red: Overdue, Orange: Due Today).
-- **Smart Filtering**: Filter subscribers by payment status (All, Paid, Overdue, Upcoming).
+- **Mobile-First & Responsive**: Adapts seamlessly from handheld devices to high-end desktops.
+- **Visual Status Indicators**: Instant recognition of account status with color-coded badges:
+  - 🟢 **Paid**: Account settled for the current month.
+  - 🔴 **Overdue**: Past the billing cycle date.
+  - 🟠 **Due Today**: Billing date matches current date.
+  - 🟡 **Partial**: Payment made but doesn't cover the full pro-rated amount.
+- **Smart Filtering**: Auto-categorization into 'Overdue/Partial', 'Upcoming', and 'Settled' sections.
 
 ### 🧮 Pro-rated Rebate System
-The system features an automated, fair billing logic that replaces fixed credits with a daily pro-rated rebate system.
-- **Formula**: `Rebate = (Monthly Rate / 30) * Days Down`
-- **Automatic Calculation**: The total amount due is automatically calculated by deducting the rebate from the base monthly rate.
-- **Precision**: Calculations are rounded to 2 decimal places to ensure financial accuracy.
+Automated billing logic that ensures fairness by deducting service downtime.
+- **Formula**: `Rebate = (Monthly Rate / Divisor) * Days Down`
+- **Configurable Divisor**: Default is 30 days, adjustable via Admin Settings.
+- **Automatic Calculation**: Deducts rebates from the base rate to determine the final `Amount Due`.
+- **Precision**: Financial calculations are rounded to 2 decimal places.
 
-### 📊 Comprehensive Dashboard
-- **Total Subscribers**: Real-time count of all active users.
-- **Monthly Revenue**: Projected revenue after all rebates are applied.
-- **Total Collected**: Real-time tracking of payments received.
-- **Overdue/Due Today**: Critical metrics highlighted for immediate action.
+### 📊 Real-time Dashboard & Analytics
+- **Financial Snapshot**: Track Total Expected Revenue, Total Collected, and Net Profit (Total Collected - Provider Cost).
+- **Collection Efficiency**: Visual gauge showing percentage of collected vs. expected revenue.
+- **Issue Timeline**: Real-time chat-style reporting for technicians and staff with Socket.io integration.
+- **Read Receipts**: "Seen by" indicators for issue reports to ensure team coordination.
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React.js (Vite), Tailwind CSS (Glassmorphism theme), Headless UI.
-- **Backend**: Node.js, Express, Mongoose.
-- **Database**: MongoDB (with persistent volume).
-- **Security**: JWT Authentication, Bcrypt password hashing.
-- **Deployment**: Docker, Docker Compose, Nginx (Multi-stage builds).
+- **Frontend**: React.js 18, Vite, Tailwind CSS, Lucide Icons, Socket.io-client.
+- **Backend**: Node.js, Express, MongoDB (Mongoose), Socket.io.
+- **Real-time**: WebSockets for instant updates on reports and read receipts.
+- **Storage**: Cloudinary integration for report attachments; local storage for proof-of-payment receipts.
+- **Security**:
+  - JWT-based Authentication.
+  - Role-Based Access Control (Admin, Staff, Technician).
+  - Express Rate Limiting on public routes.
+- **Deployment**: Dockerized services with Nginx reverse proxy.
 
 ---
 
@@ -92,6 +101,36 @@ The system uses environment variables in the `docker-compose.yml` for configurat
 │   └── Dockerfile          # Backend production build
 └── docker-compose.yml       # Service Orchestration
 ```
+
+---
+
+## 🔍 Codebase Overview & Architecture
+
+### Backend (`/server`)
+- **`index.js`**: Main entry point, Socket.io setup, and API routing.
+- **`utils/logic.js`**: Core billing engine containing `processSubscriber` and `calculateStats`.
+- **`models/`**: Mongoose schemas for `Subscriber`, `User`, `Setting`, and `MonthlyReport`.
+- **`config/time.js`**: Virtual clock utility for simulation mode.
+
+### Frontend (`/client`)
+- **`App.jsx`**: Central dashboard logic and state management.
+- **`components/`**: Modular UI elements like `SubscriberCard`, `SettingsModal`, and `UserManagement`.
+- **`pages/CheckStatus.jsx`**: A public-facing portal for subscribers to check their balance using their Account ID.
+
+### Real-time Flow
+1. Staff adds a report on a Subscriber Card.
+2. Server saves to DB and emits `report-added` via Socket.io.
+3. Other connected clients receive the event and show a "New Report" notification (with sound).
+4. When an Admin opens the "Issues" section, a `mark-as-read` event is sent, updating the "Seen by" status for everyone.
+
+---
+
+## 🚀 Future Roadmap & Improvements
+
+- [ ] **Dynamic Monthly Cycles**: Transition from hardcoded "February 2026" to a dynamic system that handles recurring monthly billing automatically.
+- [ ] **Component Decomposition**: Refactor `App.jsx` into smaller, reusable hooks and sub-components.
+- [ ] **Enhanced Reporting**: Add PDF export for monthly financial reports.
+- [ ] **Payment Gateway Integration**: Integrate GCash/PayMaya APIs for automated payment verification.
 
 ---
 

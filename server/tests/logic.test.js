@@ -9,6 +9,7 @@ describe('Subscriber Rebate Logic', () => {
     expect(processed.status).toBe('Upcoming');
     expect(processed.amountDue).toBe(600);
     expect(processed.rebate).toBe(0);
+    expect(processed.currentMonthLabel).toBe('February 2026');
   });
 
   test('Subscriber with 2 days outage', () => {
@@ -51,6 +52,7 @@ describe('Subscriber Rebate Logic', () => {
     expect(stats.overdue).toBe(1);
     expect(stats.totalMonthlyRevenue).toBe(1160); // 560 + 600
     expect(stats.totalCollections).toBe(700); // 100 + 600
+    expect(stats.currentMonthLabel).toBe('February 2026');
   });
 
   test('Partial payment status', () => {

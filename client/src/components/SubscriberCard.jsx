@@ -67,7 +67,8 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
   const handleSendReminder = () => {
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
-    const message = `Hi ${subscriber.name}, your bill for February 2026 is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
+    const monthLabel = subscriber.currentMonthLabel || 'Current Month';
+    const message = `Hi ${subscriber.name}, your bill for ${monthLabel} is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
 
     if (subscriber.messengerId) {
       const url = `https://m.me/${subscriber.messengerId}?text=${encodeURIComponent(message)}`;
@@ -103,7 +104,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
           <div class="header">
             <h1>Statement of Account</h1>
             <p>Subscriber: <strong>${subscriber.name}</strong></p>
-            <p>Billing Period: February 2026</p>
+            <p>Billing Period: ${subscriber.currentMonthLabel || 'Current Month'}</p>
           </div>
           <div class="row"><span>Monthly Rate</span><span>₱${subscriber.rate.toLocaleString()}</span></div>
           <div class="row"><span>Outage Rebate (${subscriber.daysDown} days)</span><span>-₱${subscriber.rebate.toLocaleString()}</span></div>
@@ -206,7 +207,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
             <button
               onClick={() => {
                 const latestReceipt = subscriber.payments
-                  .filter(p => p.month === 'February 2026' && p.receiptImage)
+                  .filter(p => p.month === (subscriber.currentMonthLabel || 'February 2026') && p.receiptImage)
                   .pop();
                 if (latestReceipt) onViewReceipt(latestReceipt.receiptImage);
               }}

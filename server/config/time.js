@@ -12,4 +12,9 @@ const getCurrentDate = () => {
   return new Date();
 };
 
-module.exports = { getCurrentDate };
+const getCurrentMonthYear = (date) => {
+  const now = date || getCurrentDate();
+  return now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+};
+
+module.exports = { getCurrentDate, getCurrentMonthYear };

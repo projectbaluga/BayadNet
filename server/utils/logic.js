@@ -1,7 +1,10 @@
+const { getCurrentMonthYear } = require('../config/time');
+
 const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+  const currentMonthLabel = getCurrentMonthYear(now);
 
   // Rebate Calculation
   const divisor = settings.rebateValue || 30;
@@ -47,12 +50,14 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
     effectiveCycle,
     dueDate: formattedDueDate,
     dueDateAtMidnight,
-    hasReceipt: (sub.payments || []).some(p => p.month === 'February 2026' && p.receiptImage)
+    hasReceipt: (sub.payments || []).some(p => p.month === currentMonthLabel && p.receiptImage),
+    currentMonthLabel
   };
 };
 
 const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const currentMonthLabel = getCurrentMonthYear(now);
   let dueToday = 0, overdue = 0, totalCollections = 0;
   let totalMonthlyRevenue = 0;
 
@@ -64,12 +69,12 @@ const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
 
     totalMonthlyRevenue += amountDue;
 
-    // Sum all payments for Feb 2026
-    const febPayments = (sub.payments || [])
-      .filter(p => p.month === 'February 2026')
+    // Sum all payments for current month
+    const monthlyPayments = (sub.payments || [])
+      .filter(p => p.month === currentMonthLabel)
       .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    totalCollections += febPayments;
+    totalCollections += monthlyPayments;
 
     if (!sub.isPaidFeb2026) {
       if (status === 'Overdue') overdue++;
@@ -82,7 +87,8 @@ const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
     overdue,
     totalCollections: Math.round(totalCollections * 100) / 100,
     totalSubscribers: subscribers.length,
-    totalMonthlyRevenue: Math.round(totalMonthlyRevenue * 100) / 100
+    totalMonthlyRevenue: Math.round(totalMonthlyRevenue * 100) / 100,
+    currentMonthLabel
   };
 };
 
