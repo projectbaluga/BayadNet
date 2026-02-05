@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bayadnet-v2';
+const CACHE_NAME = 'bayadnet-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -23,6 +23,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -50,7 +51,6 @@ self.addEventListener('fetch', event => {
           const contentType = response.headers.get('content-type');
 
           // Safety check: don't cache index.html content for JS/CSS requests
-          // This happens if Nginx is misconfigured to serve index.html for missing assets
           if (event.request.url.match(/\.(js|css)$/) && contentType && contentType.includes('text/html')) {
             return response;
           }
