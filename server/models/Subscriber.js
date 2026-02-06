@@ -11,14 +11,13 @@ const subscriberSchema = new mongoose.Schema({
   contactNo: { type: String, default: '' },
   daysDown: { type: Number, default: 0 },
   remainingBalance: { type: Number }, // Amount left to pay for the current month
-  isPaidFeb2026: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false },
   payments: [{
     amountPaid: Number,
     date: { type: Date, default: Date.now },
     referenceNo: String,
     receiptImage: String,
-    month: { type: String, default: 'February 2026' }
+    month: { type: String }
   }],
   reports: [{
     reporterName: String,
@@ -32,7 +31,7 @@ const subscriberSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now }
     }]
   }]
-});
+}, { strict: false });
 
 // Default remainingBalance to rate if not provided (pre-save hook or manual)
 subscriberSchema.pre('save', function(next) {

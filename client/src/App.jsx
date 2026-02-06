@@ -49,7 +49,7 @@ const Dashboard = () => {
     amountPaid: 0,
     referenceNo: '',
     receiptImage: '',
-    month: 'February 2026'
+    month: ''
   });
 
   useEffect(() => {
@@ -110,7 +110,7 @@ const Dashboard = () => {
       amountPaid: subscriber.remainingBalance !== undefined ? subscriber.remainingBalance : subscriber.amountDue,
       referenceNo: '',
       receiptImage: '',
-      month: 'February 2026'
+      month: subscriber.currentMonthName || 'February 2026'
     });
     setIsPaymentModalOpen(true);
   };

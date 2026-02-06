@@ -5,6 +5,7 @@ const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const Subscriber = require('./models/Subscriber');
@@ -31,6 +32,24 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // Limit each IP to 5 login requests per 15 minutes
+  message: { message: 'Too many login attempts, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', apiLimiter);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
@@ -71,7 +90,7 @@ const authorize = (roles = []) => {
   };
 };
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (!user || !(await user.comparePassword(password))) {
@@ -152,13 +171,11 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
     const processed = processSubscriber(subscriber, now, settings);
+    const currentMonthName = processed.currentMonthName;
 
     // Initialize remainingBalance if it's the first payment or not set correctly
     if (subscriber.remainingBalance === undefined || subscriber.remainingBalance === subscriber.rate) {
-      // If it matches the original rate, it might need pro-rating
-      // But we must be careful not to overwrite a manual balance if it was intended.
-      // For this system, we'll assume the pro-rated amount is the starting point for Feb 2026.
-      if (!subscriber.payments || subscriber.payments.length === 0) {
+      if (!subscriber.payments || !subscriber.payments.some(p => p.month === currentMonthName)) {
         subscriber.remainingBalance = processed.amountDue;
       }
     }
@@ -166,14 +183,15 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
     subscriber.remainingBalance = Math.max(0, subscriber.remainingBalance - amountPaid);
 
     if (subscriber.remainingBalance <= 0) {
-      subscriber.isPaidFeb2026 = true;
+      const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+      subscriber[legacyPaidField] = true;
     }
 
     subscriber.payments.push({
       amountPaid,
       referenceNo,
       receiptImage,
-      month: month || 'February 2026',
+      month: month || currentMonthName,
       date: now
     });
 
@@ -192,6 +210,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
     const processed = processSubscriber(subscriber, now, settings);
+    const currentMonthName = processed.currentMonthName;
 
     // Quick pay assumes full payment of remaining balance
     const amountToPay = subscriber.remainingBalance !== undefined ? subscriber.remainingBalance : processed.amountDue;
@@ -199,12 +218,14 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     subscriber.payments.push({
       amountPaid: amountToPay,
       referenceNo: 'QUICK-PAY',
-      month: 'February 2026',
+      month: currentMonthName,
       date: now
     });
 
     subscriber.remainingBalance = 0;
-    subscriber.isPaidFeb2026 = true;
+    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+    subscriber[legacyPaidField] = true;
+
     await subscriber.save();
     res.json(subscriber);
   } catch (error) {
@@ -255,18 +276,23 @@ app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, r
     let totalExpected = 0;
     let totalCollected = 0;
 
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
     subscribers.forEach(sub => {
       const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
       const collected = (sub.payments || [])
-        .filter(p => p.month === 'February 2026')
+        .filter(p => p.month === currentMonthName)
         .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
       totalCollected += collected;
     });
 
     // Save snapshot to MonthlyReport
     await MonthlyReport.create({
-      monthYear: "February 2026",
+      monthYear: currentMonthName,
       totalExpected: Math.round(totalExpected * 100) / 100,
       totalCollected: Math.round(totalCollected * 100) / 100,
       totalProfit: Math.round((totalCollected - providerCost) * 100) / 100,
@@ -274,11 +300,12 @@ app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, r
     });
 
     // Start New Month logic
+    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+    const updateObj = { daysDown: 0 };
+    updateObj[legacyPaidField] = false;
+
     await Subscriber.updateMany({ isArchived: false }, {
-      $set: {
-        isPaidFeb2026: false,
-        daysDown: 0
-      }
+      $set: updateObj
     });
 
     await Subscriber.updateMany({ isArchived: false }, { $unset: { remainingBalance: "" } });
@@ -300,12 +327,17 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
     let totalCollected = 0;
     let groupCounts = { Overdue: 0, Partial: 0, Upcoming: 0, Paid: 0 };
 
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
     subscribers.forEach(sub => {
       const processed = processSubscriber(sub, now, settings);
       totalExpected += processed.amountDue;
 
       const collected = (sub.payments || [])
-        .filter(p => p.month === 'February 2026')
+        .filter(p => p.month === currentMonthName)
         .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
       totalCollected += collected;
 

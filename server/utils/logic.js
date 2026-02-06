@@ -2,6 +2,10 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const currentMonthName = `${monthNames[currentMonth]} ${currentYear}`;
 
   // Rebate Calculation
   const divisor = settings.rebateValue || 30;
@@ -12,11 +16,21 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
 
   let effectiveCycle = sub.cycle;
 
-  // New logic for Partial Payments
-  let status = sub.isPaidFeb2026 || amountDue === 0 ? 'Paid' : 'Unpaid';
-  const remaining = sub.remainingBalance !== undefined ? sub.remainingBalance : amountDue;
+  // Dynamic Payment Check
+  const monthPayments = (sub.payments || [])
+    .filter(p => p.month === currentMonthName)
+    .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-  if (!sub.isPaidFeb2026 && remaining < amountDue && remaining > 0) {
+  // For backward compatibility with the hardcoded field if it exists
+  const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+  const isPaid = sub[legacyPaidField] || monthPayments >= amountDue || (amountDue === 0);
+
+  let status = isPaid ? 'Paid' : 'Unpaid';
+
+  // Use remainingBalance if it exists, otherwise calculate it
+  const remaining = sub.remainingBalance !== undefined ? sub.remainingBalance : Math.max(0, amountDue - monthPayments);
+
+  if (!isPaid && remaining < amountDue && remaining > 0) {
     status = 'Partial';
   }
 
@@ -47,12 +61,17 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
     effectiveCycle,
     dueDate: formattedDueDate,
     dueDateAtMidnight,
-    hasReceipt: (sub.payments || []).some(p => p.month === 'February 2026' && p.receiptImage)
+    hasReceipt: (sub.payments || []).some(p => p.month === currentMonthName && p.receiptImage),
+    currentMonthName
   };
 };
 
 const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
   const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
   let dueToday = 0, overdue = 0, totalCollections = 0;
   let totalMonthlyRevenue = 0;
 
@@ -64,14 +83,18 @@ const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
 
     totalMonthlyRevenue += amountDue;
 
-    // Sum all payments for Feb 2026
-    const febPayments = (sub.payments || [])
-      .filter(p => p.month === 'February 2026')
+    // Sum all payments for current month
+    const monthPayments = (sub.payments || [])
+      .filter(p => p.month === currentMonthName)
       .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-    totalCollections += febPayments;
+    totalCollections += monthPayments;
 
-    if (!sub.isPaidFeb2026) {
+    // Dynamic check for status
+    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+    const isPaid = sub[legacyPaidField] || monthPayments >= amountDue || (amountDue === 0);
+
+    if (!isPaid) {
       if (status === 'Overdue') overdue++;
       else if (status === 'Due Today') dueToday++;
     }
