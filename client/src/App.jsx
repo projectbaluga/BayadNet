@@ -292,34 +292,34 @@ const Dashboard = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg border border-gray-200 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-500 mb-6">Login to manage subscribers</p>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Username</label>
               <input
                 type="text"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                 value={credentials.username}
                 onChange={(e) => setCredentials({...credentials, username: e.target.value})}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
               <input
                 type="password"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                 required
               />
             </div>
             {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
-            <button className="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform">
-              SIGN IN
+            <button className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-md shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all">
+              Sign In
             </button>
           </form>
         </div>
@@ -330,54 +330,54 @@ const Dashboard = () => {
   const efficiency = Math.round((analytics.totalCollected / (analytics.totalExpected || 1)) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-700">
-      <header className="bg-white/70 backdrop-blur-md sticky top-0 z-50 border-b border-white/20">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-200">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-indigo-600 p-2 rounded-lg text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 leading-tight tracking-tight">BAYADNET PRO</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Management & Analytics</p>
+              <h1 className="text-lg font-bold text-gray-900 leading-tight">BAYADNET PRO</h1>
+              <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Management & Analytics</p>
             </div>
           </div>
 
           <nav className="hidden md:flex items-center gap-8 ml-12 mr-auto">
             <button
               onClick={() => setView('dashboard')}
-              className={`text-[11px] font-bold uppercase tracking-widest transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`text-xs font-semibold uppercase tracking-wide transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Dashboard
             </button>
             {userRole === 'admin' && (
               <button
                 onClick={() => setView('users')}
-                className={`text-[11px] font-bold uppercase tracking-widest transition-all ${view === 'users' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`text-xs font-semibold uppercase tracking-wide transition-all ${view === 'users' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
                 Users
               </button>
             )}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {userRole === 'admin' && (
               <>
                 <button
                   onClick={() => setIsSettingsModalOpen(true)}
-                  className="p-3.5 bg-white text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-slate-100 shadow-sm"
+                  className="p-2.5 bg-white text-gray-500 rounded-md hover:bg-gray-50 hover:text-indigo-600 transition-all border border-gray-200 shadow-sm"
                   title="Admin Settings"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </button>
                 <button
                   onClick={() => handleOpenModal()}
-                  className="bg-indigo-600 text-white text-[11px] font-bold px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
+                  className="bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-md shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all flex items-center gap-2"
                 >
                   + Add Subscriber
                 </button>
@@ -385,7 +385,7 @@ const Dashboard = () => {
             )}
             <button
               onClick={handleLogout}
-              className="text-[11px] font-bold text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
+              className="text-xs font-semibold text-gray-500 hover:text-red-600 bg-white border border-gray-200 hover:bg-red-50 px-4 py-2.5 rounded-md transition-all"
             >
               Logout
             </button>
@@ -393,17 +393,17 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {view === 'users' && userRole === 'admin' ? (
           <UserManagement token={token} />
         ) : (
           <>
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           {/* Collection Efficiency Chart */}
-          <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/20 shadow-xl shadow-indigo-500/5 flex items-center gap-6 group transition-all hover:shadow-indigo-500/10">
+          <div className="lg:col-span-4 bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex items-center gap-6">
             <div className="relative flex-shrink-0">
-              <svg className="h-24 w-24 transform -rotate-90">
-                <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100" />
+              <svg className="h-20 w-20 transform -rotate-90">
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
                 <circle
                   cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="10" fill="transparent"
                   strokeDasharray={2 * Math.PI * 42}
@@ -413,77 +413,77 @@ const Dashboard = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-bold text-slate-900">{efficiency}%</span>
+                <span className="text-xs font-bold text-gray-900">{efficiency}%</span>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Efficiency</p>
-              <h3 className="text-2xl font-bold text-slate-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
-              <p className="text-[11px] text-slate-400 font-bold mt-2 italic">of ₱{analytics.totalExpected.toLocaleString()}</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Efficiency</p>
+              <h3 className="text-2xl font-bold text-gray-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
+              <p className="text-xs text-gray-400 font-medium mt-1">of ₱{analytics.totalExpected.toLocaleString()} expected</p>
             </div>
           </div>
 
           {/* Quick Stats Grid */}
           <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-indigo-500 flex flex-col justify-between">
+            <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Net Profit</p>
-                <p className={`text-xl font-bold ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-rose-500'}`}>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Net Profit</p>
+                <p className={`text-xl font-bold ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
                   ₱{analytics.currentProfit.toLocaleString()}
                 </p>
               </div>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-2">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-rose-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Overdue</p>
-              <p className="text-3xl font-bold text-rose-500">{analytics.groupCounts['Overdue'] || 0}</p>
-              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative overflow-hidden border-l-4 border-l-red-500">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Overdue</p>
+              <p className="text-2xl font-bold text-gray-900">{analytics.groupCounts['Overdue'] || 0}</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-1">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-amber-400">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Partial</p>
-              <p className="text-3xl font-bold text-amber-500">{analytics.groupCounts['Partial'] || 0}</p>
-              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative overflow-hidden border-l-4 border-l-amber-400">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Partial</p>
+              <p className="text-2xl font-bold text-gray-900">{analytics.groupCounts['Partial'] || 0}</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-1">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-emerald-500">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Paid</p>
-              <p className="text-3xl font-bold text-emerald-600">{analytics.groupCounts['Paid'] || 0}</p>
-              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm relative overflow-hidden border-l-4 border-l-emerald-500">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Paid</p>
+              <p className="text-2xl font-bold text-gray-900">{analytics.groupCounts['Paid'] || 0}</p>
+              <p className="text-[10px] text-gray-400 font-medium mt-1">Accounts</p>
             </div>
           </div>
         </section>
 
-        {/* Search Bar - Glassmorphism */}
-        <div className="relative mb-6">
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        {/* Search Bar - Professional */}
+        <div className="relative mb-8">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
-            placeholder="Search accounts..."
-            className="w-full bg-white/50 backdrop-blur-md border border-white/40 rounded-2xl py-4 pl-12 pr-6 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-400 shadow-lg shadow-slate-200/10 text-base"
+            placeholder="Search accounts by name or cycle date..."
+            className="w-full bg-white border border-gray-300 rounded-lg py-3 pl-11 pr-4 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400 shadow-sm text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <main className="space-y-6">
+        <main className="space-y-8">
           <section>
-            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="bg-rose-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Overdue & Partial</h2>
-                <span className="bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
-                  {groups.overdue.length} Accounts
+                <span className="flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide">Overdue & Partial</h2>
+                <span className="bg-red-50 text-red-700 border border-red-100 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {groups.overdue.length}
                 </span>
               </div>
             </div>
             {groups.overdue.length > 0 ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {groups.overdue.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -503,24 +503,24 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No overdue accounts found</p>
+              <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-8 text-center">
+                <p className="text-gray-500 font-medium text-sm">No overdue accounts found</p>
               </div>
             )}
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="bg-indigo-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Upcoming</h2>
-                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
-                  {groups.upcoming.length} Accounts
+                <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide">Upcoming</h2>
+                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {groups.upcoming.length}
                 </span>
               </div>
             </div>
             {groups.upcoming.length > 0 ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {groups.upcoming.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -540,24 +540,24 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No upcoming bills found</p>
+              <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-8 text-center">
+                <p className="text-gray-500 font-medium text-sm">No upcoming bills found</p>
               </div>
             )}
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="bg-emerald-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Settled</h2>
-                <span className="bg-emerald-100 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
-                  {groups.paid.length} Accounts
+                <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide">Settled</h2>
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {groups.paid.length}
                 </span>
               </div>
             </div>
             {groups.paid.length > 0 ? (
-              <div className="flex flex-col gap-2 opacity-60 hover:opacity-100 transition-all duration-300">
+              <div className="flex flex-col gap-3 opacity-75 hover:opacity-100 transition-all duration-200">
                 {groups.paid.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -577,8 +577,8 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No overdue accounts found</p>
+              <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-8 text-center">
+                <p className="text-gray-500 font-medium text-sm">No settled accounts found</p>
               </div>
             )}
           </section>
@@ -588,17 +588,17 @@ const Dashboard = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-lg shadow-xl p-6 animate-in zoom-in duration-200 border border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
               {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   required
@@ -606,21 +606,21 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rate (₱)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Rate (₱)</label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                     value={formData.rate}
                     onChange={(e) => setFormData({...formData, rate: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Cycle Day</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Cycle Day</label>
                   <input
                     type="number"
                     min="1" max="31"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                     value={formData.cycle}
                     onChange={(e) => setFormData({...formData, cycle: e.target.value})}
                     required
@@ -629,20 +629,20 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Messenger</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Messenger</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
                     placeholder="ID/User"
                     value={formData.messengerId}
                     onChange={(e) => setFormData({...formData, messengerId: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact No.</label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
                     placeholder="0912..."
                     value={formData.contactNo}
                     onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
@@ -650,27 +650,27 @@ const Dashboard = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Days Without Internet</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Days Without Internet</label>
                 <input
                   type="number"
                   min="0" max="30"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={formData.daysDown}
                   onChange={(e) => setFormData({...formData, daysDown: parseInt(e.target.value) || 0})}
                   required
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-white border border-gray-300 text-gray-700 font-bold py-2.5 rounded-md hover:bg-gray-50 transition-all text-xs uppercase"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-md shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all text-xs uppercase"
                 >
                   {editingSubscriber ? 'Update' : 'Confirm'}
                 </button>
@@ -681,18 +681,18 @@ const Dashboard = () => {
       )}
 
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Confirm Payment</h2>
-            <p className="text-slate-400 text-[10px] font-bold mb-4 uppercase tracking-widest">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-lg shadow-xl p-6 animate-in zoom-in duration-200 border border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Confirm Payment</h2>
+            <p className="text-gray-500 text-xs font-semibold mb-6 uppercase tracking-wide">
               {getLatestSubscriberData(activeSubscriber)?.name}
             </p>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-4">
-              <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
+              <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100 mb-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Total Remaining</span>
-                  <span className="text-lg font-bold text-indigo-600">
+                  <span className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Total Remaining</span>
+                  <span className="text-xl font-bold text-indigo-700">
                     ₱{(getLatestSubscriberData(activeSubscriber)?.remainingBalance !== undefined
                       ? getLatestSubscriberData(activeSubscriber).remainingBalance
                       : getLatestSubscriberData(activeSubscriber)?.amountDue)?.toLocaleString()}
@@ -701,11 +701,11 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Pay</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Amount to Pay</label>
                 <input
                   type="number"
                   step="0.01"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={paymentData.amountPaid}
                   onChange={(e) => setPaymentData({...paymentData, amountPaid: parseFloat(e.target.value) || 0})}
                   required
@@ -713,10 +713,10 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Reference No.</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Reference No.</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
                   placeholder="Optional"
                   value={paymentData.referenceNo}
                   onChange={(e) => setPaymentData({...paymentData, referenceNo: e.target.value})}
@@ -724,20 +724,20 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Proof of Payment</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Proof of Payment</label>
                 <div className="space-y-2">
-                  <label className={`flex flex-col items-center justify-center w-full h-24 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                  <label className={`flex flex-col items-center justify-center w-full h-24 rounded-md border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
                     <div className="flex flex-col items-center justify-center">
                       {!paymentData.receiptImage ? (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Receipt</p>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Upload Receipt</p>
                         </>
                       ) : (
                         <div className="relative group">
-                          <img src={paymentData.receiptImage} className="h-16 w-auto rounded-lg shadow-sm object-cover" alt="Preview" />
+                          <img src={paymentData.receiptImage} className="h-16 w-auto rounded-md shadow-sm object-cover" alt="Preview" />
                         </div>
                       )}
                     </div>
@@ -747,7 +747,7 @@ const Dashboard = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentData({...paymentData, receiptImage: ''})}
-                      className="text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:underline block mx-auto"
+                      className="text-[10px] font-bold text-red-600 uppercase tracking-wide hover:underline block mx-auto"
                     >
                       Remove
                     </button>
@@ -755,17 +755,17 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsPaymentModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-white border border-gray-300 text-gray-700 font-bold py-2.5 rounded-md hover:bg-gray-50 transition-all text-xs uppercase"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-md shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all text-xs uppercase"
                 >
                   Post Payment
                 </button>
@@ -776,42 +776,42 @@ const Dashboard = () => {
       )}
 
       {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100 max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-start mb-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl p-8 animate-in zoom-in duration-200 border border-gray-200 max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Payment History</h2>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+                <h2 className="text-2xl font-bold text-gray-900">Payment History</h2>
+                <p className="text-gray-500 text-sm font-semibold uppercase tracking-wide">
                   {getLatestSubscriberData(activeSubscriber)?.name}
                 </p>
               </div>
-              <button onClick={() => setIsHistoryModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              <button onClick={() => setIsHistoryModalOpen(false)} className="p-2 bg-gray-100 text-gray-500 rounded-md hover:bg-gray-200 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
               {getLatestSubscriberData(activeSubscriber)?.payments?.length > 0 ? (
                 getLatestSubscriberData(activeSubscriber).payments.slice().reverse().map((p, idx) => (
-                  <div key={idx} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all">
+                  <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-center hover:bg-white hover:border-gray-300 transition-all">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-lg font-bold text-slate-900">₱{p.amountPaid.toLocaleString()}</span>
-                        <span className="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{p.month}</span>
+                        <span className="text-base font-bold text-gray-900">₱{p.amountPaid.toLocaleString()}</span>
+                        <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">{p.month}</span>
                       </div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <p className="text-xs font-medium text-gray-500">
                         {new Date(p.date).toLocaleDateString()} • Ref: {p.referenceNo || 'N/A'}
                       </p>
                     </div>
                     {p.receiptImage && (
                       <button
                         onClick={() => setReceiptToView(p.receiptImage)}
-                        className="bg-emerald-50 p-3 rounded-2xl text-emerald-500 hover:bg-emerald-100 transition-all cursor-pointer"
+                        className="bg-emerald-50 p-2 rounded-md text-emerald-600 hover:bg-emerald-100 transition-all cursor-pointer border border-emerald-100"
                         title="View Receipt"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </button>
@@ -819,8 +819,8 @@ const Dashboard = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-20">
-                  <p className="text-slate-300 font-bold uppercase tracking-widest">No payment records found</p>
+                <div className="text-center py-12">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wide text-sm">No payment records found</p>
                 </div>
               )}
             </div>
@@ -851,20 +851,20 @@ const Dashboard = () => {
       />
 
       {receiptToView && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="relative max-w-3xl w-full flex flex-col items-center animate-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-gray-900/90 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative max-w-3xl w-full flex flex-col items-center animate-in zoom-in duration-200">
             <button
               onClick={() => setReceiptToView(null)}
-              className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"
+              className="absolute -top-12 right-0 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="bg-white p-2 rounded-[2rem] shadow-2xl overflow-hidden max-h-[80vh]">
-              <img src={receiptToView} className="max-w-full h-auto object-contain rounded-[1.5rem]" alt="Receipt" />
+            <div className="bg-white p-2 rounded-lg shadow-2xl overflow-hidden max-h-[80vh]">
+              <img src={receiptToView} className="max-w-full h-auto object-contain rounded" alt="Receipt" />
             </div>
-            <p className="mt-6 text-white/60 text-xs font-bold uppercase tracking-widest">Digital Proof of Payment</p>
+            <p className="mt-4 text-white/70 text-xs font-bold uppercase tracking-wide">Digital Proof of Payment</p>
           </div>
         </div>
       )}
