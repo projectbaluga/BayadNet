@@ -76,6 +76,15 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
     }
   };
 
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'admin': return 'bg-orange-500';
+      case 'staff': return 'bg-red-500';
+      case 'technician': return 'bg-blue-500';
+      default: return 'bg-slate-300';
+    }
+  };
+
   if (!isOpen || !subscriber) return null;
 
   return (
@@ -132,8 +141,8 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
 
                   {/* Metadata Outside */}
                   <div className={`flex items-center gap-1.5 mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 ${isMe ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-1 h-1 rounded-full ${!isMe ? 'bg-slate-300' : 'bg-indigo-300'}`}></div>
-                    <span>{report.reporterRole}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full ${getRoleColor(report.reporterRole)} shadow-sm`}></div>
+                    <span className={isMe ? 'text-indigo-600/50' : ''}>{report.reporterRole}</span>
                     <span className="opacity-40">•</span>
                     <span>{formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}</span>
                   </div>
