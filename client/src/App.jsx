@@ -528,8 +528,8 @@ const Dashboard = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-zoom-in border border-slate-100">
             <h2 className="text-3xl font-black text-slate-900 mb-8 tracking-tight">
               {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
@@ -622,8 +622,8 @@ const Dashboard = () => {
       )}
 
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-zoom-in border border-slate-100">
             <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Payment</h2>
             <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">{activeSubscriber?.name}</p>
 
@@ -714,8 +714,8 @@ const Dashboard = () => {
       )}
 
       {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100 max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-zoom-in border border-slate-100 max-h-[80vh] flex flex-col">
             <div className="flex justify-between items-start mb-8">
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
@@ -771,8 +771,8 @@ const Dashboard = () => {
       />
 
       {receiptToView && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="relative max-w-3xl w-full flex flex-col items-center animate-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-fade-in">
+          <div className="relative max-w-3xl w-full flex flex-col items-center animate-zoom-in">
             <button
               onClick={() => setReceiptToView(null)}
               className="absolute -top-12 right-0 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all"

@@ -43,7 +43,12 @@ The system features an automated, fair billing logic that replaces fixed credits
 
 ### Quick Start
 1. **Clone the repository** and navigate to the project root.
-2. **Launch the system**:
+2. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your actual credentials (especially Cloudinary and JWT_SECRET)
+   ```
+3. **Launch the system**:
    ```bash
    sudo docker compose up --build -d
    ```

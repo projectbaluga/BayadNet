@@ -72,7 +72,7 @@ const CheckStatus = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-[#fff1f1] border border-rose-100 text-[#e11d48] p-6 rounded-[2rem] flex items-center gap-4 animate-in slide-in-from-top-4 duration-300 mb-8 shadow-sm">
+          <div className="bg-[#fff1f1] border border-rose-100 text-[#e11d48] p-6 rounded-[2rem] flex items-center gap-4 animate-slide-in-top mb-8 shadow-sm">
             <div className="w-10 h-10 rounded-full border-2 border-[#e11d48] flex items-center justify-center flex-shrink-0">
               <span className="font-black text-xl">!</span>
             </div>
@@ -82,7 +82,7 @@ const CheckStatus = () => {
 
         {/* Result Card */}
         {subscriber && (
-          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300/50 border border-slate-100 overflow-hidden animate-in zoom-in duration-500">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300/50 border border-slate-100 overflow-hidden animate-zoom-in">
             {/* Card Header */}
             <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full -mr-16 -mt-16 blur-2xl"></div>

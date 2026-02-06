@@ -274,8 +274,8 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
       {/* Centered Modal for Reports */}
       {isExpanded && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100 max-h-[90vh] flex flex-col relative">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-zoom-in border border-slate-100 max-h-[90vh] flex flex-col relative">
             <button
               onClick={() => setIsExpanded(false)}
               className="absolute top-8 right-8 p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all z-10"
@@ -296,7 +296,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
                 localReports.map((report, idx) => {
                   const isTech = report.reporterRole === 'technician';
                   return (
-                    <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                    <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'} animate-fade-in`}>
                       <div className={`max-w-[80%] rounded-[2rem] px-6 py-4 text-sm shadow-md ${
                         isTech
                           ? 'bg-slate-100 text-slate-800 rounded-tl-none'
@@ -341,7 +341,7 @@ const SubscriberCard = ({ subscriber, onPay, onHistory, onViewReceipt, onEdit, o
 
             <form onSubmit={handleSendReport} className="mt-8 space-y-4">
               {attachment && (
-                <div className="relative inline-block animate-in zoom-in duration-200">
+                <div className="relative inline-block animate-zoom-in">
                   <img src={attachment} className="h-32 w-auto rounded-3xl shadow-xl border-4 border-indigo-50" alt="Preview" />
                   <button
                     type="button"
