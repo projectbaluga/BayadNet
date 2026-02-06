@@ -26,48 +26,48 @@ const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100 overflow-hidden">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Subscriber Details</h2>
+      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 animate-in zoom-in duration-300 border border-slate-100 overflow-hidden">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Subscriber Details</h2>
           <button
             onClick={onClose}
-            className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-all"
+            className="p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 transition-all border border-slate-100"
             aria-label="Close Details"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-center mb-4">
-            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md ${getStatusColor(subscriber.status)}`}>
+        <div className="space-y-6">
+          <div className="flex justify-center">
+            <span className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-current/10 ${getStatusColor(subscriber.status)}`}>
               {subscriber.status}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {detailItems.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 transition-all hover:bg-white hover:shadow-sm group">
-                <div className="p-2 bg-white text-indigo-600 rounded-lg shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
+              <div key={idx} className="flex items-center gap-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md group">
+                <div className="p-2.5 bg-white text-indigo-600 rounded-xl shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
                   {item.icon}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate">{item.label}</p>
-                  <p className="text-xs font-bold text-slate-700 truncate">{item.value}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{item.label}</p>
+                  <p className="text-sm font-bold text-slate-700 truncate">{item.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
-            <div className="flex justify-between items-center">
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <div className="flex justify-between items-center px-2">
               <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Next Due</p>
-                <p className="text-base font-black text-indigo-600">{subscriber.dueDate}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Next Due Date</p>
+                <p className="text-lg font-bold text-indigo-600">{subscriber.dueDate}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Balance</p>
-                <p className="text-lg font-black text-slate-900">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Balance</p>
+                <p className="text-2xl font-bold text-slate-900">
                   ₱{(subscriber.status === 'Partial' ? subscriber.remainingBalance : (subscriber.status === 'Paid' ? 0 : subscriber.amountDue)).toLocaleString()}
                 </p>
               </div>
