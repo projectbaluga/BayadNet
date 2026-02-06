@@ -3,6 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const Subscriber = require('../models/Subscriber');
 const { processSubscriber } = require('../utils/logic');
+const { getCurrentDate } = require('../config/time');
 
 // Rate limiter: max 5 requests per minute per IP
 const publicLimiter = rateLimit({
@@ -33,14 +34,14 @@ router.get('/subscriber/:accountId', publicLimiter, async (req, res) => {
 
     // Strictly select only necessary fields
     const subscriber = await Subscriber.findOne({ accountId })
-      .select('accountId name planName bandwidth isArchived payments remainingBalance cycle rate daysDown isPaidFeb2026');
+      .select('accountId name planName bandwidth isArchived payments remainingBalance cycle rate daysDown');
 
     if (!subscriber) {
       return res.status(404).json({ message: 'Account ID not found' });
     }
 
     // Use internal logic to get billing info
-    const now = new Date(); // Or use getCurrentDate if imported
+    const now = getCurrentDate();
     const processed = processSubscriber(subscriber, now);
 
     const lastPayment = subscriber.payments && subscriber.payments.length > 0
