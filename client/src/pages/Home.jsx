@@ -218,13 +218,13 @@ const Home = () => {
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-widest mb-6 border border-red-100">
                 <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                Now Serving Your Area
+                Now Serving Camarines Sur
               </div>
               <h1 className="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
-                Supercharge Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-500">Digital Life.</span>
+                Internet na <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-500">Hataw sa Bilis!</span>
               </h1>
               <p className="text-lg text-slate-500 font-medium mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Experience fiber-fast speeds, ultra-low latency, and 99.9% reliability. Join the fastest growing ISP network today.
+                Fiber-fast internet para sa work, study, at gaming. Dito ka na sa subok at maasahan sa Bicol!
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <a href="#plans" className="px-8 py-4 bg-red-600 text-white rounded-full font-bold text-sm uppercase tracking-wider shadow-xl shadow-red-200 hover:bg-red-700 active:scale-95 transition-all">
@@ -335,8 +335,8 @@ const Home = () => {
       <section id="plans" className="py-24 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center max-w-2xl mx-auto mb-16">
-                  <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Simple, Transparent Pricing</h2>
-                  <p className="text-slate-500 font-medium">Choose the perfect high-speed fiber plan for your home or business. No hidden fees, no data caps.</p>
+                  <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Sulit na Internet Plans</h2>
+                  <p className="text-slate-500 font-medium">Piliin ang swak na speed para sa iyong lifestyle. Walang hidden charges!</p>
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
@@ -346,13 +346,13 @@ const Home = () => {
                           <Wifi className="w-6 h-6" />
                       </div>
                       <h3 className="text-xl font-black text-slate-900 mb-2">Starter</h3>
-                      <p className="text-slate-500 text-sm font-medium mb-6">Perfect for browsing and social media.</p>
+                      <p className="text-slate-500 text-sm font-medium mb-6">Sakto para sa browsing at social media.</p>
                       <div className="flex items-baseline gap-1 mb-8">
                           <span className="text-4xl font-black text-slate-900">₱999</span>
                           <span className="text-slate-400 font-bold text-sm">/mo</span>
                       </div>
                       <ul className="space-y-4 mb-8">
-                          {['Up to 25 Mbps', 'Unlimited Data', 'Free Installation', '24/7 Support'].map((item, i) => (
+                          {['Up to 35 Mbps', 'Unlimited Data', 'Free Installation', 'Support na Maasahan'].map((item, i) => (
                               <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-600">
                                   <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                                       <Check className="w-3 h-3 stroke-[4]" />
@@ -378,7 +378,7 @@ const Home = () => {
                           <Globe className="w-6 h-6" />
                       </div>
                       <h3 className="text-xl font-black text-white mb-2">Streamer</h3>
-                      <p className="text-slate-400 text-sm font-medium mb-6">Ideal for HD streaming and multiple devices.</p>
+                      <p className="text-slate-400 text-sm font-medium mb-6">Best Seller! Perfect pang-family streaming.</p>
                       <div className="flex items-baseline gap-1 mb-8">
                           <span className="text-4xl font-black text-white">₱1,499</span>
                           <span className="text-slate-500 font-bold text-sm">/mo</span>
@@ -407,7 +407,7 @@ const Home = () => {
                           <Wifi className="w-6 h-6" />
                       </div>
                       <h3 className="text-xl font-black text-slate-900 mb-2">Gamer</h3>
-                      <p className="text-slate-500 text-sm font-medium mb-6">Ultra-low latency for competitive gaming.</p>
+                      <p className="text-slate-500 text-sm font-medium mb-6">Gaming na walang lag. Panalo ka dito!</p>
                       <div className="flex items-baseline gap-1 mb-8">
                           <span className="text-4xl font-black text-slate-900">₱2,499</span>
                           <span className="text-slate-400 font-bold text-sm">/mo</span>
@@ -453,8 +453,8 @@ const Home = () => {
                                      <Rocket className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Quick Installation</p>
-                                     <p className="text-white font-bold">Get connected within 24-48 hours</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mabilis na Kabit</p>
+                                     <p className="text-white font-bold">Installation within 3-5 days</p>
                                  </div>
                              </div>
                              <div className="flex items-center gap-4">
@@ -462,8 +462,8 @@ const Home = () => {
                                      <Shield className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Reliable Connection</p>
-                                     <p className="text-white font-bold">99.9% Uptime Guarantee</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Stable na Connection</p>
+                                     <p className="text-white font-bold">Tuloy-tuloy ang saya, walang putol!</p>
                                  </div>
                              </div>
                              <div className="flex items-center gap-4">
@@ -471,8 +471,8 @@ const Home = () => {
                                      <Users className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Local Support</p>
-                                     <p className="text-white font-bold">Technicians available in your area</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Support na Aasahan</p>
+                                     <p className="text-white font-bold">May technicians kami sa iyong area</p>
                                  </div>
                              </div>
                          </div>
@@ -542,7 +542,11 @@ const Home = () => {
                   </div>
                   <span className="text-xl font-black text-white tracking-tighter">BOJEX<span className="text-red-600">.ONLINE</span></span>
               </div>
-              <p className="text-slate-500 text-sm font-medium">© 2024 Bojex Internet Services. All rights reserved.</p>
+              <div className="flex flex-col items-center md:items-end gap-1">
+                 <p className="text-slate-500 text-sm font-medium">© 2024 Bojex Internet Services. All rights reserved.</p>
+                 <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">Camarines Sur, Bicol</p>
+              </div>
+
               <div className="flex gap-6">
                   <a href="#" className="text-slate-400 hover:text-white transition-colors"><Globe className="w-5 h-5"/></a>
                   <a href="#" className="text-slate-400 hover:text-white transition-colors"><MessageCircle className="w-5 h-5"/></a>
