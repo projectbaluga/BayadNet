@@ -3,6 +3,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
+import SubscriptionModal from '../components/SubscriptionModal';
 
 // Connect to socket
 const socketURL = window.location.hostname === 'localhost'
@@ -68,6 +69,15 @@ const Home = () => {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  // --- Subscription Modal Logic ---
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+
+  const handleSubscribe = (plan) => {
+    setSelectedPlan(plan);
+    setIsApplyModalOpen(true);
   };
 
   // --- Contact Form Logic ---
@@ -272,7 +282,10 @@ const Home = () => {
                               </li>
                           ))}
                       </ul>
-                      <button className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors">
+                      <button
+                        onClick={() => handleSubscribe('Starter')}
+                        className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors"
+                      >
                           Subscribe Now
                       </button>
                   </div>
@@ -301,7 +314,10 @@ const Home = () => {
                               </li>
                           ))}
                       </ul>
-                      <button className="w-full py-4 rounded-xl bg-red-600 text-white font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors shadow-lg shadow-red-900/50">
+                      <button
+                        onClick={() => handleSubscribe('Streamer')}
+                        className="w-full py-4 rounded-xl bg-red-600 text-white font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors shadow-lg shadow-red-900/50"
+                      >
                           Subscribe Now
                       </button>
                   </div>
@@ -327,7 +343,10 @@ const Home = () => {
                               </li>
                           ))}
                       </ul>
-                      <button className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors">
+                      <button
+                        onClick={() => handleSubscribe('Gamer')}
+                        className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors"
+                      >
                           Subscribe Now
                       </button>
                   </div>
@@ -457,6 +476,12 @@ const Home = () => {
         onClose={() => setIsChatOpen(false)}
         subscriber={subscriber}
         socket={socket}
+      />
+
+      <SubscriptionModal
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+        planName={selectedPlan}
       />
     </div>
   );
