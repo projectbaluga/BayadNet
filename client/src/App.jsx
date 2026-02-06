@@ -302,9 +302,10 @@ const Dashboard = () => {
   );
 
   const groups = {
-    overdue: filteredSubscribers.filter(sub => sub.status === 'Overdue' || sub.status === 'Due Today' || sub.status === 'Partial'),
-    upcoming: filteredSubscribers.filter(sub => sub.status === 'Upcoming'),
-    paid: filteredSubscribers.filter(sub => sub.status === 'Paid')
+    withIssues: filteredSubscribers.filter(sub => sub.issueStatus === 'Open'),
+    overdue: filteredSubscribers.filter(sub => (sub.status === 'Overdue' || sub.status === 'Due Today' || sub.status === 'Partial') && sub.issueStatus !== 'Open'),
+    upcoming: filteredSubscribers.filter(sub => sub.status === 'Upcoming' && sub.issueStatus !== 'Open'),
+    paid: filteredSubscribers.filter(sub => sub.status === 'Paid' && sub.issueStatus !== 'Open')
   };
 
   if (!token) {
@@ -489,6 +490,43 @@ const Dashboard = () => {
         </div>
 
         <main className="space-y-8">
+          <section>
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide">With Issues</h2>
+                <span className="bg-amber-50 text-amber-700 border border-amber-100 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {groups.withIssues.length}
+                </span>
+              </div>
+            </div>
+            {groups.withIssues.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {groups.withIssues.map(sub => (
+                  <SubscriberCard
+                    key={sub._id}
+                    subscriber={sub}
+                    onPay={handleOpenPaymentModal}
+                    onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
+                    onViewReceipt={(img) => setReceiptToView(img)}
+                    onEdit={handleOpenModal}
+                    onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
+                    userRole={userRole}
+                    token={token}
+                    socket={socket}
+                    onRefresh={fetchData}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-8 text-center">
+                <p className="text-gray-500 font-medium text-sm">No active issues found</p>
+              </div>
+            )}
+          </section>
+
           <section>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
               <div className="flex items-center gap-3">
