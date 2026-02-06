@@ -111,12 +111,12 @@ const UserManagement = ({ token }) => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">User Management</h2>
+          <h2 className="text-3xl font-bold text-slate-900 tracking-tight">User Management</h2>
           <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Control access for staff & technicians</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
+          className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-bold px-6 py-3.5 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
         >
           <UserPlus className="w-4 h-4" />
           Add New User
@@ -137,10 +137,10 @@ const UserManagement = ({ token }) => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="px-4 py-3 text-[8px] font-black text-slate-400 uppercase tracking-widest">User</th>
-                <th className="px-4 py-3 text-[8px] font-black text-slate-400 uppercase tracking-widest">Email</th>
-                <th className="px-4 py-3 text-[8px] font-black text-slate-400 uppercase tracking-widest">Role</th>
-                <th className="px-4 py-3 text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">User</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -153,7 +153,7 @@ const UserManagement = ({ token }) => {
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 leading-none">{user.name || 'No Name'}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">@{user.username}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">@{user.username}</p>
                       </div>
                     </div>
                   </td>
@@ -161,7 +161,7 @@ const UserManagement = ({ token }) => {
                     {user.email || '—'}
                   </td>
                   <td className="px-4 py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-tighter border ${getRoleBadgeColor(user.role)}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter border ${getRoleBadgeColor(user.role)}`}>
                       {user.role}
                     </span>
                   </td>
@@ -198,7 +198,7 @@ const UserManagement = ({ token }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {editingUser ? 'Edit User' : 'New User'}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -208,7 +208,7 @@ const UserManagement = ({ token }) => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
@@ -218,7 +218,7 @@ const UserManagement = ({ token }) => {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email</label>
                 <input
                   type="email"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
@@ -228,7 +228,7 @@ const UserManagement = ({ token }) => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Username</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Username</label>
                   <input
                     type="text"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
@@ -238,7 +238,7 @@ const UserManagement = ({ token }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Role</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Role</label>
                   <select
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none bg-white text-sm"
                     value={formData.role}
@@ -251,7 +251,7 @@ const UserManagement = ({ token }) => {
                 </div>
               </div>
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
                   {editingUser ? 'New Password' : 'Password'}
                 </label>
                 <input
@@ -267,13 +267,13 @@ const UserManagement = ({ token }) => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-black py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-slate-50 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
                 >
                   {editingUser ? 'Update' : 'Confirm'}
                 </button>
@@ -290,20 +290,20 @@ const UserManagement = ({ token }) => {
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
               <AlertTriangle className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">Delete User?</h3>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Delete User?</h3>
             <p className="text-slate-500 font-medium mb-8">
               Are you sure you want to delete <span className="font-bold text-slate-900">@{userToDelete?.username}</span>? This action cannot be undone.
             </p>
             <div className="flex gap-4">
               <button
                 onClick={() => setIsDeleteConfirmOpen(false)}
-                className="flex-1 bg-slate-50 text-slate-400 font-black py-4 rounded-2xl hover:bg-slate-100 transition-all uppercase text-[11px] tracking-widest"
+                className="flex-1 bg-slate-50 text-slate-400 font-bold py-4 rounded-2xl hover:bg-slate-100 transition-all uppercase text-[11px] tracking-widest"
               >
                 No, Keep
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 bg-rose-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-600 transition-all uppercase text-[11px] tracking-widest"
+                className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-600 transition-all uppercase text-[11px] tracking-widest"
               >
                 Yes, Delete
               </button>

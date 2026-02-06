@@ -98,26 +98,26 @@ const SubscriberCard = ({
   const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : (isPaid ? 0 : subscriber.amountDue);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-between gap-2 hover:shadow-md hover:border-indigo-100 transition-all group">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-3 flex items-center justify-between gap-3 hover:shadow-xl hover:shadow-indigo-500/5 hover:border-indigo-200/50 transition-all group">
       {/* Left: Name & Info - Clickable for details */}
       <div
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onViewDetails && onViewDetails(subscriber)}
       >
-        <div className="flex items-center gap-1.5">
-          <h3 className="font-bold text-slate-900 truncate text-[13px] group-hover:text-indigo-600 transition-colors">
+        <div className="flex items-center gap-2">
+          <h3 className="font-bold text-slate-800 truncate text-sm group-hover:text-indigo-600 transition-colors">
             {subscriber.name}
           </h3>
-          <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight whitespace-nowrap">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100">
             C{subscriber.cycle}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 mt-0">
-          <span className={`px-1.5 py-0 rounded-full text-[7px] font-black uppercase tracking-tighter border ${getStatusColor(subscriber.status)}`}>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusColor(subscriber.status)}`}>
             {subscriber.status}
           </span>
           {unreadCount > 0 && (
-            <span className="bg-amber-100 text-amber-600 text-[7px] font-black px-1 py-0 rounded-full uppercase">
+            <span className="bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase animate-pulse">
               {unreadCount} Issue{unreadCount > 1 ? 's' : ''}
             </span>
           )}
@@ -126,59 +126,59 @@ const SubscriberCard = ({
 
       {/* Middle: Amount - Clickable for details */}
       <div
-        className="text-right min-w-[70px] px-2 border-l border-slate-50 cursor-pointer"
+        className="text-right min-w-[80px] px-3 border-l border-slate-100 cursor-pointer"
         onClick={() => onViewDetails && onViewDetails(subscriber)}
       >
-        <p className="text-[7px] text-slate-400 font-black uppercase tracking-tighter">Due</p>
-        <p className={`text-[12px] font-black ${isPaid ? 'text-emerald-500' : 'text-indigo-600'}`}>
+        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Due</p>
+        <p className={`text-sm font-bold ${isPaid ? 'text-emerald-500' : 'text-indigo-600'}`}>
           ₱{amount.toLocaleString()}
         </p>
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-1">
-        <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onHistory(subscriber)}
-            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
             title="History"
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4" />
           </button>
 
           {userRole === 'admin' && (
             <button
               onClick={() => onEdit(subscriber)}
-              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
               title="Edit"
             >
-              <Edit className="w-3.5 h-3.5" />
+              <Edit className="w-4 h-4" />
             </button>
           )}
 
           <button
             onClick={() => onOpenChat(subscriber)}
-            className={`p-1.5 rounded-lg transition-all relative ${unreadCount > 0 ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+            className={`p-2 rounded-xl transition-all relative ${unreadCount > 0 ? 'text-amber-500 bg-amber-50 ring-2 ring-amber-100' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
             title="Chat"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-4 h-4" />
           </button>
 
           {(userRole === 'admin' || userRole === 'staff') && (
             <>
               <button
                 onClick={handleDownloadSOA}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                 title="SOA"
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-4 h-4" />
               </button>
               <button
                 onClick={handleSendReminder}
-                className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
                 title="Send Reminder"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </>
           )}
@@ -191,20 +191,20 @@ const SubscriberCard = ({
                   .pop();
                 if (latestReceipt) onViewReceipt(latestReceipt.receiptImage);
               }}
-              className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+              className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
               title="Receipt"
             >
-              <ImageIcon className="w-3.5 h-3.5" />
+              <ImageIcon className="w-4 h-4" />
             </button>
           )}
 
           {userRole === 'admin' && (
             <button
               onClick={() => onDelete(subscriber._id)}
-              className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+              className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
               title="Archive"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -213,7 +213,7 @@ const SubscriberCard = ({
           (userRole === 'admin' || userRole === 'staff') && (
             <button
               onClick={() => onPay(subscriber)}
-              className="bg-indigo-600 text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-tighter"
+              className="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-xl hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-wider shadow-lg shadow-indigo-100"
             >
               Pay
             </button>

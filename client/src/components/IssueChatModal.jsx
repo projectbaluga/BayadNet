@@ -80,25 +80,27 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl p-4 sm:p-6 animate-in zoom-in duration-300 border border-slate-100 h-[85vh] flex flex-col relative overflow-hidden">
+      <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-4 sm:p-8 animate-in zoom-in duration-300 border border-slate-100 h-[90vh] flex flex-col relative overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-6 border-b border-slate-50 pb-4">
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">Issue Reports</h2>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{subscriber.name} • {subscriber.accountId}</p>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Issue Reports</h2>
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-1">
+              {subscriber.name} <span className="mx-1 text-slate-200">•</span> {subscriber.accountId}
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-all z-10"
+            className="p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 transition-all z-10 border border-slate-100"
           >
-            <XCircle className="w-5 h-5" />
+            <XCircle className="w-6 h-6" />
           </button>
         </div>
 
         {/* Chat Area */}
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar scroll-smooth min-h-0 mb-4"
+          className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar scroll-smooth min-h-0 mb-6"
         >
           {reports.length > 0 ? (
             reports.map((report, idx) => {
@@ -107,34 +109,39 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
               const isTech = report.reporterRole === 'technician';
 
               return (
-                <div key={idx} className={`flex flex-col ${!isMe ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-1 duration-300`}>
-                  <div className={`max-w-[90%] sm:max-w-[80%] rounded-[1.5rem] px-4 py-3 text-xs shadow-sm ${
+                <div key={idx} className={`flex flex-col ${!isMe ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                  <div className={`max-w-[85%] sm:max-w-[75%] rounded-[1.8rem] px-5 py-3.5 shadow-sm transition-all ${
                     !isMe
-                      ? 'bg-slate-100 text-slate-800 rounded-tl-none'
-                      : 'bg-indigo-600 text-white rounded-tr-none'
+                      ? 'bg-slate-100 text-slate-700 rounded-tl-none border border-slate-200/50'
+                      : 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-100 shadow-lg'
                   }`}>
                     {report.attachmentUrl && (
-                      <div className="mb-2 overflow-hidden rounded-xl max-w-full">
+                      <div className="mb-2 overflow-hidden rounded-[1.2rem] max-w-full border border-black/5">
                         <img
                           src={report.attachmentUrl}
                           alt="Attachment"
-                          className="w-full h-auto max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          className="w-full h-auto max-h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity"
                           onClick={() => window.open(report.attachmentUrl, '_blank')}
                         />
                       </div>
                     )}
-                    <p className="font-bold leading-snug whitespace-pre-wrap">{report.message}</p>
-                    <div className={`flex items-center gap-1.5 mt-2 pt-2 border-t text-[8px] font-black uppercase tracking-widest ${
-                      isTech ? 'border-slate-200 text-slate-400' : 'border-white/20 text-indigo-100'
-                    }`}>
-                      {isTech ? <User className="w-2.5 h-2.5" /> : <ShieldCheck className="w-2.5 h-2.5" />}
-                      {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
-                    </div>
+                    {report.message && (
+                      <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">{report.message}</p>
+                    )}
                   </div>
+
+                  {/* Metadata Outside */}
+                  <div className={`flex items-center gap-1.5 mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-1 h-1 rounded-full ${!isMe ? 'bg-slate-300' : 'bg-indigo-300'}`}></div>
+                    <span>{report.reporterRole}</span>
+                    <span className="opacity-40">•</span>
+                    <span>{formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}</span>
+                  </div>
+
                   {idx === reports.length - 1 && report.readBy && report.readBy.length > 1 && (
-                    <div className="flex items-center gap-1 mt-2 px-2 opacity-60">
+                    <div className="flex items-center gap-1 mt-2 px-1 opacity-60">
                       <Eye className="w-3 h-3 text-slate-400" />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                         Seen by {report.readBy.filter(r => r.name !== report.reporterName).map(r => r.name).join(', ')}
                       </span>
                     </div>
@@ -143,66 +150,72 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
-              <AlertCircle className="w-16 h-16 mb-4 text-slate-300" />
-              <p className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">No issues reported yet</p>
+            <div className="flex flex-col items-center justify-center h-full text-center opacity-40 py-20">
+              <div className="bg-slate-50 p-6 rounded-full mb-4">
+                <AlertCircle className="w-12 h-12 text-slate-300" />
+              </div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">No issues reported yet</p>
             </div>
           )}
         </div>
 
         {/* Footer / Input */}
-        <div className="mt-auto">
+        <div className="mt-auto border-t border-slate-50 pt-4">
           {attachment && (
-            <div className="relative inline-block animate-in zoom-in duration-200 mb-2 ml-2">
-              <img src={attachment} className="h-20 w-auto rounded-xl shadow-lg border-2 border-indigo-50" alt="Preview" />
+            <div className="relative inline-block animate-in zoom-in duration-200 mb-3 ml-2">
+              <img src={attachment} className="h-24 w-auto rounded-2xl shadow-xl border-4 border-indigo-50 object-cover" alt="Preview" />
               <button
                 type="button"
                 onClick={() => setAttachment(null)}
-                className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:bg-rose-600 transition-all hover:scale-110"
+                className="absolute -top-3 -right-3 bg-rose-500 text-white rounded-full p-1.5 shadow-lg hover:bg-rose-600 transition-all hover:scale-110"
               >
-                <XCircle className="w-3.5 h-3.5" />
+                <XCircle className="w-4 h-4" />
               </button>
             </div>
           )}
-          <form onSubmit={handleSendReport} className="relative group">
-            <textarea
-              placeholder="Type a message..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-[1.5rem] py-3 pl-5 pr-28 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 resize-none min-h-[50px]"
-              rows="1"
-              value={reportMessage}
-              onChange={(e) => setReportMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendReport(e);
-                }
-              }}
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                title="Take Photo"
-              >
-                <Camera className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                title="Attach Image"
-              >
-                <Image className="w-4 h-4" />
-              </button>
-              <button
-                type="submit"
-                disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
-                className="ml-1 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-md shadow-indigo-100"
-              >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </button>
+          <form onSubmit={handleSendReport} className="relative flex items-center gap-2">
+            <div className="relative flex-1 group">
+              <textarea
+                placeholder="Type a message..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-full py-3.5 pl-6 pr-20 text-sm font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 resize-none min-h-[54px] max-h-32 flex items-center"
+                rows="1"
+                value={reportMessage}
+                onChange={(e) => setReportMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendReport(e);
+                  }
+                }}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
+                  title="Take Photo"
+                >
+                  <Camera className="w-4.5 h-4.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
+                  title="Attach Image"
+                >
+                  <Image className="w-4.5 h-4.5" />
+                </button>
+              </div>
             </div>
+
+            <button
+              type="submit"
+              disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
+              className="flex-shrink-0 w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 active:scale-90 transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-indigo-100"
+            >
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </button>
+
             <input
               type="file"
               className="hidden"

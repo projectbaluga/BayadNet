@@ -294,7 +294,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8">
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-500 mb-6">Login to manage subscribers</p>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -340,7 +340,7 @@ const Dashboard = () => {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 leading-tight tracking-tight">BAYADNET PRO</h1>
+              <h1 className="text-xl font-bold text-slate-900 leading-tight tracking-tight">BAYADNET PRO</h1>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Management & Analytics</p>
             </div>
           </div>
@@ -348,14 +348,14 @@ const Dashboard = () => {
           <nav className="hidden md:flex items-center gap-8 ml-12 mr-auto">
             <button
               onClick={() => setView('dashboard')}
-              className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`text-[11px] font-bold uppercase tracking-widest transition-all ${view === 'dashboard' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
             >
               Dashboard
             </button>
             {userRole === 'admin' && (
               <button
                 onClick={() => setView('users')}
-                className={`text-[11px] font-black uppercase tracking-widest transition-all ${view === 'users' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`text-[11px] font-bold uppercase tracking-widest transition-all ${view === 'users' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Users
               </button>
@@ -377,7 +377,7 @@ const Dashboard = () => {
                 </button>
                 <button
                   onClick={() => handleOpenModal()}
-                  className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-black px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
+                  className="bg-indigo-600 text-white text-[11px] font-bold px-6 py-3 rounded-xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest uppercase"
                 >
                   + Add Subscriber
                 </button>
@@ -385,7 +385,7 @@ const Dashboard = () => {
             )}
             <button
               onClick={handleLogout}
-              className="text-[11px] font-black text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
+              className="text-[11px] font-bold text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 px-5 py-3 rounded-xl transition-all uppercase tracking-widest"
             >
               Logout
             </button>
@@ -400,57 +400,57 @@ const Dashboard = () => {
           <>
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           {/* Collection Efficiency Chart */}
-          <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-4 rounded-3xl border border-white/20 shadow-xl shadow-indigo-100/30 flex items-center gap-4 group transition-transform duration-500">
+          <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-5 rounded-3xl border border-white/20 shadow-xl shadow-indigo-500/5 flex items-center gap-6 group transition-all hover:shadow-indigo-500/10">
             <div className="relative flex-shrink-0">
-              <svg className="h-20 w-20 transform -rotate-90">
-                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
+              <svg className="h-24 w-24 transform -rotate-90">
+                <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100" />
                 <circle
-                  cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent"
-                  strokeDasharray={2 * Math.PI * 36}
-                  strokeDashoffset={2 * Math.PI * 36 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
+                  cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="10" fill="transparent"
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={2 * Math.PI * 42 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
                   className="text-indigo-600 transition-all duration-1000 ease-out"
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[10px] font-black text-slate-900">{efficiency}%</span>
+                <span className="text-xs font-bold text-slate-900">{efficiency}%</span>
               </div>
             </div>
             <div>
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Efficiency</p>
-              <h3 className="text-lg font-black text-slate-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
-              <p className="text-[9px] text-slate-400 font-bold mt-1 italic">of ₱{analytics.totalExpected.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Efficiency</p>
+              <h3 className="text-2xl font-bold text-slate-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
+              <p className="text-[11px] text-slate-400 font-bold mt-2 italic">of ₱{analytics.totalExpected.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-indigo-500 flex flex-col justify-between">
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-indigo-500 flex flex-col justify-between">
               <div>
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Net Profit</p>
-                <p className={`text-lg font-black ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-rose-500'}`}>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Net Profit</p>
+                <p className={`text-xl font-bold ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-rose-500'}`}>
                   ₱{analytics.currentProfit.toLocaleString()}
                 </p>
               </div>
-              <p className="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-rose-500">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Overdue</p>
-              <p className="text-2xl font-black text-rose-500">{analytics.groupCounts['Overdue'] || 0}</p>
-              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-rose-500">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Overdue</p>
+              <p className="text-3xl font-bold text-rose-500">{analytics.groupCounts['Overdue'] || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-amber-400">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Partial</p>
-              <p className="text-2xl font-black text-amber-500">{analytics.groupCounts['Partial'] || 0}</p>
-              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-amber-400">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Partial</p>
+              <p className="text-3xl font-bold text-amber-500">{analytics.groupCounts['Partial'] || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-emerald-500">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Paid</p>
-              <p className="text-2xl font-black text-emerald-600">{analytics.groupCounts['Paid'] || 0}</p>
-              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-5 rounded-3xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-emerald-500">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Paid</p>
+              <p className="text-3xl font-bold text-emerald-600">{analytics.groupCounts['Paid'] || 0}</p>
+              <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
             </div>
           </div>
         </section>
@@ -476,8 +476,8 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
               <div className="flex items-center gap-3">
                 <div className="bg-rose-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Overdue & Partial</h2>
-                <span className="bg-rose-100 text-rose-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Overdue & Partial</h2>
+                <span className="bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.overdue.length} Accounts
                 </span>
               </div>
@@ -513,8 +513,8 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
               <div className="flex items-center gap-3">
                 <div className="bg-indigo-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Upcoming</h2>
-                <span className="bg-indigo-100 text-indigo-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Upcoming</h2>
+                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.upcoming.length} Accounts
                 </span>
               </div>
@@ -550,8 +550,8 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
               <div className="flex items-center gap-3">
                 <div className="bg-emerald-500 w-1 h-5 rounded-full"></div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Settled</h2>
-                <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase">Settled</h2>
+                <span className="bg-emerald-100 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.paid.length} Accounts
                 </span>
               </div>
@@ -590,12 +590,12 @@ const Dashboard = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">
               {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
@@ -606,7 +606,7 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rate (₱)</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rate (₱)</label>
                   <input
                     type="number"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
@@ -616,7 +616,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Cycle Day</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Cycle Day</label>
                   <input
                     type="number"
                     min="1" max="31"
@@ -629,7 +629,7 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Messenger</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Messenger</label>
                   <input
                     type="text"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
@@ -639,7 +639,7 @@ const Dashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</label>
                   <input
                     type="text"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
@@ -650,7 +650,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Days Without Internet</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Days Without Internet</label>
                 <input
                   type="number"
                   min="0" max="30"
@@ -664,13 +664,13 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-black py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-slate-50 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
                 >
                   {editingSubscriber ? 'Update' : 'Confirm'}
                 </button>
@@ -683,7 +683,7 @@ const Dashboard = () => {
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-2xl font-black text-slate-900 mb-1 tracking-tight">Confirm Payment</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Confirm Payment</h2>
             <p className="text-slate-400 text-[10px] font-bold mb-4 uppercase tracking-widest">
               {getLatestSubscriberData(activeSubscriber)?.name}
             </p>
@@ -691,8 +691,8 @@ const Dashboard = () => {
             <form onSubmit={handlePaymentSubmit} className="space-y-4">
               <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
-                  <span className="text-lg font-black text-indigo-600">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Total Remaining</span>
+                  <span className="text-lg font-bold text-indigo-600">
                     ₱{(getLatestSubscriberData(activeSubscriber)?.remainingBalance !== undefined
                       ? getLatestSubscriberData(activeSubscriber).remainingBalance
                       : getLatestSubscriberData(activeSubscriber)?.amountDue)?.toLocaleString()}
@@ -701,7 +701,7 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Pay</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Pay</label>
                 <input
                   type="number"
                   step="0.01"
@@ -713,7 +713,7 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Reference No.</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Reference No.</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
@@ -724,7 +724,7 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Proof of Payment</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Proof of Payment</label>
                 <div className="space-y-2">
                   <label className={`flex flex-col items-center justify-center w-full h-24 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
                     <div className="flex flex-col items-center justify-center">
@@ -733,7 +733,7 @@ const Dashboard = () => {
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Upload Receipt</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Receipt</p>
                         </>
                       ) : (
                         <div className="relative group">
@@ -747,7 +747,7 @@ const Dashboard = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentData({...paymentData, receiptImage: ''})}
-                      className="text-[8px] font-black text-rose-500 uppercase tracking-widest hover:underline block mx-auto"
+                      className="text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:underline block mx-auto"
                     >
                       Remove
                     </button>
@@ -759,13 +759,13 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => setIsPaymentModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-black py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-slate-50 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-3 rounded-xl shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Post Payment
                 </button>
@@ -780,7 +780,7 @@ const Dashboard = () => {
           <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100 max-h-[80vh] flex flex-col">
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
+                <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Payment History</h2>
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
                   {getLatestSubscriberData(activeSubscriber)?.name}
                 </p>
@@ -798,8 +798,8 @@ const Dashboard = () => {
                   <div key={idx} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-lg font-black text-slate-900">₱{p.amountPaid.toLocaleString()}</span>
-                        <span className="bg-indigo-100 text-indigo-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">{p.month}</span>
+                        <span className="text-lg font-bold text-slate-900">₱{p.amountPaid.toLocaleString()}</span>
+                        <span className="bg-indigo-100 text-indigo-600 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">{p.month}</span>
                       </div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         {new Date(p.date).toLocaleDateString()} • Ref: {p.referenceNo || 'N/A'}
@@ -820,7 +820,7 @@ const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center py-20">
-                  <p className="text-slate-300 font-black uppercase tracking-widest">No payment records found</p>
+                  <p className="text-slate-300 font-bold uppercase tracking-widest">No payment records found</p>
                 </div>
               )}
             </div>
@@ -864,7 +864,7 @@ const Dashboard = () => {
             <div className="bg-white p-2 rounded-[2rem] shadow-2xl overflow-hidden max-h-[80vh]">
               <img src={receiptToView} className="max-w-full h-auto object-contain rounded-[1.5rem]" alt="Receipt" />
             </div>
-            <p className="mt-6 text-white/60 text-xs font-black uppercase tracking-widest">Digital Proof of Payment</p>
+            <p className="mt-6 text-white/60 text-xs font-bold uppercase tracking-widest">Digital Proof of Payment</p>
           </div>
         </div>
       )}
