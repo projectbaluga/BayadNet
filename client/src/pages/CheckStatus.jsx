@@ -1,12 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Loader2, AlertCircle, Check, XCircle, Info, PhoneCall } from 'lucide-react';
+import { io } from 'socket.io-client';
+import { Search, Loader2, AlertCircle, Check, XCircle, Info, PhoneCall, MessageCircle } from 'lucide-react';
+import PublicChatModal from '../components/PublicChatModal';
+
+// Connect to socket. If localhost:3000, point to 5000. Otherwise, use same origin (proxied by Nginx)
+const socketURL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : window.location.origin;
 
 const CheckStatus = () => {
   const [accountId, setAccountId] = useState('');
   const [subscriber, setSubscriber] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const newSocket = io(socketURL, {
+      transports: ['polling', 'websocket'],
+      withCredentials: true
+    });
+    setSocket(newSocket);
+    return () => newSocket.close();
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !subscriber) return;
+
+    const handleReportAdded = ({ subscriberId, report }) => {
+      if (subscriberId === subscriber._id) {
+        setSubscriber(prev => ({
+           ...prev,
+           reports: [...(prev.reports || []), report]
+        }));
+      }
+    };
+
+    socket.on('report-added', handleReportAdded);
+    return () => socket.off('report-added', handleReportAdded);
+  }, [socket, subscriber]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -154,15 +188,13 @@ const CheckStatus = () => {
 
             {/* Card Footer */}
             <div className="bg-slate-50 p-6 border-t border-slate-100 flex justify-center">
-              <a
-                href="https://m.me/bojex.official"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => setIsChatOpen(true)}
                 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-violet-600 transition-colors"
               >
-                <PhoneCall className="w-3 h-3" />
-                Contact Support
-              </a>
+                <MessageCircle className="w-3 h-3" />
+                Direct Chat
+              </button>
             </div>
           </div>
         )}
@@ -174,6 +206,13 @@ const CheckStatus = () => {
           </p>
         )}
       </div>
+
+      <PublicChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        subscriber={subscriber}
+        socket={socket}
+      />
     </div>
   );
 };

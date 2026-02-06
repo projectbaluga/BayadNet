@@ -7,7 +7,7 @@ import {
   Trash2,
   CheckCircle2,
   Image as ImageIcon,
-  Send
+  AlertCircle
 } from 'lucide-react';
 
 const SubscriberCard = ({
@@ -21,25 +21,6 @@ const SubscriberCard = ({
   onViewDetails,
   userRole
 }) => {
-  const handleSendReminder = (e) => {
-    e.stopPropagation();
-    const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
-    const message = `Hi ${subscriber.name}, your bill for ${subscriber.currentMonthName || 'this month'} is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
-
-    if (subscriber.messengerId) {
-      const url = `https://m.me/${subscriber.messengerId}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-    } else {
-      if (subscriber.contactNo) {
-        const smsUrl = `sms:${subscriber.contactNo}?body=${encodeURIComponent(message)}`;
-        window.open(smsUrl, '_blank');
-      } else {
-        const url = `https://m.me/?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-      }
-    }
-  };
-
   const handleDownloadSOA = (e) => {
     e.stopPropagation();
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
@@ -119,9 +100,9 @@ const SubscriberCard = ({
             {subscriber.status}
           </span>
           {unreadCount > 0 && (
-            <span className="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-              {unreadCount} Issue{unreadCount > 1 ? 's' : ''}
-            </span>
+            <div className="animate-pulse" title={`${unreadCount} unread message${unreadCount > 1 ? 's' : ''}`}>
+              <AlertCircle className="w-6 h-6 text-red-600 fill-red-100" strokeWidth={2.5} />
+            </div>
           )}
         </div>
       </div>
@@ -174,13 +155,6 @@ const SubscriberCard = ({
                 title="SOA"
               >
                 <FileText className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleSendReminder}
-                className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
-                title="Send Reminder"
-              >
-                <Send className="w-4 h-4" />
               </button>
             </>
           )}

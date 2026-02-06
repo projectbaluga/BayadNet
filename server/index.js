@@ -416,6 +416,49 @@ app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'techn
   }
 });
 
+app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), async (req, res) => {
+  try {
+    const { accountId, message, attachmentUrl } = req.body;
+    if (!accountId) return res.status(400).json({ message: 'Account ID is required' });
+
+    const subscriber = await Subscriber.findOne({ accountId });
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
+
+    let finalAttachmentUrl = attachmentUrl;
+    // Upload attachment to Cloudinary if it's base64
+    if (finalAttachmentUrl && finalAttachmentUrl.startsWith('data:image')) {
+      finalAttachmentUrl = await uploadToCloudinary(finalAttachmentUrl, 'bayadnet_reports');
+    }
+
+    const report = {
+      reporterName: subscriber.name,
+      reporterRole: 'subscriber',
+      message: message || '',
+      attachmentUrl: finalAttachmentUrl,
+      timestamp: new Date(),
+      readBy: [{
+        name: subscriber.name,
+        role: 'subscriber',
+        timestamp: new Date()
+      }]
+    };
+
+    subscriber.reports.push(report);
+
+    await subscriber.save();
+
+    // Emit real-time event
+    io.emit('report-added', { subscriberId: subscriber._id, report });
+
+    res.status(201).json(report);
+  } catch (error) {
+    console.error('Server error in public report route:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
 
