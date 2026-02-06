@@ -7,7 +7,7 @@ import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
 import IssueChatModal from './components/IssueChatModal';
 import SubscriberDetailsModal from './components/SubscriberDetailsModal';
-import CheckStatus from './pages/CheckStatus';
+import Home from './pages/Home';
 import { convertToBase64, compressImage } from './utils/image';
 
 const API_BASE = '/api';
@@ -1007,7 +1007,7 @@ const Dashboard = () => {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<CheckStatus />} />
+      <Route path="/" element={<Home />} />
       <Route path="/team" element={<Dashboard />} />
     </Routes>
   );
