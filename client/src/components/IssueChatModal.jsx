@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye } from 'lucide-react';
+import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye, Camera } from 'lucide-react';
 
 const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
 
@@ -12,6 +12,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
   const [localReports, setLocalReports] = useState([]);
   const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const notificationSoundRef = useRef(new Audio(NOTIFICATION_SOUND_URL));
 
   useEffect(() => {
@@ -210,14 +211,22 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
                 }
               }}
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="p-2 sm:p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all"
+                title="Take Photo"
+              >
+                <Camera className="w-5 h-5 sm:w-6 h-6" />
+              </button>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all"
+                className="p-2 sm:p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all"
                 title="Attach Image"
               >
-                <Image className="w-6 h-6" />
+                <Image className="w-5 h-5 sm:w-6 h-6" />
               </button>
               <button
                 type="submit"
@@ -232,6 +241,14 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
               className="hidden"
               accept="image/*"
               ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              ref={cameraInputRef}
               onChange={handleFileChange}
             />
           </form>

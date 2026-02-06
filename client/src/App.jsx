@@ -6,6 +6,7 @@ import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
 import IssueChatModal from './components/IssueChatModal';
+import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
@@ -36,6 +37,7 @@ const Dashboard = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [receiptToView, setReceiptToView] = useState(null);
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [editingSubscriber, setEditingSubscriber] = useState(null);
@@ -155,6 +157,11 @@ const Dashboard = () => {
   const handleOpenChatModal = (subscriber) => {
     setActiveSubscriber(subscriber);
     setIsChatModalOpen(true);
+  };
+
+  const handleOpenDetailsModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setIsDetailsModalOpen(true);
   };
 
   const handlePaymentSubmit = async (e) => {
@@ -452,6 +459,7 @@ const Dashboard = () => {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -488,6 +496,7 @@ const Dashboard = () => {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -524,6 +533,7 @@ const Dashboard = () => {
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -801,6 +811,12 @@ const Dashboard = () => {
         socket={socket}
         userRole={userRole}
         onRefresh={fetchData}
+      />
+
+      <SubscriberDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        subscriber={getLatestSubscriberData(activeSubscriber)}
       />
 
       {receiptToView && (
