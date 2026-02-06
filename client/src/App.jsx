@@ -1007,8 +1007,8 @@ const Dashboard = () => {
 function App() {
   return (
     <Routes>
-      <Route path="/check-status" element={<CheckStatus />} />
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<CheckStatus />} />
+      <Route path="/team" element={<Dashboard />} />
     </Routes>
   );
 }
