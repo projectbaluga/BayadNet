@@ -4,52 +4,15 @@ import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye, Camera } from 'lucide-react';
 import { convertToBase64, compressImage } from '../utils/image';
 
-const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
-
 const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, onRefresh }) => {
   const [reportMessage, setReportMessage] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localReports, setLocalReports] = useState([]);
   const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const notificationSoundRef = useRef(new Audio(NOTIFICATION_SOUND_URL));
 
-  useEffect(() => {
-    if (subscriber) {
-      setLocalReports(subscriber.reports || []);
-    }
-  }, [subscriber]);
-
-  useEffect(() => {
-    if (socket && subscriber) {
-      const handleReportAdded = ({ subscriberId, report }) => {
-        if (subscriberId === subscriber._id) {
-          setLocalReports(prev => [...prev, report]);
-
-          // Play notification sound if not the sender
-          const currentUser = JSON.parse(localStorage.getItem('user')) || {};
-          if (report.reporterName !== (currentUser.name || currentUser.username)) {
-            notificationSoundRef.current.play().catch(e => console.log('Sound blocked by browser'));
-          }
-        }
-      };
-
-      const handleReportsRead = ({ subscriberId, reports }) => {
-        if (subscriberId === subscriber._id) {
-          setLocalReports(reports);
-        }
-      };
-
-      socket.on('report-added', handleReportAdded);
-      socket.on('reports-read', handleReportsRead);
-      return () => {
-        socket.off('report-added', handleReportAdded);
-        socket.off('reports-read', handleReportsRead);
-      };
-    }
-  }, [socket, subscriber]);
+  const reports = subscriber?.reports || [];
 
   useEffect(() => {
     if (isOpen && subscriber) {
@@ -62,7 +25,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
         }
       }
     }
-  }, [localReports, isOpen, socket, subscriber]);
+  }, [reports, isOpen, socket, subscriber]);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -104,7 +67,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
 
       setReportMessage('');
       setAttachment(null);
-      if (onRefresh) onRefresh();
+      // No longer need a full dashboard refresh because of socket sync
     } catch (error) {
       console.error('Error sending report:', error);
       alert('Failed to send report');
@@ -137,8 +100,8 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
           ref={chatContainerRef}
           className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar scroll-smooth min-h-0 mb-4"
         >
-          {localReports.length > 0 ? (
-            localReports.map((report, idx) => {
+          {reports.length > 0 ? (
+            reports.map((report, idx) => {
               const currentUser = JSON.parse(localStorage.getItem('user')) || {};
               const isMe = report.reporterName === (currentUser.name || currentUser.username);
               const isTech = report.reporterRole === 'technician';
@@ -168,7 +131,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
                       {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
                     </div>
                   </div>
-                  {idx === localReports.length - 1 && report.readBy && report.readBy.length > 1 && (
+                  {idx === reports.length - 1 && report.readBy && report.readBy.length > 1 && (
                     <div className="flex items-center gap-1 mt-2 px-2 opacity-60">
                       <Eye className="w-3 h-3 text-slate-400" />
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">

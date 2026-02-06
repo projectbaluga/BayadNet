@@ -36,7 +36,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000, // Increased limit for active dashboard/chat usage
   standardHeaders: true,
   legacyHeaders: false,
 });
