@@ -66,6 +66,17 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const uploadToCloudinary = async (image, folder = 'bayadnet') => {
+  if (!image || typeof image !== 'string' || !image.startsWith('data:image')) return image;
+  try {
+    const uploadRes = await cloudinary.uploader.upload(image, { folder });
+    return uploadRes.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Failed to upload image to Cloudinary');
+  }
+};
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -167,7 +178,13 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
-    const { amountPaid, referenceNo, receiptImage, month } = req.body;
+    let { amountPaid, referenceNo, receiptImage, month } = req.body;
+
+    // Upload receipt to Cloudinary if it's base64
+    if (receiptImage && receiptImage.startsWith('data:image')) {
+      receiptImage = await uploadToCloudinary(receiptImage, 'bayadnet_receipts');
+    }
+
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
     const processed = processSubscriber(subscriber, now, settings);
@@ -369,11 +386,8 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ message: 'No image provided' });
 
-    const uploadRes = await cloudinary.uploader.upload(image, {
-      folder: 'bayadnet_reports'
-    });
-
-    res.json({ url: uploadRes.secure_url });
+    const url = await uploadToCloudinary(image, 'bayadnet_reports');
+    res.json({ url });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -384,8 +398,13 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
-    const { message, attachmentUrl } = req.body;
+    let { message, attachmentUrl } = req.body;
     if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
+
+    // Upload attachment to Cloudinary if it's base64
+    if (attachmentUrl && attachmentUrl.startsWith('data:image')) {
+      attachmentUrl = await uploadToCloudinary(attachmentUrl, 'bayadnet_reports');
+    }
 
     const report = {
       reporterName: req.user.name || req.user.username,
