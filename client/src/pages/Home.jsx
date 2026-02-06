@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
 import SubscriptionModal from '../components/SubscriptionModal';
+import { isValidEmail } from '../utils/validators';
 
 // Connect to socket
 const socketURL = window.location.hostname === 'localhost'
@@ -46,14 +47,15 @@ const Home = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!accountId.trim()) return;
+    const id = accountId.trim();
+    if (!id) return;
 
     setLoading(true);
     setError('');
     setSubscriber(null);
 
     try {
-      const res = await axios.get(`/api/public/subscriber/${accountId}`);
+      const res = await axios.get(`/api/public/subscriber/${id}`);
       setSubscriber(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Account not found. Please check your ID.');
@@ -64,7 +66,9 @@ const Home = () => {
 
   const formatDate = (dateString) => {
     if (!dateString || dateString === 'No payment records') return dateString;
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -86,6 +90,10 @@ const Home = () => {
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
+    if (!isValidEmail(contactForm.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
     setContactStatus('sending');
     try {
       await axios.post('/api/public/contact', contactForm);

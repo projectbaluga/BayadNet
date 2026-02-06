@@ -31,6 +31,10 @@ const PublicChatModal = ({ isOpen, onClose, subscriber, socket, onRefresh }) => 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+         alert('File is too large. Max 5MB.');
+         return;
+      }
       try {
         const base64 = await convertToBase64(file);
         // Compress if it's an image
