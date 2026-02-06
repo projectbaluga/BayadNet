@@ -405,9 +405,9 @@ const Dashboard = () => {
               <svg className="h-20 w-20 transform -rotate-90">
                 <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
                 <circle
-                  cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent"
-                  strokeDasharray={2 * Math.PI * 36}
-                  strokeDashoffset={2 * Math.PI * 36 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
+                  cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="10" fill="transparent"
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={2 * Math.PI * 42 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
                   className="text-indigo-600 transition-all duration-1000 ease-out"
                   strokeLinecap="round"
                 />
