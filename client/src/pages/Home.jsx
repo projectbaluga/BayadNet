@@ -329,7 +329,10 @@ const Home = () => {
                             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                 <Search className="w-8 h-8" />
                             </div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Active Search</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">No Active Search</p>
+                            <p className="text-[10px] text-slate-400 font-medium max-w-xs mx-auto px-4">
+                                Enter your Account ID to view your status or <span className="text-red-600 font-bold">chat with our support team</span>.
+                            </p>
                         </div>
                     )}
                 </div>
