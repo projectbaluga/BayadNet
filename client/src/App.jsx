@@ -5,6 +5,8 @@ import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
+import IssueChatModal from './components/IssueChatModal';
+import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
@@ -34,6 +36,8 @@ const Dashboard = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [receiptToView, setReceiptToView] = useState(null);
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [editingSubscriber, setEditingSubscriber] = useState(null);
@@ -51,6 +55,11 @@ const Dashboard = () => {
     receiptImage: '',
     month: ''
   });
+
+  const getLatestSubscriberData = (sub) => {
+    if (!sub) return null;
+    return subscribers.find(s => s._id === sub._id) || sub;
+  };
 
   useEffect(() => {
     if (token) {
@@ -127,10 +136,6 @@ const Dashboard = () => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large! Please select an image under 5MB.");
-        return;
-      }
       try {
         const base64 = await convertToBase64(file);
         setPaymentData({ ...paymentData, receiptImage: base64 });
@@ -143,6 +148,16 @@ const Dashboard = () => {
   const handleOpenHistoryModal = (subscriber) => {
     setActiveSubscriber(subscriber);
     setIsHistoryModalOpen(true);
+  };
+
+  const handleOpenChatModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setIsChatModalOpen(true);
+  };
+
+  const handleOpenDetailsModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setIsDetailsModalOpen(true);
   };
 
   const handlePaymentSubmit = async (e) => {
@@ -417,28 +432,30 @@ const Dashboard = () => {
           />
         </div>
 
-        <main className="space-y-16">
+        <main className="space-y-8">
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-rose-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
-                <span className="bg-rose-100 text-rose-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-rose-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
+                <span className="bg-rose-100 text-rose-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.overdue.length} Accounts
                 </span>
               </div>
             </div>
             {groups.overdue.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-col gap-2">
                 {groups.overdue.map(sub => (
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -454,26 +471,28 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-indigo-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
-                <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-indigo-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
+                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.upcoming.length} Accounts
                 </span>
               </div>
             </div>
             {groups.upcoming.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-col gap-2">
                 {groups.upcoming.map(sub => (
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -489,26 +508,28 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-emerald-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
-                <span className="bg-emerald-100 text-emerald-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-emerald-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
+                <span className="bg-emerald-100 text-emerald-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.paid.length} Accounts
                 </span>
               </div>
             </div>
             {groups.paid.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+              <div className="flex flex-col gap-2 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
                 {groups.paid.map(sub => (
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
+                    onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
                     token={token}
                     socket={socket}
@@ -625,13 +646,19 @@ const Dashboard = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
             <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Payment</h2>
-            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">{activeSubscriber?.name}</p>
+            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">
+              {getLatestSubscriberData(activeSubscriber)?.name}
+            </p>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
               <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 mb-6">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
-                  <span className="text-xl font-black text-indigo-600">₱{(activeSubscriber?.remainingBalance !== undefined ? activeSubscriber.remainingBalance : activeSubscriber?.amountDue).toLocaleString()}</span>
+                  <span className="text-xl font-black text-indigo-600">
+                    ₱{(getLatestSubscriberData(activeSubscriber)?.remainingBalance !== undefined
+                      ? getLatestSubscriberData(activeSubscriber).remainingBalance
+                      : getLatestSubscriberData(activeSubscriber)?.amountDue)?.toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -719,7 +746,9 @@ const Dashboard = () => {
             <div className="flex justify-between items-start mb-8">
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{activeSubscriber?.name}</p>
+                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+                  {getLatestSubscriberData(activeSubscriber)?.name}
+                </p>
               </div>
               <button onClick={() => setIsHistoryModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -729,8 +758,8 @@ const Dashboard = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-              {activeSubscriber?.payments?.length > 0 ? (
-                activeSubscriber.payments.slice().reverse().map((p, idx) => (
+              {getLatestSubscriberData(activeSubscriber)?.payments?.length > 0 ? (
+                getLatestSubscriberData(activeSubscriber).payments.slice().reverse().map((p, idx) => (
                   <div key={idx} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -768,6 +797,22 @@ const Dashboard = () => {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         onRefresh={fetchData}
+      />
+
+      <IssueChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setIsChatModalOpen(false)}
+        subscriber={getLatestSubscriberData(activeSubscriber)}
+        token={token}
+        socket={socket}
+        userRole={userRole}
+        onRefresh={fetchData}
+      />
+
+      <SubscriberDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        subscriber={getLatestSubscriberData(activeSubscriber)}
       />
 
       {receiptToView && (
