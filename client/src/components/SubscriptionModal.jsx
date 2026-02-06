@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Check, Wifi, MapPin, Phone, Mail, User } from 'lucide-react';
+import { isValidEmail, isValidPHPhoneNumber } from '../utils/validators';
 
 const SubscriptionModal = ({ isOpen, onClose, planName }) => {
   const [formData, setFormData] = useState({
@@ -11,15 +12,28 @@ const SubscriptionModal = ({ isOpen, onClose, planName }) => {
     plan: ''
   });
   const [status, setStatus] = useState('idle'); // idle, sending, success, error
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (isOpen && planName) {
       setFormData(prev => ({ ...prev, plan: planName }));
+      setErrorMsg('');
     }
   }, [isOpen, planName]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    if (!isValidPHPhoneNumber(formData.contactNo)) {
+      setErrorMsg('Please enter a valid PH mobile number (e.g. 09123456789).');
+      return;
+    }
+    if (!isValidEmail(formData.email)) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
     setStatus('sending');
     try {
       // We will reuse the contact endpoint but send type='Application'
@@ -68,6 +82,12 @@ const SubscriptionModal = ({ isOpen, onClose, planName }) => {
 
         {/* Form */}
         <div className="p-8">
+           {errorMsg && (
+             <div className="mb-4 bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">!</div>
+                {errorMsg}
+             </div>
+           )}
            {status === 'success' ? (
               <div className="text-center py-8 animate-in zoom-in duration-300">
                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-6">
