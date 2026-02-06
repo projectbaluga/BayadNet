@@ -150,7 +150,31 @@ const validateObjectId = (req, res, next) => {
 
 app.post('/api/subscribers', authenticateToken, authorize('admin'), async (req, res) => {
   try {
-    const subscriber = new Subscriber(req.body);
+    const { initialPayment, ...subData } = req.body;
+    const subscriber = new Subscriber(subData);
+
+    // If initial payment is provided (Advance Payment)
+    if (initialPayment && initialPayment.amountPaid > 0) {
+      const now = getCurrentDate();
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
+      subscriber.payments.push({
+        amountPaid: initialPayment.amountPaid,
+        referenceNo: 'INITIAL-PAYMENT',
+        month: currentMonthName,
+        date: now
+      });
+
+      // Update remaining balance immediately
+      if (subscriber.remainingBalance === undefined) {
+        subscriber.remainingBalance = subscriber.rate;
+      }
+      subscriber.remainingBalance = Math.max(0, subscriber.remainingBalance - initialPayment.amountPaid);
+    }
+
     await subscriber.save();
     res.status(201).json(subscriber);
   } catch (error) {

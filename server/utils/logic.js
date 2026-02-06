@@ -27,16 +27,38 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
 
   let status = isPaid ? 'Paid' : 'Unpaid';
 
+  // Handle Date Overflow (e.g. Feb 29 -> March 1)
+  // Check if we need to shift to next month due to new installation logic
+  let targetYear = currentYear;
+  let targetMonth = currentMonth;
+
+  const cycleDateCurrentMonth = new Date(currentYear, currentMonth, effectiveCycle);
+  // Compare timestamps to be safe (ensure both are midnight based or date based)
+  const cycleTimestamp = new Date(cycleDateCurrentMonth.getFullYear(), cycleDateCurrentMonth.getMonth(), cycleDateCurrentMonth.getDate()).getTime();
+
+  // Logic: If startDate exists and is ON or AFTER the current month's cycle date
+  // AND no payments have been made for this month
+  // THEN shift the cycle to the next month (Grace Period for new installs)
+  if (sub.startDate) {
+    const startDateObj = new Date(sub.startDate);
+    const startDateTimestamp = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), startDateObj.getDate()).getTime();
+
+    if (startDateTimestamp >= cycleTimestamp && monthPayments === 0) {
+       targetMonth++;
+       // JS Date automatically handles month overflow (12 -> Jan next year) in the constructor,
+       // but we should set variables cleanly if we want to construct string names or logging
+    }
+  }
+
+  const dueDateObj = new Date(targetYear, targetMonth, effectiveCycle);
+  const dueDateAtMidnight = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate());
+
   // Use remainingBalance if it exists, otherwise calculate it
   const remaining = sub.remainingBalance !== undefined ? sub.remainingBalance : Math.max(0, amountDue - monthPayments);
 
   if (!isPaid && remaining < amountDue && remaining > 0) {
     status = 'Partial';
   }
-
-  // Handle Date Overflow (e.g. Feb 29 -> March 1)
-  const dueDateObj = new Date(currentYear, currentMonth, effectiveCycle);
-  const dueDateAtMidnight = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate());
 
   // Calculate Status based on full date comparison
   if (status !== 'Paid') {

@@ -67,7 +67,9 @@ const Dashboard = () => {
     cycle: 1,
     messengerId: '',
     contactNo: '',
-    daysDown: 0
+    daysDown: 0,
+    startDate: new Date().toISOString().split('T')[0],
+    initialPayment: false
   });
   const [paymentData, setPaymentData] = useState({
     amountPaid: 0,
@@ -286,7 +288,8 @@ const Dashboard = () => {
         cycle: subscriber.cycle,
         messengerId: subscriber.messengerId || '',
         contactNo: subscriber.contactNo || '',
-        daysDown: subscriber.daysDown || 0
+        daysDown: subscriber.daysDown || 0,
+        startDate: subscriber.startDate ? new Date(subscriber.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
       });
     } else {
       setEditingSubscriber(null);
@@ -310,7 +313,9 @@ const Dashboard = () => {
         cycle: 1,
         messengerId: '',
         contactNo: '',
-        daysDown: 0
+        daysDown: 0,
+        startDate: new Date().toISOString().split('T')[0],
+        initialPayment: false
       });
     }
     setIsModalOpen(true);
@@ -346,9 +351,16 @@ const Dashboard = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       if (editingSubscriber) {
-        await axios.put(`${API_BASE}/subscribers/${editingSubscriber._id}`, formData, config);
+        // Exclude initialPayment from update to avoid re-triggering logic if we had it
+        const { initialPayment, ...updateData } = formData;
+        await axios.put(`${API_BASE}/subscribers/${editingSubscriber._id}`, updateData, config);
       } else {
-        await axios.post(`${API_BASE}/subscribers`, formData, config);
+        // Prepare payload
+        const payload = { ...formData };
+        if (payload.initialPayment) {
+           payload.initialPayment = { amountPaid: parseFloat(payload.rate) };
+        }
+        await axios.post(`${API_BASE}/subscribers`, payload, config);
       }
       setIsModalOpen(false);
       fetchData();
@@ -853,6 +865,31 @@ const Dashboard = () => {
                     required
                   />
                 </div>
+
+                <div>
+                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Start Date</label>
+                   <input
+                     type="date"
+                     className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                     value={formData.startDate}
+                     onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                   />
+                </div>
+
+                {!editingSubscriber && (
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            id="initialPayment"
+                            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                            checked={formData.initialPayment}
+                            onChange={(e) => setFormData({...formData, initialPayment: e.target.checked})}
+                        />
+                        <label htmlFor="initialPayment" className="text-sm font-bold text-indigo-900 cursor-pointer select-none">
+                            Mark Initial Month as Paid (Advance Payment)
+                        </label>
+                    </div>
+                )}
               </div>
 
               {editingSubscriber && (
