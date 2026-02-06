@@ -8,6 +8,7 @@ import UserManagement from './components/UserManagement';
 import IssueChatModal from './components/IssueChatModal';
 import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import CheckStatus from './pages/CheckStatus';
+import { convertToBase64, compressImage } from './utils/image';
 
 const API_BASE = '/api';
 
@@ -124,21 +125,17 @@ const Dashboard = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       try {
         const base64 = await convertToBase64(file);
-        setPaymentData({ ...paymentData, receiptImage: base64 });
+        if (file.type.startsWith('image/')) {
+          const compressed = await compressImage(base64);
+          setPaymentData({ ...paymentData, receiptImage: compressed });
+        } else {
+          setPaymentData({ ...paymentData, receiptImage: base64 });
+        }
       } catch (error) {
         console.error("Error converting file:", error);
       }
@@ -361,84 +358,84 @@ const Dashboard = () => {
           <>
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           {/* Collection Efficiency Chart */}
-          <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 shadow-2xl shadow-indigo-100/50 flex items-center gap-8 group hover:scale-[1.02] transition-transform duration-500">
+          <div className="lg:col-span-4 bg-white/80 backdrop-blur-xl p-4 rounded-3xl border border-white/20 shadow-xl shadow-indigo-100/30 flex items-center gap-4 group transition-transform duration-500">
             <div className="relative flex-shrink-0">
-              <svg className="h-32 w-32 transform -rotate-90">
-                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100" />
+              <svg className="h-20 w-20 transform -rotate-90">
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
                 <circle
-                  cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent"
-                  strokeDasharray={2 * Math.PI * 58}
-                  strokeDashoffset={2 * Math.PI * 58 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
+                  cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent"
+                  strokeDasharray={2 * Math.PI * 36}
+                  strokeDashoffset={2 * Math.PI * 36 * (1 - (analytics.totalCollected / (analytics.totalExpected || 1)))}
                   className="text-indigo-600 transition-all duration-1000 ease-out"
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xl font-black text-slate-900">{efficiency}%</span>
+                <span className="text-[10px] font-black text-slate-900">{efficiency}%</span>
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Collection Efficiency</p>
-              <h3 className="text-2xl font-black text-slate-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
-              <p className="text-[11px] text-slate-400 font-bold mt-2 italic">of ₱{analytics.totalExpected.toLocaleString()} target</p>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Efficiency</p>
+              <h3 className="text-lg font-black text-slate-900 leading-none">₱{analytics.totalCollected.toLocaleString()}</h3>
+              <p className="text-[9px] text-slate-400 font-bold mt-1 italic">of ₱{analytics.totalExpected.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-indigo-500 flex flex-col justify-between">
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-indigo-500 flex flex-col justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Net Profit</p>
-                <p className={`text-2xl font-black ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-rose-500'}`}>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Net Profit</p>
+                <p className={`text-lg font-black ${analytics.currentProfit >= 0 ? 'text-indigo-600' : 'text-rose-500'}`}>
                   ₱{analytics.currentProfit.toLocaleString()}
                 </p>
               </div>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
+              <p className="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">After ₱{analytics.providerCost?.toLocaleString()} Cost</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-rose-500">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Overdue</p>
-              <p className="text-3xl font-black text-rose-500">{analytics.groupCounts['Overdue'] || 0}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-rose-500">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Overdue</p>
+              <p className="text-2xl font-black text-rose-500">{analytics.groupCounts['Overdue'] || 0}</p>
+              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-amber-400">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Partial</p>
-              <p className="text-3xl font-black text-amber-500">{analytics.groupCounts['Partial'] || 0}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-amber-400">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Partial</p>
+              <p className="text-2xl font-black text-amber-500">{analytics.groupCounts['Partial'] || 0}</p>
+              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/40 shadow-xl shadow-slate-200/30 relative overflow-hidden border-t-4 border-t-emerald-500">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Paid</p>
-              <p className="text-3xl font-black text-emerald-600">{analytics.groupCounts['Paid'] || 0}</p>
-              <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Accounts</p>
+            <div className="bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg shadow-slate-200/20 relative overflow-hidden border-t-4 border-t-emerald-500">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Paid</p>
+              <p className="text-2xl font-black text-emerald-600">{analytics.groupCounts['Paid'] || 0}</p>
+              <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">Accounts</p>
             </div>
           </div>
         </section>
 
         {/* Search Bar - Glassmorphism */}
-        <div className="relative mb-12">
-          <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="relative mb-6">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
-            placeholder="Search by name or billing cycle (e.g. 'Bonete' or '7')..."
-            className="w-full bg-white/50 backdrop-blur-md border border-white/40 rounded-[2.5rem] py-6 pl-16 pr-8 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-400 shadow-xl shadow-slate-200/20 text-lg"
+            placeholder="Search accounts..."
+            className="w-full bg-white/50 backdrop-blur-md border border-white/40 rounded-2xl py-4 pl-12 pr-6 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-400 shadow-lg shadow-slate-200/10 text-base"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <main className="space-y-8">
+        <main className="space-y-6">
           <section>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-4">
-                <div className="bg-rose-500 w-1.5 h-6 rounded-full"></div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
-                <span className="bg-rose-100 text-rose-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+              <div className="flex items-center gap-3">
+                <div className="bg-rose-500 w-1 h-5 rounded-full"></div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Overdue & Partial</h2>
+                <span className="bg-rose-100 text-rose-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.overdue.length} Accounts
                 </span>
               </div>
@@ -471,11 +468,11 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-4">
-                <div className="bg-indigo-500 w-1.5 h-6 rounded-full"></div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
-                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-500 w-1 h-5 rounded-full"></div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Upcoming</h2>
+                <span className="bg-indigo-100 text-indigo-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.upcoming.length} Accounts
                 </span>
               </div>
@@ -508,17 +505,17 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-              <div className="flex items-center gap-4">
-                <div className="bg-emerald-500 w-1.5 h-6 rounded-full"></div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
-                <span className="bg-emerald-100 text-emerald-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+            <div className="flex items-center justify-between mb-2 border-b border-slate-200 pb-1.5">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-500 w-1 h-5 rounded-full"></div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Settled</h2>
+                <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.paid.length} Accounts
                 </span>
               </div>
             </div>
             {groups.paid.length > 0 ? (
-              <div className="flex flex-col gap-2 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+              <div className="flex flex-col gap-2 opacity-60 hover:opacity-100 transition-all duration-300">
                 {groups.paid.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -538,8 +535,8 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 p-12 text-center">
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">No settled accounts found</p>
+              <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No overdue accounts found</p>
               </div>
             )}
           </section>
@@ -549,90 +546,89 @@ const Dashboard = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-3xl font-black text-slate-900 mb-8 tracking-tight">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
+            <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">
               {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
-            <form onSubmit={handleFormSubmit} className="space-y-6">
+            <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Full Name</label>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
                 <input
                   type="text"
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                  placeholder="e.g. Juan Dela Cruz"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Rate (₱)</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rate (₱)</label>
                   <input
                     type="number"
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
                     value={formData.rate}
                     onChange={(e) => setFormData({...formData, rate: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cycle Day</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Cycle Day</label>
                   <input
                     type="number"
                     min="1" max="31"
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
                     value={formData.cycle}
                     onChange={(e) => setFormData({...formData, cycle: e.target.value})}
                     required
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Messenger ID/User</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Messenger</label>
                   <input
                     type="text"
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                    placeholder="e.g. juan.delacruz"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                    placeholder="ID/User"
                     value={formData.messengerId}
                     onChange={(e) => setFormData({...formData, messengerId: e.target.value})}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Number</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</label>
                   <input
                     type="text"
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                    placeholder="e.g. 09123456789"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                    placeholder="0912..."
                     value={formData.contactNo}
                     onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Days Without Internet</label>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Days Without Internet</label>
                 <input
                   type="number"
                   min="0" max="30"
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
                   value={formData.daysDown}
                   onChange={(e) => setFormData({...formData, daysDown: parseInt(e.target.value) || 0})}
                   required
                 />
               </div>
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-black py-4 rounded-2xl hover:bg-slate-100 hover:text-slate-600 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                  className="flex-1 bg-slate-50 text-slate-400 font-black py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
                 >
                   {editingSubscriber ? 'Update' : 'Confirm'}
                 </button>
@@ -643,18 +639,18 @@ const Dashboard = () => {
       )}
 
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
-            <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Payment</h2>
-            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100">
+            <h2 className="text-2xl font-black text-slate-900 mb-1 tracking-tight">Confirm Payment</h2>
+            <p className="text-slate-400 text-[10px] font-bold mb-4 uppercase tracking-widest">
               {getLatestSubscriberData(activeSubscriber)?.name}
             </p>
 
-            <form onSubmit={handlePaymentSubmit} className="space-y-6">
-              <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 mb-6">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
-                  <span className="text-xl font-black text-indigo-600">
+            <form onSubmit={handlePaymentSubmit} className="space-y-4">
+              <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
+                  <span className="text-lg font-black text-indigo-600">
                     ₱{(getLatestSubscriberData(activeSubscriber)?.remainingBalance !== undefined
                       ? getLatestSubscriberData(activeSubscriber).remainingBalance
                       : getLatestSubscriberData(activeSubscriber)?.amountDue)?.toLocaleString()}
@@ -663,11 +659,11 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Amount to Pay (₱)</label>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Pay</label>
                 <input
                   type="number"
                   step="0.01"
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
                   value={paymentData.amountPaid}
                   onChange={(e) => setPaymentData({...paymentData, amountPaid: parseFloat(e.target.value) || 0})}
                   required
@@ -675,34 +671,31 @@ const Dashboard = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Reference No. (e.g. GCash)</label>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Reference No.</label>
                 <input
                   type="text"
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-300"
-                  placeholder="Optional reference number"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm placeholder:text-slate-300"
+                  placeholder="Optional"
                   value={paymentData.referenceNo}
                   onChange={(e) => setPaymentData({...paymentData, referenceNo: e.target.value})}
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Proof of Payment (Image)</label>
-                <div className="space-y-4">
-                  <label className={`flex flex-col items-center justify-center w-full h-32 rounded-3xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Proof of Payment</label>
+                <div className="space-y-2">
+                  <label className={`flex flex-col items-center justify-center w-full h-24 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${paymentData.receiptImage ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                    <div className="flex flex-col items-center justify-center">
                       {!paymentData.receiptImage ? (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Receipt Image</p>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Upload Receipt</p>
                         </>
                       ) : (
                         <div className="relative group">
-                          <img src={paymentData.receiptImage} className="h-24 w-auto rounded-lg shadow-md object-cover" alt="Preview" />
-                          <div className="absolute inset-0 bg-slate-900/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p className="text-[8px] font-black text-white uppercase tracking-widest">Change Image</p>
-                          </div>
+                          <img src={paymentData.receiptImage} className="h-16 w-auto rounded-lg shadow-sm object-cover" alt="Preview" />
                         </div>
                       )}
                     </div>
@@ -712,25 +705,25 @@ const Dashboard = () => {
                     <button
                       type="button"
                       onClick={() => setPaymentData({...paymentData, receiptImage: ''})}
-                      className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline"
+                      className="text-[8px] font-black text-rose-500 uppercase tracking-widest hover:underline block mx-auto"
                     >
-                      Remove Image
+                      Remove
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsPaymentModalOpen(false)}
-                  className="flex-1 bg-slate-50 text-slate-400 font-black py-4 rounded-2xl hover:bg-slate-100 hover:text-slate-600 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                  className="flex-1 bg-slate-50 text-slate-400 font-black py-3 rounded-xl hover:bg-slate-100 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[11px]"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black py-3 rounded-xl shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[10px]"
                 >
                   Post Payment
                 </button>
