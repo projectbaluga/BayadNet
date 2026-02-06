@@ -19,6 +19,7 @@ const subscriberSchema = new mongoose.Schema({
   cycle: { type: Number, required: true },
   messengerId: { type: String, default: '' },
   contactNo: { type: String, default: '' },
+  startDate: { type: Date, default: Date.now },
   daysDown: { type: Number, default: 0 },
   remainingBalance: { type: Number }, // Amount left to pay for the current month
   isArchived: { type: Boolean, default: false },
