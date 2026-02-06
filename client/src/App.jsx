@@ -22,6 +22,9 @@ const socket = io(socketURL, {
   withCredentials: true
 });
 
+const NOTIFICATION_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
+const notificationSound = new Audio(NOTIFICATION_SOUND_URL);
+
 const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,8 +73,43 @@ const Dashboard = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReportAdded = ({ subscriberId, report }) => {
+      setSubscribers(prev => prev.map(s =>
+        s._id === subscriberId ? { ...s, reports: [...(s.reports || []), report] } : s
+      ));
+
+      // Notification sound
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+        if (report.reporterName !== (currentUser.name || currentUser.username)) {
+          notificationSound.play().catch(() => {});
+        }
+      } catch (e) {}
+    };
+
+    const handleReportsRead = ({ subscriberId, reports }) => {
+      setSubscribers(prev => prev.map(s =>
+        s._id === subscriberId ? { ...s, reports } : s
+      ));
+    };
+
+    socket.on('report-added', handleReportAdded);
+    socket.on('reports-read', handleReportsRead);
+
+    return () => {
+      socket.off('report-added', handleReportAdded);
+      socket.off('reports-read', handleReportsRead);
+    };
+  }, [socket]);
+
+  const [isFetching, setIsFetching] = useState(false);
   const fetchData = async () => {
+    if (isFetching) return;
     try {
+      setIsFetching(true);
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [subsRes, statsRes, analyticsRes] = await Promise.all([
         axios.get(`${API_BASE}/subscribers`, config),
@@ -88,6 +126,8 @@ const Dashboard = () => {
         handleLogout();
       }
       setLoading(false);
+    } finally {
+      setIsFetching(false);
     }
   };
 
