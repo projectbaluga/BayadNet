@@ -18,6 +18,7 @@ const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const messageRoutes = require('./routes/messages');
 const authenticateToken = require('./middleware/auth');
+const mikrotikService = require('./services/mikrotik');
 
 const app = express();
 const server = http.createServer(app);
@@ -64,7 +65,11 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 mongoose.connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => {
+    console.log('Connected to MongoDB');
+    // Start Cron Jobs
+    require('./cron/checkOverdue').startCron();
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Cloudinary Configuration
@@ -252,6 +257,12 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
     if (subscriber.remainingBalance <= 0) {
       const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
       subscriber[legacyPaidField] = true;
+
+      // Re-enable internet if fully paid
+      if (subscriber.pppoeUsername) {
+        mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
+          .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+      }
     }
 
     subscriber.payments.push({
@@ -301,6 +312,12 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     subscriber.remainingBalance = 0;
     const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
     subscriber[legacyPaidField] = true;
+
+    // Re-enable internet
+    if (subscriber.pppoeUsername) {
+      mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
+        .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+    }
 
     await subscriber.save();
     res.json(subscriber);
@@ -483,6 +500,39 @@ app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), asyn
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
+
+// Mikrotik Control Routes
+app.post('/api/mikrotik/toggle/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    if (!subscriber.pppoeUsername) return res.status(400).json({ message: 'Subscriber has no PPPoE Username configured' });
+
+    const { enable } = req.body; // true or false
+    if (enable === undefined) return res.status(400).json({ message: 'Enable status is required' });
+
+    const result = await mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, enable);
+    if (!result.success) {
+      return res.status(502).json({ message: result.message || 'Failed to communicate with Mikrotik' });
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    if (!subscriber.pppoeUsername) return res.json({ exists: false, message: 'No PPPoE Username configured' });
+
+    const status = await mikrotikService.getPppoeStatus(subscriber.pppoeUsername);
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Image Upload Route
 app.post('/api/upload', authenticateToken, async (req, res) => {

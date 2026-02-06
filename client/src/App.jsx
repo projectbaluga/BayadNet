@@ -50,6 +50,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     accountId: '',
+    pppoeUsername: '',
     street: '',
     geoAddress: '',
     address: '',
@@ -271,6 +272,7 @@ const Dashboard = () => {
       setFormData({
         name: subscriber.name,
         accountId: subscriber.accountId || '',
+        pppoeUsername: subscriber.pppoeUsername || '',
         street: subscriber.street || '',
         geoAddress: '', // Will be populated by selector or we don't care initially if address is full string
         address: subscriber.address || '',
@@ -296,6 +298,7 @@ const Dashboard = () => {
       setFormData({
         name: '',
         accountId: '',
+        pppoeUsername: '',
         street: '',
         geoAddress: '',
         address: '',
@@ -781,6 +784,17 @@ const Dashboard = () => {
                     value={formData.accountId}
                     onChange={(e) => setFormData({...formData, accountId: e.target.value})}
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Username</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                    placeholder="Mikrotik Secret Name"
+                    value={formData.pppoeUsername}
+                    onChange={(e) => setFormData({...formData, pppoeUsername: e.target.value})}
                   />
                 </div>
 

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   accountId: { type: String, required: true, unique: true },
+  pppoeUsername: { type: String, default: '' },
   street: { type: String, default: '' },
   address: { type: String, default: '' },
   region: { type: String, default: '' },
