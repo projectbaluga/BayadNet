@@ -12,6 +12,7 @@ const subscriberSchema = new mongoose.Schema({
   daysDown: { type: Number, default: 0 },
   remainingBalance: { type: Number }, // Amount left to pay for the current month
   isArchived: { type: Boolean, default: false },
+  issueStatus: { type: String, enum: ['Open', 'Resolved'], default: 'Resolved' },
   payments: [{
     amountPaid: Number,
     date: { type: Date, default: Date.now },

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye, Camera } from 'lucide-react';
+import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye, Camera, CheckCircle } from 'lucide-react';
 import { convertToBase64, compressImage } from '../utils/image';
 
 const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, onRefresh }) => {
   const [reportMessage, setReportMessage] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
   const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -76,6 +77,23 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
     }
   };
 
+  const handleResolveIssue = async () => {
+    if (isResolving) return;
+    setIsResolving(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.put(`/api/subscribers/${subscriber._id}/resolve`, {}, config);
+      if (onRefresh) onRefresh();
+      // Optimistic update or wait for refresh
+      subscriber.issueStatus = 'Resolved'; // Direct mutation for immediate UI feedback until refresh
+    } catch (error) {
+      console.error('Error resolving issue:', error);
+      alert('Failed to resolve issue');
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
   const getRoleColorClass = (role) => {
     if (!role) return 'text-gray-700';
     const r = role.toLowerCase();
@@ -93,15 +111,38 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
         {/* Header */}
         <div className="flex justify-between items-start mb-4 border-b border-gray-100 pb-2">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Issue Reports</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900">Issue Reports</h2>
+              {subscriber.issueStatus === 'Open' ? (
+                <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide border border-red-200">
+                  Open
+                </span>
+              ) : (
+                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide border border-emerald-200">
+                  Resolved
+                </span>
+              )}
+            </div>
             <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{subscriber.name} • {subscriber.accountId}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 bg-white text-gray-400 rounded-md hover:bg-gray-50 transition-all z-10 border border-transparent hover:border-gray-200"
-          >
-            <XCircle className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {(userRole === 'admin' || userRole === 'staff') && subscriber.issueStatus === 'Open' && (
+              <button
+                onClick={handleResolveIssue}
+                disabled={isResolving}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-md hover:bg-emerald-700 active:scale-95 transition-all shadow-sm mr-2 disabled:opacity-50"
+              >
+                {isResolving ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                Mark Resolved
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 bg-white text-gray-400 rounded-md hover:bg-gray-50 transition-all z-10 border border-transparent hover:border-gray-200"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Chat Area */}
