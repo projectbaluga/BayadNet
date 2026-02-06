@@ -13,8 +13,11 @@ const Setting = require('./models/Setting');
 const MonthlyReport = require('./models/MonthlyReport');
 const { getCurrentDate } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
+const rateLimit = require('express-rate-limit');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const { authenticateToken, authorize, validateObjectId } = require('./middleware/auth');
+const { PORT, MONGO_URI, JWT_SECRET, CLOUDINARY } = require('./config/constants');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,46 +35,22 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
-
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Cloudinary Configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+cloudinary.config(CLOUDINARY);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login attempts per windowMs
+  message: { message: 'Too many login attempts, please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};
-
-const authorize = (roles = []) => {
-  if (typeof roles === 'string') {
-    roles = [roles];
-  }
-  return (req, res, next) => {
-    if (!req.user || (roles.length && !roles.includes(req.user.role))) {
-      return res.status(403).json({ message: 'Forbidden: You do not have the required role' });
-    }
-    next();
-  };
-};
-
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (!user || !(await user.comparePassword(password))) {
@@ -82,15 +61,17 @@ app.post('/api/auth/login', async (req, res) => {
     JWT_SECRET,
     { expiresIn: '1d' }
   );
-  res.json({ token, role: user.role });
+  res.json({
+    token,
+    role: user.role,
+    user: {
+      id: user._id,
+      username: user.username,
+      role: user.role,
+      name: user.name || user.username
+    }
+  });
 });
-
-const validateObjectId = (req, res, next) => {
-  if (req.params.id && !mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid ID format' });
-  }
-  next();
-};
 
 app.post('/api/subscribers', authenticateToken, authorize('admin'), async (req, res) => {
   try {
