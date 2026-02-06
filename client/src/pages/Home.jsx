@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users } from 'lucide-react';
+import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users, Menu, X } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { isValidEmail } from '../utils/validators';
@@ -19,6 +19,26 @@ const Home = () => {
   const [error, setError] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['home', 'plans', 'status', 'contact'];
+      const scrollPosition = window.scrollY + 100; // Offset for navbar
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
+          setActiveSection(section);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const newSocket = io(socketURL, {
@@ -121,17 +141,68 @@ const Home = () => {
               </div>
               <span className="text-2xl font-black text-slate-900 tracking-tighter">BOJEX<span className="text-red-600">.ONLINE</span></span>
             </div>
+
+            {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#home" className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors">Home</a>
-              <a href="#plans" className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors">Plans</a>
-              <a href="#status" className="text-sm font-bold uppercase tracking-wide text-red-600">Check Status</a>
-              <a href="#contact" className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors">Contact</a>
+              <a href="#home" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'home' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Home</a>
+              <a href="#plans" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'plans' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Plans</a>
+              <a href="#status" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'status' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Check Status</a>
+              <a href="#contact" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'contact' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Contact</a>
             </div>
-            <button className="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-              Client Portal
-            </button>
+
+            <div className="flex items-center gap-4">
+              <button className="hidden md:block bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                Client Portal
+              </button>
+              {/* Mobile Menu Button */}
+              <button
+                className="md:hidden p-2 text-slate-600"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-b border-slate-100 absolute w-full left-0 top-20 shadow-xl animate-in slide-in-from-top-5 duration-200">
+            <div className="px-4 py-6 space-y-4 flex flex-col items-center">
+              <a
+                href="#home"
+                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </a>
+              <a
+                href="#plans"
+                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Plans
+              </a>
+              <a
+                href="#status"
+                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Check Status
+              </a>
+              <a
+                href="#contact"
+                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </a>
+              <button className="w-full bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                Client Portal
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
