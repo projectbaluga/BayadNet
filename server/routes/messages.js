@@ -6,7 +6,7 @@ const authenticateToken = require('../middleware/auth');
 // Public: Send a message
 router.post('/public/contact', async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message, type, plan } = req.body;
 
     if (!name || !email || !message) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -15,7 +15,9 @@ router.post('/public/contact', async (req, res) => {
     const newMessage = new Message({
       name,
       email,
-      message
+      message,
+      type: type || 'Inquiry',
+      plan: plan || null
     });
 
     const savedMessage = await newMessage.save();

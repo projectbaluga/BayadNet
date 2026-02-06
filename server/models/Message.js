@@ -15,6 +15,14 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  type: {
+    type: String,
+    enum: ['Inquiry', 'Application'],
+    default: 'Inquiry'
+  },
+  plan: {
+    type: String
+  },
   status: {
     type: String,
     enum: ['Unread', 'Read'],

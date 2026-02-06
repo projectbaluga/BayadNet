@@ -85,6 +85,16 @@ const EmailInbox = ({ token }) => {
                                     {msg.name}
                                   </p>
                                   <span className="text-xs text-gray-400 font-normal">&lt;{msg.email}&gt;</span>
+                                  {msg.type === 'Application' && (
+                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        Application: {msg.plan}
+                                     </span>
+                                  )}
+                                  {msg.type === 'Inquiry' && (
+                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        Inquiry
+                                     </span>
+                                  )}
                                </div>
                                <p className="text-xs text-gray-500 truncate">{msg.message}</p>
                             </div>
@@ -108,7 +118,14 @@ const EmailInbox = ({ token }) => {
                             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
                                   <div>
-                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">From</p>
+                                     <div className="flex items-center gap-2 mb-1">
+                                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">From</p>
+                                       {msg.type === 'Application' && (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                                             {msg.plan} Plan Application
+                                          </span>
+                                       )}
+                                     </div>
                                      <p className="text-sm font-bold text-gray-900">{msg.name}</p>
                                      <p className="text-sm text-indigo-600 font-medium">{msg.email}</p>
                                   </div>
