@@ -55,12 +55,14 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
     if (isOpen && subscriber) {
       scrollToBottom();
       // Emit mark-as-read
-      if (socket && (userRole === 'admin' || userRole === 'staff')) {
+      if (socket) {
         const currentUser = JSON.parse(localStorage.getItem('user')) || {};
-        socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+        if (currentUser.name) {
+          socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
+        }
       }
     }
-  }, [localReports, isOpen, socket, userRole, subscriber]);
+  }, [localReports, isOpen, socket, subscriber]);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -137,11 +139,14 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
         >
           {localReports.length > 0 ? (
             localReports.map((report, idx) => {
+              const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+              const isMe = report.reporterName === (currentUser.name || currentUser.username);
               const isTech = report.reporterRole === 'technician';
+
               return (
-                <div key={idx} className={`flex flex-col ${isTech ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-1 duration-300`}>
+                <div key={idx} className={`flex flex-col ${!isMe ? 'items-start' : 'items-end'} animate-in fade-in slide-in-from-bottom-1 duration-300`}>
                   <div className={`max-w-[90%] sm:max-w-[80%] rounded-[1.5rem] px-4 py-3 text-xs shadow-sm ${
-                    isTech
+                    !isMe
                       ? 'bg-slate-100 text-slate-800 rounded-tl-none'
                       : 'bg-indigo-600 text-white rounded-tr-none'
                   }`}>
