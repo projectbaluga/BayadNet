@@ -3,6 +3,16 @@ const mongoose = require('mongoose');
 const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   accountId: { type: String, required: true, unique: true },
+  street: { type: String, default: '' },
+  address: { type: String, default: '' },
+  region: { type: String, default: '' },
+  province: { type: String, default: '' },
+  city: { type: String, default: '' },
+  barangay: { type: String, default: '' },
+  regionCode: { type: String, default: '' },
+  provinceCode: { type: String, default: '' },
+  cityCode: { type: String, default: '' },
+  psgc: { type: String, default: '' },
   planName: { type: String, default: 'Residential Plan' },
   bandwidth: { type: String, default: '50Mbps' },
   rate: { type: Number, required: true }, // Base monthly rate

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Check, Wifi, MapPin, Phone, Mail, User } from 'lucide-react';
+import { X, Check, Wifi, MapPin, Phone, Mail, User, Home } from 'lucide-react';
 import { isValidEmail, isValidPHPhoneNumber } from '../utils/validators';
+import AddressSelector from './AddressSelector';
 
 const SubscriptionModal = ({ isOpen, onClose, planName }) => {
   const [formData, setFormData] = useState({
     name: '',
-    address: '',
+    street: '',
+    geoAddress: '',
+    addressData: null,
     contactNo: '',
     email: '',
     plan: ''
@@ -33,20 +36,28 @@ const SubscriptionModal = ({ isOpen, onClose, planName }) => {
       setErrorMsg('Please enter a valid email address.');
       return;
     }
+    if (!formData.geoAddress) {
+      setErrorMsg('Please select a complete address (Region to Barangay).');
+      return;
+    }
 
     setStatus('sending');
     try {
+      const { addressData } = formData;
+      const structuredInfo = addressData ?
+        ` [Region: ${addressData.regionCode}, Prov: ${addressData.provinceCode}, City: ${addressData.cityCode}, PSGC: ${addressData.psgc}]` : '';
+
       // We will reuse the contact endpoint but send type='Application'
       await axios.post('/api/public/contact', {
         ...formData,
         type: 'Application',
-        message: `New Application for ${formData.plan} Plan. Address: ${formData.address}. Contact: ${formData.contactNo}`
+        message: `New Application for ${formData.plan} Plan. Address: ${formData.street}, ${formData.geoAddress}${structuredInfo}. Contact: ${formData.contactNo}`
       });
       setStatus('success');
       setTimeout(() => {
         onClose();
         setStatus('idle');
-        setFormData({ name: '', address: '', contactNo: '', email: '', plan: '' });
+        setFormData({ name: '', street: '', geoAddress: '', addressData: null, contactNo: '', email: '', plan: '' });
       }, 3000);
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -146,18 +157,25 @@ const SubscriptionModal = ({ isOpen, onClose, planName }) => {
                  </div>
 
                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Installation Address</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Street / House No.</label>
                     <div className="relative">
-                       <MapPin className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+                       <Home className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
                        <input
                           type="text"
                           required
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
-                          placeholder="Complete address (Street, Brgy, City)"
-                          value={formData.address}
-                          onChange={e => setFormData({...formData, address: e.target.value})}
+                          placeholder="House No., Street, Subdivision"
+                          value={formData.street}
+                          onChange={e => setFormData({...formData, street: e.target.value})}
                        />
                     </div>
+                 </div>
+
+                 <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area / Location</label>
+                    <AddressSelector
+                        onChange={(data) => setFormData(prev => ({ ...prev, geoAddress: data.address, addressData: data }))}
+                    />
                  </div>
 
                  <div>
