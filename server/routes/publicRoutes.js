@@ -34,7 +34,7 @@ router.get('/subscriber/:accountId', publicLimiter, async (req, res) => {
 
     // Strictly select only necessary fields
     const subscriber = await Subscriber.findOne({ accountId })
-      .select('accountId name planName bandwidth isArchived payments remainingBalance cycle rate daysDown reports');
+      .select('accountId name planName bandwidth isArchived payments remainingBalance cycle rate daysDown');
 
     if (!subscriber) {
       return res.status(404).json({ message: 'Account ID not found' });
@@ -57,10 +57,7 @@ router.get('/subscriber/:accountId', publicLimiter, async (req, res) => {
       billingStatus: processed.status, // Extra useful info
       currentBalance: processed.remainingBalance,
       lastPaymentDate: lastPayment ? lastPayment.date : 'No payment records',
-      nextDueDate: processed.dueDate,
-      cycle: subscriber.cycle,
-      monthlyRate: subscriber.rate,
-      issuesCount: subscriber.reports ? subscriber.reports.length : 0
+      nextDueDate: processed.dueDate
     };
 
     res.json(publicData);

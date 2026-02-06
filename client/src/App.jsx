@@ -429,19 +429,19 @@ const Dashboard = () => {
           />
         </div>
 
-        <main className="space-y-16">
+        <main className="space-y-8">
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-rose-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
-                <span className="bg-rose-100 text-rose-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-rose-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Overdue, Due & Partial</h2>
+                <span className="bg-rose-100 text-rose-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.overdue.length} Accounts
                 </span>
               </div>
             </div>
             {groups.overdue.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-col gap-2">
                 {groups.overdue.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -467,17 +467,17 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-indigo-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
-                <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-indigo-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Upcoming Bills</h2>
+                <span className="bg-indigo-100 text-indigo-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.upcoming.length} Accounts
                 </span>
               </div>
             </div>
             {groups.upcoming.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="flex flex-col gap-2">
                 {groups.upcoming.map(sub => (
                   <SubscriberCard
                     key={sub._id}
@@ -503,17 +503,17 @@ const Dashboard = () => {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
               <div className="flex items-center gap-4">
-                <div className="bg-emerald-500 w-2 h-8 rounded-full"></div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
-                <span className="bg-emerald-100 text-emerald-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-emerald-500 w-1.5 h-6 rounded-full"></div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Settled Accounts</h2>
+                <span className="bg-emerald-100 text-emerald-600 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
                   {groups.paid.length} Accounts
                 </span>
               </div>
             </div>
             {groups.paid.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+              <div className="flex flex-col gap-2 opacity-75 grayscale-[0.5] hover:opacity-100 hover:grayscale-0 transition-all duration-500">
                 {groups.paid.map(sub => (
                   <SubscriberCard
                     key={sub._id}
