@@ -79,9 +79,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleReportAdded = ({ subscriberId, report }) => {
+    const handleReportAdded = ({ subscriberId, report, issueStatus }) => {
       setSubscribers(prev => prev.map(s =>
-        s._id === subscriberId ? { ...s, reports: [...(s.reports || []), report] } : s
+        s._id === subscriberId ? { ...s, reports: [...(s.reports || []), report], issueStatus: issueStatus || 'Open' } : s
       ));
 
       // Notification sound
@@ -99,12 +99,20 @@ const Dashboard = () => {
       ));
     };
 
+    const handleIssueResolved = ({ subscriberId, status }) => {
+      setSubscribers(prev => prev.map(s =>
+        s._id === subscriberId ? { ...s, issueStatus: status } : s
+      ));
+    };
+
     socket.on('report-added', handleReportAdded);
     socket.on('reports-read', handleReportsRead);
+    socket.on('issue-resolved', handleIssueResolved);
 
     return () => {
       socket.off('report-added', handleReportAdded);
       socket.off('reports-read', handleReportsRead);
+      socket.off('issue-resolved', handleIssueResolved);
     };
   }, [socket]);
 
