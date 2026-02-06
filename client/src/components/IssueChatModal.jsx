@@ -79,10 +79,6 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File is too large! Max 5MB.");
-        return;
-      }
       const base64 = await convertToBase64(file);
       setAttachment(base64);
     }
