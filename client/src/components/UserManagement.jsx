@@ -92,9 +92,9 @@ const UserManagement = ({ token }) => {
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
-      case 'admin': return 'bg-violet-100 text-violet-700 border-violet-200';
-      case 'staff': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-      case 'technician': return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'admin': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'staff': return 'bg-red-100 text-red-700 border-red-200';
+      case 'technician': return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
