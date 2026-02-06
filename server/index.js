@@ -16,6 +16,7 @@ const { getCurrentDate } = require('./config/time');
 const { processSubscriber, calculateStats } = require('./utils/logic');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const messageRoutes = require('./routes/messages');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +33,12 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Attach IO to request for access in routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Rate Limiting
 const apiLimiter = rateLimit({
@@ -462,6 +469,7 @@ app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), asyn
 
 app.use('/api/users', userRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
+app.use('/api', messageRoutes);
 
 // Image Upload Route
 app.post('/api/upload', authenticateToken, async (req, res) => {

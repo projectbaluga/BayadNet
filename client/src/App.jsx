@@ -5,6 +5,7 @@ import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
+import EmailInbox from './components/EmailInbox';
 import IssueChatModal from './components/IssueChatModal';
 import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import Home from './pages/Home';
@@ -31,7 +32,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('dashboard'); // 'dashboard' or 'users'
+  const [view, setView] = useState('dashboard'); // 'dashboard', 'users', 'emails'
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('role'));
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -105,14 +106,21 @@ const Dashboard = () => {
       ));
     };
 
+    const handleNewMessage = (message) => {
+      notificationSound.play().catch(() => {});
+      // Ideally we'd show a toast here or increment a counter
+    };
+
     socket.on('report-added', handleReportAdded);
     socket.on('reports-read', handleReportsRead);
     socket.on('issue-resolved', handleIssueResolved);
+    socket.on('new-message', handleNewMessage);
 
     return () => {
       socket.off('report-added', handleReportAdded);
       socket.off('reports-read', handleReportsRead);
       socket.off('issue-resolved', handleIssueResolved);
+      socket.off('new-message', handleNewMessage);
     };
   }, [socket]);
 
@@ -370,6 +378,14 @@ const Dashboard = () => {
             >
               Dashboard
             </button>
+            {(userRole === 'admin' || userRole === 'staff') && (
+               <button
+                 onClick={() => setView('emails')}
+                 className={`text-xs font-semibold uppercase tracking-wide transition-all ${view === 'emails' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+               >
+                 Email
+               </button>
+            )}
             {userRole === 'admin' && (
               <button
                 onClick={() => setView('users')}
@@ -414,6 +430,8 @@ const Dashboard = () => {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {view === 'users' && userRole === 'admin' ? (
           <UserManagement token={token} />
+        ) : view === 'emails' && (userRole === 'admin' || userRole === 'staff') ? (
+           <EmailInbox token={token} />
         ) : (
           <>
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">

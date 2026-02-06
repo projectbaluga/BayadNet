@@ -70,6 +70,25 @@ const Home = () => {
     });
   };
 
+  // --- Contact Form Logic ---
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [contactStatus, setContactStatus] = useState('idle'); // idle, sending, success, error
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactStatus('sending');
+    try {
+      await axios.post('/api/public/contact', contactForm);
+      setContactStatus('success');
+      setContactForm({ name: '', email: '', message: '' });
+      setTimeout(() => setContactStatus('idle'), 5000);
+    } catch (err) {
+      console.error(err);
+      setContactStatus('error');
+      setTimeout(() => setContactStatus('idle'), 5000);
+    }
+  };
+
   // --- UI Components ---
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 scroll-smooth">
@@ -361,21 +380,53 @@ const Home = () => {
                          </div>
                      </div>
                      <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-                         <form className="space-y-4">
+                         <form onSubmit={handleContactSubmit} className="space-y-4">
                              <div>
                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Name</label>
-                                 <input type="text" className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors" placeholder="Your Name" />
+                                 <input
+                                    type="text"
+                                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors"
+                                    placeholder="Your Name"
+                                    value={contactForm.name}
+                                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                                    required
+                                 />
                              </div>
                              <div>
                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Email</label>
-                                 <input type="email" className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors" placeholder="email@example.com" />
+                                 <input
+                                    type="email"
+                                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors"
+                                    placeholder="email@example.com"
+                                    value={contactForm.email}
+                                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                                    required
+                                 />
                              </div>
                              <div>
                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Message</label>
-                                 <textarea rows="4" className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors" placeholder="How can we help?"></textarea>
+                                 <textarea
+                                    rows="4"
+                                    className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 transition-colors"
+                                    placeholder="How can we help?"
+                                    value={contactForm.message}
+                                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                                    required
+                                 ></textarea>
                              </div>
-                             <button type="button" className="w-full bg-red-600 text-white font-bold py-4 rounded-xl uppercase tracking-wide hover:bg-red-700 transition-colors">
-                                 Send Message
+                             <button
+                                type="submit"
+                                disabled={contactStatus === 'sending'}
+                                className={`w-full font-bold py-4 rounded-xl uppercase tracking-wide transition-colors ${
+                                    contactStatus === 'sending' ? 'bg-slate-700 text-slate-400 cursor-not-allowed' :
+                                    contactStatus === 'success' ? 'bg-emerald-600 text-white' :
+                                    contactStatus === 'error' ? 'bg-rose-600 text-white' :
+                                    'bg-red-600 text-white hover:bg-red-700'
+                                }`}
+                             >
+                                 {contactStatus === 'sending' ? 'Sending...' :
+                                  contactStatus === 'success' ? 'Message Sent!' :
+                                  contactStatus === 'error' ? 'Error Sending' : 'Send Message'}
                              </button>
                          </form>
                      </div>
