@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Message = require('../models/Message');
-const auth = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth');
 
 // Public: Send a message
 router.post('/public/contact', async (req, res) => {
@@ -20,7 +20,7 @@ router.post('/public/contact', async (req, res) => {
 
     const savedMessage = await newMessage.save();
 
-    // Emit socket event if io is attached to req (we'll need to ensure it is in index.js)
+    // Emit socket event if io is attached to req
     if (req.io) {
       req.io.emit('new-message', savedMessage);
     }
@@ -33,8 +33,13 @@ router.post('/public/contact', async (req, res) => {
 });
 
 // Protected: Get all messages
-router.get('/messages', auth, async (req, res) => {
+router.get('/messages', authenticateToken, async (req, res) => {
   try {
+    // Check if user is admin or staff
+    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
+       return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const messages = await Message.find().sort({ createdAt: -1 });
     res.json(messages);
   } catch (error) {
@@ -44,8 +49,13 @@ router.get('/messages', auth, async (req, res) => {
 });
 
 // Protected: Mark message as read
-router.patch('/messages/:id/read', auth, async (req, res) => {
+router.patch('/messages/:id/read', authenticateToken, async (req, res) => {
   try {
+     // Check if user is admin or staff
+    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
+       return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const message = await Message.findByIdAndUpdate(
       req.params.id,
       { status: 'Read' },
