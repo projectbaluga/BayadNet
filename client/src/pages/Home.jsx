@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users, Menu, X } from 'lucide-react';
+import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users, Menu, X, Power, Plug, AlertTriangle, Smartphone } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { isValidEmail } from '../utils/validators';
@@ -24,7 +24,7 @@ const Home = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'plans', 'status', 'contact'];
+      const sections = ['home', 'plans', 'status', 'contact', 'no-connection'];
       const scrollPosition = window.scrollY + 100; // Offset for navbar
 
       for (const section of sections) {
@@ -148,6 +148,7 @@ const Home = () => {
               <a href="#plans" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'plans' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Plans</a>
               <a href="#status" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'status' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Check Status</a>
               <a href="#contact" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'contact' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Contact</a>
+              <a href="#no-connection" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'no-connection' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>No Connection?</a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -196,6 +197,13 @@ const Home = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Contact
+              </a>
+              <a
+                href="#no-connection"
+                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                No Connection?
               </a>
               <button className="w-full bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
                 Client Portal
@@ -531,6 +539,66 @@ const Home = () => {
                  </div>
              </div>
          </div>
+      </section>
+
+      {/* No Connection Section */}
+      <section id="no-connection" className="py-24 bg-white border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-16">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-widest mb-4 border border-red-100">
+                      <AlertTriangle className="w-3 h-3" />
+                      Troubleshoot
+                  </div>
+                  <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">No Connection?</h2>
+                  <p className="text-slate-500 font-medium">Subukan muna ang mga steps na ito para bumilis ulit ang net mo!</p>
+              </div>
+
+              <div className="grid md:grid-cols-4 gap-8">
+                  {/* Step 1 */}
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-center hover:border-red-200 transition-colors">
+                      <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-red-600 mx-auto mb-4">
+                          <Power className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 mb-2">1. Restart Modem</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          Hugutin ang power adapter sa saksakan. Maghintay ng 1-2 minutes bago isaksak ulit.
+                      </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-center hover:border-red-200 transition-colors">
+                      <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-red-600 mx-auto mb-4">
+                          <Plug className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 mb-2">2. Check Cables</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          Siguraduhin na mahigpit ang yellow patch cord. Iwasan maipit o mabaluktot ang fiber cable.
+                      </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-center hover:border-red-200 transition-colors">
+                      <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-red-600 mx-auto mb-4">
+                          <AlertTriangle className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 mb-2">3. Check LOS</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          Kung may <span className="text-red-600 font-bold">pulang ilaw</span> sa 'LOS', putol ang linya o walang signal. I-report na agad.
+                      </p>
+                  </div>
+
+                   {/* Step 4 */}
+                   <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-center hover:border-red-200 transition-colors">
+                      <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-red-600 mx-auto mb-4">
+                          <Smartphone className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 mb-2">4. Check Device</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                          Subukan mag-connect gamit ang ibang cellphone o laptop. Baka sa gadget lang ang issue.
+                      </p>
+                  </div>
+              </div>
+          </div>
       </section>
 
       {/* Footer */}
