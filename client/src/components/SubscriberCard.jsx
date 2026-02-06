@@ -18,6 +18,7 @@ const SubscriberCard = ({
   onViewReceipt,
   onEdit,
   onDelete,
+  onViewDetails,
   userRole
 }) => {
   const handleSendReminder = () => {
@@ -98,8 +99,11 @@ const SubscriberCard = ({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-3 flex items-center justify-between gap-4 hover:shadow-lg hover:border-indigo-100 transition-all group">
-      {/* Left: Name & Info */}
-      <div className="flex-1 min-w-0">
+      {/* Left: Name & Info - Clickable for details */}
+      <div
+        className="flex-1 min-w-0 cursor-pointer"
+        onClick={() => onViewDetails && onViewDetails(subscriber)}
+      >
         <div className="flex items-center gap-2">
           <h3 className="font-black text-slate-900 truncate tracking-tight group-hover:text-indigo-600 transition-colors">
             {subscriber.name}
@@ -120,8 +124,11 @@ const SubscriberCard = ({
         </div>
       </div>
 
-      {/* Middle: Amount */}
-      <div className="text-right min-w-[90px] px-4 border-l border-r border-slate-50">
+      {/* Middle: Amount - Clickable for details */}
+      <div
+        className="text-right min-w-[90px] px-4 border-l border-r border-slate-50 cursor-pointer"
+        onClick={() => onViewDetails && onViewDetails(subscriber)}
+      >
         <p className="text-[8px] text-slate-400 font-black uppercase tracking-tighter">Amount Due</p>
         <p className={`text-sm font-black ${isPaid ? 'text-emerald-500' : 'text-indigo-600'}`}>
           ₱{amount.toLocaleString()}
