@@ -5,6 +5,7 @@ import axios from 'axios';
 import SubscriberCard from './components/SubscriberCard';
 import SettingsModal from './components/SettingsModal';
 import UserManagement from './components/UserManagement';
+import IssueChatModal from './components/IssueChatModal';
 import CheckStatus from './pages/CheckStatus';
 
 const API_BASE = '/api';
@@ -34,6 +35,7 @@ const Dashboard = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [receiptToView, setReceiptToView] = useState(null);
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [editingSubscriber, setEditingSubscriber] = useState(null);
@@ -51,6 +53,11 @@ const Dashboard = () => {
     receiptImage: '',
     month: ''
   });
+
+  const getLatestSubscriberData = (sub) => {
+    if (!sub) return null;
+    return subscribers.find(s => s._id === sub._id) || sub;
+  };
 
   useEffect(() => {
     if (token) {
@@ -143,6 +150,11 @@ const Dashboard = () => {
   const handleOpenHistoryModal = (subscriber) => {
     setActiveSubscriber(subscriber);
     setIsHistoryModalOpen(true);
+  };
+
+  const handleOpenChatModal = (subscriber) => {
+    setActiveSubscriber(subscriber);
+    setIsChatModalOpen(true);
   };
 
   const handlePaymentSubmit = async (e) => {
@@ -436,6 +448,7 @@ const Dashboard = () => {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
@@ -471,6 +484,7 @@ const Dashboard = () => {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
@@ -506,6 +520,7 @@ const Dashboard = () => {
                     subscriber={sub}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
+                    onOpenChat={handleOpenChatModal}
                     onViewReceipt={(img) => setReceiptToView(img)}
                     onEdit={handleOpenModal}
                     onDelete={handleDelete}
@@ -625,13 +640,19 @@ const Dashboard = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
             <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Payment</h2>
-            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">{activeSubscriber?.name}</p>
+            <p className="text-slate-400 text-sm font-bold mb-8 uppercase tracking-widest">
+              {getLatestSubscriberData(activeSubscriber)?.name}
+            </p>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
               <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 mb-6">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Remaining</span>
-                  <span className="text-xl font-black text-indigo-600">₱{(activeSubscriber?.remainingBalance !== undefined ? activeSubscriber.remainingBalance : activeSubscriber?.amountDue).toLocaleString()}</span>
+                  <span className="text-xl font-black text-indigo-600">
+                    ₱{(getLatestSubscriberData(activeSubscriber)?.remainingBalance !== undefined
+                      ? getLatestSubscriberData(activeSubscriber).remainingBalance
+                      : getLatestSubscriberData(activeSubscriber)?.amountDue)?.toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -719,7 +740,9 @@ const Dashboard = () => {
             <div className="flex justify-between items-start mb-8">
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{activeSubscriber?.name}</p>
+                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+                  {getLatestSubscriberData(activeSubscriber)?.name}
+                </p>
               </div>
               <button onClick={() => setIsHistoryModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -729,8 +752,8 @@ const Dashboard = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-              {activeSubscriber?.payments?.length > 0 ? (
-                activeSubscriber.payments.slice().reverse().map((p, idx) => (
+              {getLatestSubscriberData(activeSubscriber)?.payments?.length > 0 ? (
+                getLatestSubscriberData(activeSubscriber).payments.slice().reverse().map((p, idx) => (
                   <div key={idx} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 flex justify-between items-center group hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -767,6 +790,16 @@ const Dashboard = () => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        onRefresh={fetchData}
+      />
+
+      <IssueChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setIsChatModalOpen(false)}
+        subscriber={getLatestSubscriberData(activeSubscriber)}
+        token={token}
+        socket={socket}
+        userRole={userRole}
         onRefresh={fetchData}
       />
 
