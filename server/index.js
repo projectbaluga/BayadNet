@@ -135,7 +135,14 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     JWT_SECRET,
     { expiresIn: '1d' }
   );
-  res.json({ token, role: user.role });
+  res.json({
+    token,
+    role: user.role,
+    user: {
+      name: user.name || user.username,
+      role: user.role
+    }
+  });
 });
 
 const validateObjectId = (req, res, next) => {
@@ -483,6 +490,7 @@ io.on('connection', (socket) => {
 
   socket.on('mark-as-read', async ({ subscriberId, user }) => {
     try {
+      if (!user || !user.name) return;
       const subscriber = await Subscriber.findById(subscriberId);
       if (!subscriber) return;
 
