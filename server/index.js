@@ -68,12 +68,27 @@ cloudinary.config({
 
 const uploadToCloudinary = async (image, folder = 'bayadnet') => {
   if (!image || typeof image !== 'string' || !image.startsWith('data:image')) return image;
+
+  // Check if Cloudinary is configured
+  const isConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+                      process.env.CLOUDINARY_API_KEY &&
+                      process.env.CLOUDINARY_API_SECRET;
+
+  if (!isConfigured) {
+    console.warn('Cloudinary not configured, falling back to database storage for image');
+    return image;
+  }
+
   try {
-    const uploadRes = await cloudinary.uploader.upload(image, { folder });
+    const uploadRes = await cloudinary.uploader.upload(image, {
+      folder,
+      resource_type: "auto"
+    });
     return uploadRes.secure_url;
   } catch (error) {
     console.error('Cloudinary upload error:', error);
-    throw new Error('Failed to upload image to Cloudinary');
+    // Fall back to original image string instead of throwing to avoid breaking the request
+    return image;
   }
 };
 
