@@ -76,22 +76,13 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
     }
   };
 
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin': return 'bg-orange-500';
-      case 'staff': return 'bg-red-500';
-      case 'technician': return 'bg-blue-500';
-      default: return 'bg-slate-300';
-    }
-  };
-
   if (!isOpen || !subscriber) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-2xl rounded-lg shadow-xl p-4 sm:p-6 animate-in zoom-in duration-200 border border-gray-200 h-[85vh] flex flex-col relative overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6 border-b border-slate-50 pb-4">
+        <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Issue Reports</h2>
             <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{subscriber.name} • {subscriber.accountId}</p>
@@ -100,14 +91,14 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
             onClick={onClose}
             className="p-2 bg-white text-gray-400 rounded-md hover:bg-gray-50 transition-all z-10 border border-transparent hover:border-gray-200"
           >
-            <XCircle className="w-6 h-6" />
+            <XCircle className="w-5 h-5" />
           </button>
         </div>
 
         {/* Chat Area */}
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar scroll-smooth min-h-0 mb-6"
+          className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar scroll-smooth min-h-0 mb-4"
         >
           {reports.length > 0 ? (
             reports.map((report, idx) => {
@@ -127,7 +118,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
                         <img
                           src={report.attachmentUrl}
                           alt="Attachment"
-                          className="w-full h-auto max-h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                          className="w-full h-auto max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => window.open(report.attachmentUrl, '_blank')}
                         />
                       </div>
@@ -140,15 +131,6 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
                       {report.reporterName} • {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}
                     </div>
                   </div>
-
-                  {/* Metadata Outside */}
-                  <div className={`flex items-center gap-1.5 mt-2 px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 ${isMe ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${getRoleColor(report.reporterRole)} shadow-sm`}></div>
-                    <span className={isMe ? 'text-indigo-600/50' : ''}>{report.reporterRole}</span>
-                    <span className="opacity-40">•</span>
-                    <span>{formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}</span>
-                  </div>
-
                   {idx === reports.length - 1 && report.readBy && report.readBy.length > 1 && (
                     <div className="flex items-center gap-1 mt-1 px-1 opacity-60">
                       <Eye className="w-3 h-3 text-gray-400" />
@@ -221,15 +203,6 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={(!reportMessage.trim() && !attachment) || isSubmitting}
-              className="flex-shrink-0 w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 active:scale-90 transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-indigo-100"
-            >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-            </button>
-
             <input
               type="file"
               className="hidden"
