@@ -71,46 +71,46 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl p-6 animate-in zoom-in duration-300 border border-slate-100 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-xl rounded-lg shadow-xl p-6 animate-in zoom-in duration-200 border border-gray-200 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">Admin Settings</h2>
-            <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5">Constants & Bulk Actions</p>
+            <h2 className="text-xl font-bold text-gray-900">Admin Settings</h2>
+            <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mt-1">Constants & Bulk Actions</p>
           </div>
-          <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-all">
+          <button onClick={onClose} className="p-2 bg-white text-gray-400 rounded-md hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Settings Form */}
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-1.5">Constants</h3>
-            <form onSubmit={handleSaveSettings} className="space-y-3">
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">Constants</h3>
+            <form onSubmit={handleSaveSettings} className="space-y-4">
               <div>
-                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Default Rate</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Default Rate</label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={settings.defaultRate}
                   onChange={(e) => setSettings({...settings, defaultRate: parseInt(e.target.value) || 0})}
                 />
               </div>
               <div>
-                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Rebate Divisor</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Rebate Divisor</label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={settings.rebateValue}
                   onChange={(e) => setSettings({...settings, rebateValue: parseInt(e.target.value) || 0})}
                 />
               </div>
               <div>
-                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Provider Cost</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Provider Cost</label>
                 <input
                   type="number"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 text-sm"
+                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
                   value={settings.providerCost}
                   onChange={(e) => setSettings({...settings, providerCost: parseInt(e.target.value) || 0})}
                 />
@@ -118,7 +118,7 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-slate-900 text-white font-black py-3 rounded-xl hover:bg-indigo-600 transition-all tracking-widest uppercase text-[9px]"
+                className="w-full bg-gray-900 text-white font-bold py-2.5 rounded-md hover:bg-indigo-600 transition-all uppercase text-[10px] tracking-wide shadow-sm"
               >
                 Save
               </button>
@@ -127,35 +127,35 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
 
           {/* Analytics Summary */}
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest border-b border-slate-100 pb-1.5">Analytics</h3>
-            <div className="space-y-2">
-              <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
-                <p className="text-[7px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Expected</p>
-                <p className="text-base font-black text-indigo-600">₱{analytics.totalExpected.toLocaleString()}</p>
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">Analytics</h3>
+            <div className="space-y-3">
+              <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100">
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mb-1">Expected</p>
+                <p className="text-xl font-bold text-indigo-700">₱{analytics.totalExpected.toLocaleString()}</p>
               </div>
-              <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
-                <p className="text-[7px] font-black text-emerald-400 uppercase tracking-widest mb-0.5">Collected</p>
-                <p className="text-base font-black text-emerald-600">₱{analytics.totalCollected.toLocaleString()}</p>
+              <div className="bg-emerald-50 p-4 rounded-md border border-emerald-100">
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide mb-1">Collected</p>
+                <p className="text-xl font-bold text-emerald-700">₱{analytics.totalCollected.toLocaleString()}</p>
               </div>
-              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
-                <p className="text-[7px] font-black text-amber-400 uppercase tracking-widest mb-0.5">Net Profit</p>
-                <p className="text-base font-black text-amber-600">₱{analytics.currentProfit.toLocaleString()}</p>
+              <div className="bg-amber-50 p-4 rounded-md border border-amber-100">
+                <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wide mb-1">Net Profit</p>
+                <p className="text-xl font-bold text-amber-700">₱{analytics.currentProfit.toLocaleString()}</p>
               </div>
             </div>
           </section>
         </div>
 
         {/* Bulk Action */}
-        <section className="pt-6 border-t border-slate-100">
+        <section className="pt-6 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex-1">
-              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-0.5">Monthly Billing Reset</h3>
-              <p className="text-[9px] text-slate-400 font-medium leading-tight">Resets all statuses and outage records.</p>
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-1">Monthly Billing Reset</h3>
+              <p className="text-[10px] text-gray-500 font-medium">Resets all statuses and outage records.</p>
             </div>
             <button
               onClick={handleStartNewMonth}
               disabled={loading}
-              className="w-full sm:w-auto bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black px-6 py-3 rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all tracking-widest uppercase text-[9px]"
+              className="w-full sm:w-auto bg-red-600 text-white font-bold px-6 py-2.5 rounded-md shadow-sm hover:bg-red-700 active:scale-95 transition-all uppercase text-[10px] tracking-wide"
             >
               Start New Month
             </button>

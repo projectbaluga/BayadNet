@@ -21,7 +21,8 @@ const SubscriberCard = ({
   onViewDetails,
   userRole
 }) => {
-  const handleSendReminder = () => {
+  const handleSendReminder = (e) => {
+    e.stopPropagation();
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
     const message = `Hi ${subscriber.name}, your bill for ${subscriber.currentMonthName || 'this month'} is ${subscriber.status}. Total Due: ₱${amount.toLocaleString()} (after ₱${subscriber.rebate.toLocaleString()} rebate). Thank you!`;
 
@@ -39,7 +40,8 @@ const SubscriberCard = ({
     }
   };
 
-  const handleDownloadSOA = () => {
+  const handleDownloadSOA = (e) => {
+    e.stopPropagation();
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -49,11 +51,11 @@ const SubscriberCard = ({
         <head>
           <title>SOA - ${subscriber.name}</title>
           <style>
-            body { font-family: sans-serif; padding: 40px; color: #334155; }
-            .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-            .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+            body { font-family: sans-serif; padding: 40px; color: #111827; }
+            .header { border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 30px; }
+            .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
             .total { font-size: 24px; font-weight: bold; color: #4f46e5; margin-top: 30px; }
-            .footer { margin-top: 50px; font-size: 12px; color: #94a3b8; }
+            .footer { margin-top: 50px; font-size: 12px; color: #6b7280; }
           </style>
         </head>
         <body>
@@ -83,13 +85,13 @@ const SubscriberCard = ({
     }, 100);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusStyle = (status) => {
     switch (status) {
-      case 'Paid': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-      case 'Overdue': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
-      case 'Due Today': return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
-      case 'Partial': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      default: return 'bg-slate-500/10 text-slate-600 border-slate-500/20';
+      case 'Paid': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+      case 'Overdue': return 'bg-red-50 text-red-700 border-red-100';
+      case 'Due Today': return 'bg-orange-50 text-orange-700 border-orange-100';
+      case 'Partial': return 'bg-amber-50 text-amber-700 border-amber-100';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
@@ -98,26 +100,26 @@ const SubscriberCard = ({
   const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : (isPaid ? 0 : subscriber.amountDue);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-between gap-2 hover:shadow-md hover:border-indigo-100 transition-all group">
+    <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between gap-4 hover:shadow-md hover:border-indigo-300 transition-all duration-200 group">
       {/* Left: Name & Info - Clickable for details */}
       <div
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onViewDetails && onViewDetails(subscriber)}
       >
-        <div className="flex items-center gap-1.5">
-          <h3 className="font-bold text-slate-900 truncate text-[13px] group-hover:text-indigo-600 transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-bold text-gray-900 truncate text-sm group-hover:text-indigo-600 transition-colors">
             {subscriber.name}
           </h3>
-          <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tight whitespace-nowrap">
+          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
             C{subscriber.cycle}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 mt-0">
-          <span className={`px-1.5 py-0 rounded-full text-[7px] font-black uppercase tracking-tighter border ${getStatusColor(subscriber.status)}`}>
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusStyle(subscriber.status)}`}>
             {subscriber.status}
           </span>
           {unreadCount > 0 && (
-            <span className="bg-amber-100 text-amber-600 text-[7px] font-black px-1 py-0 rounded-full uppercase">
+            <span className="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
               {unreadCount} Issue{unreadCount > 1 ? 's' : ''}
             </span>
           )}
@@ -126,85 +128,86 @@ const SubscriberCard = ({
 
       {/* Middle: Amount - Clickable for details */}
       <div
-        className="text-right min-w-[70px] px-2 border-l border-slate-50 cursor-pointer"
+        className="text-right min-w-[90px] px-3 border-l border-gray-100 cursor-pointer"
         onClick={() => onViewDetails && onViewDetails(subscriber)}
       >
-        <p className="text-[7px] text-slate-400 font-black uppercase tracking-tighter">Due</p>
-        <p className={`text-[12px] font-black ${isPaid ? 'text-emerald-500' : 'text-indigo-600'}`}>
+        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide mb-0.5">Total Due</p>
+        <p className={`text-sm font-bold ${isPaid ? 'text-emerald-600' : 'text-indigo-600'}`}>
           ₱{amount.toLocaleString()}
         </p>
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-1">
-        <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1.5 pl-1">
+        <div className="flex items-center gap-1">
           <button
-            onClick={() => onHistory(subscriber)}
-            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+            onClick={(e) => { e.stopPropagation(); onHistory(subscriber); }}
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
             title="History"
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4" />
           </button>
 
           {userRole === 'admin' && (
             <button
-              onClick={() => onEdit(subscriber)}
-              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+              onClick={(e) => { e.stopPropagation(); onEdit(subscriber); }}
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
               title="Edit"
             >
-              <Edit className="w-3.5 h-3.5" />
+              <Edit className="w-4 h-4" />
             </button>
           )}
 
           <button
-            onClick={() => onOpenChat(subscriber)}
-            className={`p-1.5 rounded-lg transition-all relative ${unreadCount > 0 ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+            onClick={(e) => { e.stopPropagation(); onOpenChat(subscriber); }}
+            className={`p-1.5 rounded-md transition-all border border-transparent hover:border-gray-200 ${unreadCount > 0 ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-gray-400 hover:text-indigo-600 hover:bg-gray-50'}`}
             title="Chat"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-4 h-4" />
           </button>
 
           {(userRole === 'admin' || userRole === 'staff') && (
             <>
               <button
                 onClick={handleDownloadSOA}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
                 title="SOA"
               >
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-4 h-4" />
               </button>
               <button
                 onClick={handleSendReminder}
-                className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
                 title="Send Reminder"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </>
           )}
 
           {subscriber.hasReceipt && (
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 const latestReceipt = subscriber.payments
                   ?.filter(p => p.month === (subscriber.currentMonthName || 'February 2026') && p.receiptImage)
                   .pop();
                 if (latestReceipt) onViewReceipt(latestReceipt.receiptImage);
               }}
-              className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-all border border-transparent hover:border-emerald-100"
               title="Receipt"
             >
-              <ImageIcon className="w-3.5 h-3.5" />
+              <ImageIcon className="w-4 h-4" />
             </button>
           )}
 
           {userRole === 'admin' && (
             <button
-              onClick={() => onDelete(subscriber._id)}
-              className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+              onClick={(e) => { e.stopPropagation(); onDelete(subscriber._id); }}
+              className="p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-md transition-all border border-transparent hover:border-red-100"
               title="Archive"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -212,15 +215,15 @@ const SubscriberCard = ({
         {!isPaid ? (
           (userRole === 'admin' || userRole === 'staff') && (
             <button
-              onClick={() => onPay(subscriber)}
-              className="bg-indigo-600 text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-tighter"
+              onClick={(e) => { e.stopPropagation(); onPay(subscriber); }}
+              className="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-md hover:bg-indigo-700 shadow-sm active:scale-95 transition-all uppercase tracking-wide ml-1"
             >
               Pay
             </button>
           )
         ) : (
-          <div className="bg-emerald-50 text-emerald-600 p-1.5 rounded-lg border border-emerald-100" title="Settled">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <div className="bg-emerald-50 text-emerald-600 p-1.5 rounded-md border border-emerald-100 ml-1" title="Settled">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
         )}
       </div>
