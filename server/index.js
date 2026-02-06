@@ -17,6 +17,7 @@ const { processSubscriber, calculateStats } = require('./utils/logic');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const messageRoutes = require('./routes/messages');
+const authenticateToken = require('./middleware/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -105,18 +106,6 @@ const uploadToCloudinary = async (image, folder = 'bayadnet') => {
     // Fall back to original image string instead of throwing to avoid breaking the request
     return image;
   }
-};
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
 };
 
 const authorize = (roles = []) => {
