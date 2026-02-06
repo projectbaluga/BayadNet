@@ -8,6 +8,7 @@ import UserManagement from './components/UserManagement';
 import EmailInbox from './components/EmailInbox';
 import IssueChatModal from './components/IssueChatModal';
 import SubscriberDetailsModal from './components/SubscriberDetailsModal';
+import AddressSelector from './components/AddressSelector';
 import Home from './pages/Home';
 import { convertToBase64, compressImage } from './utils/image';
 
@@ -49,6 +50,17 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     accountId: '',
+    street: '',
+    geoAddress: '',
+    address: '',
+    region: '',
+    province: '',
+    city: '',
+    barangay: '',
+    regionCode: '',
+    provinceCode: '',
+    cityCode: '',
+    psgc: '',
     planName: 'Residential Plan',
     bandwidth: '50Mbps',
     rate: 0,
@@ -257,6 +269,17 @@ const Dashboard = () => {
       setFormData({
         name: subscriber.name,
         accountId: subscriber.accountId || '',
+        street: subscriber.street || '',
+        geoAddress: '', // Will be populated by selector or we don't care initially if address is full string
+        address: subscriber.address || '',
+        region: subscriber.region || '',
+        province: subscriber.province || '',
+        city: subscriber.city || '',
+        barangay: subscriber.barangay || '',
+        regionCode: subscriber.regionCode || '',
+        provinceCode: subscriber.provinceCode || '',
+        cityCode: subscriber.cityCode || '',
+        psgc: subscriber.psgc || '',
         planName: subscriber.planName || 'Residential Plan',
         bandwidth: subscriber.bandwidth || '50Mbps',
         rate: subscriber.rate,
@@ -270,6 +293,17 @@ const Dashboard = () => {
       setFormData({
         name: '',
         accountId: '',
+        street: '',
+        geoAddress: '',
+        address: '',
+        region: '',
+        province: '',
+        city: '',
+        barangay: '',
+        regionCode: '',
+        provinceCode: '',
+        cityCode: '',
+        psgc: '',
         planName: 'Residential Plan',
         bandwidth: '50Mbps',
         rate: 0,
@@ -280,6 +314,31 @@ const Dashboard = () => {
       });
     }
     setIsModalOpen(true);
+  };
+
+  const handleAddressChange = (addrData) => {
+    setFormData(prev => {
+        const newData = {
+            ...prev,
+            geoAddress: addrData.address,
+            address: `${prev.street ? prev.street + ', ' : ''}${addrData.address}`,
+            region: addrData.region,
+            province: addrData.province,
+            city: addrData.city,
+            barangay: addrData.barangay,
+            psgc: addrData.psgc,
+            regionCode: addrData.regionCode,
+            provinceCode: addrData.provinceCode,
+            cityCode: addrData.cityCode
+        };
+
+        // Auto-generate ID logic
+        if (addrData.psgc && (addrData.psgc !== prev.psgc || !prev.accountId)) {
+             const random3 = Math.floor(Math.random() * 900) + 100; // 100-999
+             newData.accountId = `${addrData.psgc}${random3}`;
+        }
+        return newData;
+    });
   };
 
   const handleFormSubmit = async (e) => {
@@ -681,6 +740,26 @@ const Dashboard = () => {
                     required
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Street / House No.</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                    value={formData.street}
+                    onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        street: e.target.value,
+                        address: `${e.target.value}, ${prev.geoAddress}`
+                    }))}
+                  />
+                </div>
+
+                <AddressSelector
+                    value={formData}
+                    onChange={handleAddressChange}
+                    className="pt-1"
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Account ID</label>
