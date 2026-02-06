@@ -47,6 +47,9 @@ const Dashboard = () => {
   const [editingSubscriber, setEditingSubscriber] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    accountId: '',
+    planName: 'Residential Plan',
+    bandwidth: '50Mbps',
     rate: 0,
     cycle: 1,
     messengerId: '',
@@ -237,6 +240,9 @@ const Dashboard = () => {
       setEditingSubscriber(subscriber);
       setFormData({
         name: subscriber.name,
+        accountId: subscriber.accountId || '',
+        planName: subscriber.planName || 'Residential Plan',
+        bandwidth: subscriber.bandwidth || '50Mbps',
         rate: subscriber.rate,
         cycle: subscriber.cycle,
         messengerId: subscriber.messengerId || '',
@@ -247,6 +253,9 @@ const Dashboard = () => {
       setEditingSubscriber(null);
       setFormData({
         name: '',
+        accountId: '',
+        planName: 'Residential Plan',
+        bandwidth: '50Mbps',
         rate: 0,
         cycle: 1,
         messengerId: '',
@@ -589,77 +598,154 @@ const Dashboard = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-lg shadow-xl p-6 animate-in zoom-in duration-200 border border-gray-200">
+          <div className="bg-white w-full max-w-lg rounded-lg shadow-xl p-6 animate-in zoom-in duration-200 border border-gray-200 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               {editingSubscriber ? 'Edit Account' : 'New Subscriber'}
             </h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-100 pb-2">Account Info</h3>
+
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Rate (₱)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
                   <input
-                    type="number"
+                    type="text"
                     className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                    value={formData.rate}
-                    onChange={(e) => setFormData({...formData, rate: e.target.value})}
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                     required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Cycle Day</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Account ID</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                    value={formData.accountId}
+                    onChange={(e) => setFormData({...formData, accountId: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                   <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Plan Name</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        value={formData.planName}
+                        onChange={(e) => setFormData({...formData, planName: e.target.value})}
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Bandwidth</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        value={formData.bandwidth}
+                        onChange={(e) => setFormData({...formData, bandwidth: e.target.value})}
+                      />
+                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-100 pb-2">Billing & Contact</h3>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Rate (₱)</label>
+                    <input
+                      type="number"
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                      value={formData.rate}
+                      onChange={(e) => setFormData({...formData, rate: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Cycle Day</label>
+                    <input
+                      type="number"
+                      min="1" max="31"
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                      value={formData.cycle}
+                      onChange={(e) => setFormData({...formData, cycle: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Messenger</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
+                      placeholder="ID/User"
+                      value={formData.messengerId}
+                      onChange={(e) => setFormData({...formData, messengerId: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact No.</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
+                      placeholder="0912..."
+                      value={formData.contactNo}
+                      onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Days Without Internet</label>
                   <input
                     type="number"
-                    min="1" max="31"
+                    min="0" max="30"
                     className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                    value={formData.cycle}
-                    onChange={(e) => setFormData({...formData, cycle: e.target.value})}
+                    value={formData.daysDown}
+                    onChange={(e) => setFormData({...formData, daysDown: parseInt(e.target.value) || 0})}
                     required
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Messenger</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
-                    placeholder="ID/User"
-                    value={formData.messengerId}
-                    onChange={(e) => setFormData({...formData, messengerId: e.target.value})}
-                  />
+
+              {editingSubscriber && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest border-b border-indigo-100 pb-2">Status Overview</h3>
+
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 grid grid-cols-2 gap-4">
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Billing Status</p>
+                        <p className={`text-xs font-black uppercase ${
+                             editingSubscriber.status === 'Paid' ? 'text-emerald-600' :
+                             editingSubscriber.status === 'Overdue' ? 'text-rose-600' : 'text-orange-500'
+                        }`}>
+                            {editingSubscriber.status}
+                        </p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Balance</p>
+                        <p className="text-xs font-black text-slate-700">₱{editingSubscriber.remainingBalance !== undefined ? editingSubscriber.remainingBalance.toLocaleString() : editingSubscriber.amountDue.toLocaleString()}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Next Due Date</p>
+                        <p className="text-xs font-black text-slate-700">{editingSubscriber.dueDate}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Payment</p>
+                        <p className="text-xs font-black text-slate-700">
+                            {editingSubscriber.payments && editingSubscriber.payments.length > 0
+                                ? new Date(editingSubscriber.payments[editingSubscriber.payments.length - 1].date).toLocaleDateString()
+                                : 'No records'}
+                        </p>
+                     </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Contact No.</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm placeholder:text-gray-400"
-                    placeholder="0912..."
-                    value={formData.contactNo}
-                    onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Days Without Internet</label>
-                <input
-                  type="number"
-                  min="0" max="30"
-                  className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                  value={formData.daysDown}
-                  onChange={(e) => setFormData({...formData, daysDown: parseInt(e.target.value) || 0})}
-                  required
-                />
-              </div>
+              )}
+
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
