@@ -21,7 +21,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://mgt.bojex.online", "http://localhost:3000"],
+    origin: ["https://bojex.online", "http://localhost:3000"],
     methods: ["GET", "POST"],
     credentials: true
   },
