@@ -331,7 +331,7 @@ const Home = () => {
                             </div>
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">No Active Search</p>
                             <p className="text-[10px] text-slate-400 font-medium max-w-xs mx-auto px-4">
-                                Enter your Account ID to view your status or <span className="text-red-600 font-bold">chat with our support team</span>.
+                                Enter your Account ID to view your status. Once verified, you can <span className="text-red-600 font-bold">chat with our support team</span>.
                             </p>
                         </div>
                     )}
