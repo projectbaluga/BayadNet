@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle } from 'lucide-react';
+import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { isValidEmail } from '../utils/validators';
@@ -379,29 +379,29 @@ const Home = () => {
                          <div className="space-y-6">
                              <div className="flex items-center gap-4">
                                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
-                                     <Phone className="w-5 h-5" />
+                                     <Rocket className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Call Us</p>
-                                     <p className="text-white font-bold">+63 (912) 345-6789</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Quick Installation</p>
+                                     <p className="text-white font-bold">Get connected within 24-48 hours</p>
                                  </div>
                              </div>
                              <div className="flex items-center gap-4">
                                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
-                                     <Mail className="w-5 h-5" />
+                                     <Shield className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Email Us</p>
-                                     <p className="text-white font-bold">support@bojex.online</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Reliable Connection</p>
+                                     <p className="text-white font-bold">99.9% Uptime Guarantee</p>
                                  </div>
                              </div>
                              <div className="flex items-center gap-4">
                                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
-                                     <MapPin className="w-5 h-5" />
+                                     <Users className="w-5 h-5" />
                                  </div>
                                  <div>
-                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Visit Us</p>
-                                     <p className="text-white font-bold">123 Internet St., Fiber City, Philippines</p>
+                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Local Support</p>
+                                     <p className="text-white font-bold">Technicians available in your area</p>
                                  </div>
                              </div>
                          </div>
