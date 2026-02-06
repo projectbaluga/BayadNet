@@ -446,11 +446,12 @@ app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), asyn
     };
 
     subscriber.reports.push(report);
+    subscriber.issueStatus = 'Open';
 
     await subscriber.save();
 
     // Emit real-time event
-    io.emit('report-added', { subscriberId: subscriber._id, report });
+    io.emit('report-added', { subscriberId: subscriber._id, report, issueStatus: 'Open' });
 
     res.status(201).json(report);
   } catch (error) {
@@ -470,6 +471,22 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
 
     const url = await uploadToCloudinary(image, 'bayadnet_reports');
     res.json({ url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put('/api/subscribers/:id/resolve', authenticateToken, authorize(['admin', 'staff', 'technician']), validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id);
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    subscriber.issueStatus = 'Resolved';
+    await subscriber.save();
+
+    io.emit('issue-resolved', { subscriberId: subscriber._id, status: 'Resolved' });
+
+    res.json({ message: 'Issue resolved', status: 'Resolved' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -504,6 +521,7 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     };
 
     subscriber.reports.push(report);
+    subscriber.issueStatus = 'Open'; // Re-open or keep open on new messages
 
     try {
       await subscriber.save();
@@ -519,7 +537,7 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     }
 
     // Emit real-time event
-    io.emit('report-added', { subscriberId: subscriber._id, report });
+    io.emit('report-added', { subscriberId: subscriber._id, report, issueStatus: 'Open' });
 
     res.status(201).json(report);
   } catch (error) {

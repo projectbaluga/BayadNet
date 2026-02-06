@@ -79,6 +79,7 @@ const SubscriberCard = ({
   const isPaid = subscriber.status === 'Paid';
   const unreadCount = subscriber.reports ? subscriber.reports.filter(r => !r.readBy || r.readBy.length <= 1).length : 0;
   const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : (isPaid ? 0 : subscriber.amountDue);
+  const hasActiveIssue = subscriber.issueStatus === 'Open';
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-3 flex items-center justify-between gap-4 hover:shadow-md hover:border-indigo-300 transition-all duration-200 group">
@@ -99,8 +100,8 @@ const SubscriberCard = ({
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusStyle(subscriber.status)}`}>
             {subscriber.status}
           </span>
-          {unreadCount > 0 && (
-            <div className="animate-pulse" title={`${unreadCount} unread message${unreadCount > 1 ? 's' : ''}`}>
+          {hasActiveIssue && (
+            <div className="animate-pulse" title="Active Issue / Unresolved">
               <AlertCircle className="w-6 h-6 text-red-600 fill-red-100" strokeWidth={2.5} />
             </div>
           )}
@@ -141,7 +142,7 @@ const SubscriberCard = ({
 
           <button
             onClick={(e) => { e.stopPropagation(); onOpenChat(subscriber); }}
-            className={`p-1.5 rounded-md transition-all border border-transparent hover:border-gray-200 ${unreadCount > 0 ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-gray-400 hover:text-indigo-600 hover:bg-gray-50'}`}
+            className={`p-1.5 rounded-md transition-all border border-transparent hover:border-gray-200 ${unreadCount > 0 || hasActiveIssue ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-gray-400 hover:text-indigo-600 hover:bg-gray-50'}`}
             title="Chat"
           >
             <MessageCircle className="w-4 h-4" />
