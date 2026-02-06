@@ -69,6 +69,9 @@ cloudinary.config({
 const uploadToCloudinary = async (image, folder = 'bayadnet') => {
   if (!image || typeof image !== 'string' || !image.startsWith('data:image')) return image;
 
+  const sizeInMB = Buffer.from(image.split(',')[1], 'base64').length / (1024 * 1024);
+  console.log(`Processing image upload: ${sizeInMB.toFixed(2)} MB`);
+
   // Check if Cloudinary is configured
   const isConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
                       process.env.CLOUDINARY_API_KEY &&
@@ -76,14 +79,19 @@ const uploadToCloudinary = async (image, folder = 'bayadnet') => {
 
   if (!isConfigured) {
     console.warn('Cloudinary not configured, falling back to database storage for image');
+    if (sizeInMB > 10) {
+      console.warn('WARNING: Image size is over 10MB and Cloudinary is not configured. This might exceed MongoDB limits.');
+    }
     return image;
   }
 
   try {
     const uploadRes = await cloudinary.uploader.upload(image, {
       folder,
-      resource_type: "auto"
+      resource_type: "auto",
+      timeout: 60000 // 60 seconds timeout
     });
+    console.log('Cloudinary upload successful:', uploadRes.secure_url);
     return uploadRes.secure_url;
   } catch (error) {
     console.error('Cloudinary upload error:', error);
@@ -227,9 +235,18 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
       date: now
     });
 
-    await subscriber.save();
+    try {
+      await subscriber.save();
+    } catch (saveError) {
+      console.error('Error saving subscriber with new payment:', saveError);
+      if (saveError.message.includes('maximum document size')) {
+        return res.status(413).json({ message: 'Document size limit exceeded. The receipt image might be too large.' });
+      }
+      throw saveError;
+    }
     res.json(subscriber);
   } catch (error) {
+    console.error('Server error in payments route:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -416,6 +433,8 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     let { message, attachmentUrl } = req.body;
     if (!message && !attachmentUrl) return res.status(400).json({ message: 'Message or attachment is required' });
 
+    console.log(`Received report for subscriber ${req.params.id}. Message length: ${message?.length || 0}. Has attachment: ${!!attachmentUrl}`);
+
     // Upload attachment to Cloudinary if it's base64
     if (attachmentUrl && attachmentUrl.startsWith('data:image')) {
       attachmentUrl = await uploadToCloudinary(attachmentUrl, 'bayadnet_reports');
@@ -424,7 +443,7 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     const report = {
       reporterName: req.user.name || req.user.username,
       reporterRole: req.user.role,
-      message,
+      message: message || '',
       attachmentUrl,
       timestamp: new Date(),
       readBy: [{
@@ -435,13 +454,26 @@ app.post('/api/subscribers/:id/report', authenticateToken, validateObjectId, asy
     };
 
     subscriber.reports.push(report);
-    await subscriber.save();
+
+    try {
+      await subscriber.save();
+    } catch (saveError) {
+      console.error('Error saving subscriber with new report:', saveError);
+      if (saveError.name === 'ValidationError') {
+        return res.status(400).json({ message: 'Validation Error: ' + saveError.message });
+      }
+      if (saveError.message.includes('maximum document size')) {
+        return res.status(413).json({ message: 'Document size limit exceeded. Please use smaller images or contact support.' });
+      }
+      throw saveError;
+    }
 
     // Emit real-time event
     io.emit('report-added', { subscriberId: subscriber._id, report });
 
     res.status(201).json(report);
   } catch (error) {
+    console.error('Server error in report route:', error);
     res.status(500).json({ message: error.message });
   }
 });
