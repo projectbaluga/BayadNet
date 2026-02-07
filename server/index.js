@@ -255,11 +255,11 @@ app.put('/api/subscribers/:id', authenticateToken, checkPermission(PERMISSIONS.M
             const processed = processSubscriber(subscriber, now, settings);
 
             if (processed.status === 'Overdue') {
-                 mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, false)
-                   .catch(err => console.error(`Failed to auto-disable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+                 mikrotikService.setPppoeProfile(routerConfig, subscriber.pppoeUsername, 'payment-reminder')
+                   .catch(err => console.error(`Failed to auto-restrict Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
             } else {
-                 mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
-                   .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+                 mikrotikService.setPppoeProfile(routerConfig, subscriber.pppoeUsername, subscriber.pppoeProfile || 'default')
+                   .catch(err => console.error(`Failed to auto-restore Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
             }
         }
     }
@@ -333,8 +333,8 @@ app.post('/api/subscribers/:id/payments', authenticateToken, checkPermission(PER
       if (subscriber.pppoeUsername && subscriber.router) {
         const routerConfig = await Router.findById(subscriber.router);
         if (routerConfig && routerConfig.isActive) {
-            mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
-              .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+            mikrotikService.setPppoeProfile(routerConfig, subscriber.pppoeUsername, subscriber.pppoeProfile || 'default')
+              .catch(err => console.error(`Failed to auto-restore Mikrotik user ${subscriber.pppoeUsername}:`, err));
         }
       }
     }
@@ -391,8 +391,8 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, checkPermission(PERMISS
     if (subscriber.pppoeUsername && subscriber.router) {
       const routerConfig = await Router.findById(subscriber.router);
       if (routerConfig && routerConfig.isActive) {
-          mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
-            .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+          mikrotikService.setPppoeProfile(routerConfig, subscriber.pppoeUsername, subscriber.pppoeProfile || 'default')
+            .catch(err => console.error(`Failed to auto-restore Mikrotik user ${subscriber.pppoeUsername}:`, err));
       }
     }
 
@@ -590,7 +590,11 @@ app.post('/api/mikrotik/toggle/:id', authenticateToken, checkPermission(PERMISSI
     const { enable } = req.body; // true or false
     if (enable === undefined) return res.status(400).json({ message: 'Enable status is required' });
 
-    const result = await mikrotikService.togglePppoeSecret(subscriber.router, subscriber.pppoeUsername, enable);
+    // "Disable" now means set to payment-reminder profile
+    // "Enable" means restore to assigned profile
+    const targetProfile = enable ? (subscriber.pppoeProfile || 'default') : 'payment-reminder';
+
+    const result = await mikrotikService.setPppoeProfile(subscriber.router, subscriber.pppoeUsername, targetProfile);
     if (!result.success) {
       return res.status(502).json({ message: result.message || 'Failed to communicate with Mikrotik' });
     }
@@ -639,6 +643,18 @@ app.get('/api/mikrotik/health', authenticateToken, checkPermission(PERMISSIONS.V
         summary: `${onlineCount}/${routers.length} Online`,
         details: checks
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/routers/:id/profiles', authenticateToken, checkPermission(PERMISSIONS.MANAGE_ROUTERS), validateObjectId, async (req, res) => {
+  try {
+    const router = await Router.findById(req.params.id);
+    if (!router) return res.status(404).json({ message: 'Router not found' });
+
+    const profiles = await mikrotikService.getProfiles(router);
+    res.json(profiles);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
