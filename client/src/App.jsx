@@ -72,7 +72,8 @@ const Dashboard = () => {
     contactNo: '',
     daysDown: 0,
     startDate: new Date().toISOString().split('T')[0],
-    initialPayment: false
+    initialPayment: false,
+    pppoePassword: ''
   });
   const [paymentData, setPaymentData] = useState({
     amountPaid: 0,
@@ -291,6 +292,7 @@ const Dashboard = () => {
         accountId: subscriber.accountId || '',
         router: subscriber.router ? (subscriber.router._id || subscriber.router) : '',
         pppoeUsername: subscriber.pppoeUsername || '',
+        pppoePassword: '',
         street: subscriber.street || '',
         geoAddress: '', // Will be populated by selector or we don't care initially if address is full string
         address: subscriber.address || '',
@@ -318,6 +320,7 @@ const Dashboard = () => {
         accountId: '',
         router: '',
         pppoeUsername: '',
+        pppoePassword: '',
         street: '',
         geoAddress: '',
         address: '',
@@ -816,20 +819,21 @@ const Dashboard = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Assigned Router</label>
+                  <select
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                    value={formData.router}
+                    onChange={(e) => setFormData({...formData, router: e.target.value})}
+                  >
+                    <option value="">-- Select Router --</option>
+                    {routers.map(r => (
+                        <option key={r._id} value={r._id}>{r.name} ({r.host})</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Assigned Router</label>
-                      <select
-                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                        value={formData.router}
-                        onChange={(e) => setFormData({...formData, router: e.target.value})}
-                      >
-                        <option value="">-- Select Router --</option>
-                        {routers.map(r => (
-                            <option key={r._id} value={r._id}>{r.name} ({r.host})</option>
-                        ))}
-                      </select>
-                    </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Username</label>
                       <input
@@ -838,6 +842,16 @@ const Dashboard = () => {
                         placeholder="Mikrotik Secret Name"
                         value={formData.pppoeUsername}
                         onChange={(e) => setFormData({...formData, pppoeUsername: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Password</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        placeholder={editingSubscriber ? "(Unchanged)" : "Secret Password"}
+                        value={formData.pppoePassword}
+                        onChange={(e) => setFormData({...formData, pppoePassword: e.target.value})}
                       />
                     </div>
                 </div>

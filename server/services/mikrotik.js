@@ -1,4 +1,5 @@
 const { RouterOSClient } = require('routeros-client');
+const { decrypt } = require('../utils/encryption');
 
 class MikrotikService {
   constructor() {
@@ -25,8 +26,15 @@ class MikrotikService {
     };
 
     const client = new RouterOSClient(clientConfig);
+
+    // Add manual timeout wrapper
+    const connectPromise = client.connect();
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timed out')), 5000)
+    );
+
     try {
-        await client.connect();
+        await Promise.race([connectPromise, timeoutPromise]);
         return client;
     } catch (err) {
         throw new Error(`Failed to connect to Mikrotik (${config.host}): ${err.message}`);
@@ -57,12 +65,79 @@ class MikrotikService {
   }
 
   /**
+   * Create or Update PPPoE Secret
+   */
+  async createOrUpdateSecret(config, subscriberData) {
+      if (!this.isConfigured(config)) {
+          return { success: false, message: 'Router Not Configured' };
+      }
+
+      const username = subscriberData.pppoeUsername?.trim();
+      let password = subscriberData.pppoePassword;
+
+      // Decrypt if necessary (if it looks like IV:Encrypted)
+      if (password && password.includes(':')) {
+          password = decrypt(password);
+      }
+
+      const profile = subscriberData.pppoeProfile || 'default'; // Or determine based on plan
+      const service = 'pppoe';
+
+      if (!username) return { success: false, message: 'No PPPoE Username provided' };
+
+      let client;
+      try {
+          client = await this.connect(config);
+
+          // Check if exists
+          const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
+
+          if (secrets.length > 0) {
+              // Update
+              const id = secrets[0]['.id'];
+              const updateData = {};
+
+              // Only update if changed or to ensure consistency
+              if (password) updateData.password = password;
+              if (profile) updateData.profile = profile;
+
+              if (Object.keys(updateData).length > 0) {
+                  await client.api().menu('/ppp/secret').update(updateData, id);
+              }
+
+              return { success: true, action: 'updated', message: `Updated PPPoE user '${username}'` };
+          } else {
+              // Create
+              if (!password) return { success: false, message: 'Password required for new PPPoE user' };
+
+              await client.api().menu('/ppp/secret').add({
+                  name: username,
+                  password: password,
+                  profile: profile,
+                  service: service,
+                  disabled: false // Enable by default on creation
+              });
+
+              return { success: true, action: 'created', message: `Created PPPoE user '${username}'` };
+          }
+      } catch (error) {
+          console.error(`Mikrotik Create/Update Error (${config.host}):`, error.message);
+          return { success: false, message: error.message };
+      } finally {
+          if (client) client.close();
+      }
+  }
+
+  /**
    * Toggle PPPoE Secret Status
    */
   async togglePppoeSecret(config, username, enable, existingClient = null) {
     if (!this.isConfigured(config)) {
         return { success: false, message: 'Router Not Configured' };
     }
+
+    username = username?.trim();
+    if (!username) return { success: false, message: 'Invalid Username' };
 
     let client = existingClient;
     const shouldClose = !existingClient;
@@ -86,10 +161,11 @@ class MikrotikService {
 
       if (!enable) {
          try {
+             // Remove from active connections to disconnect immediately
              const active = await client.api().menu('/ppp/active').where({ name: username }).get();
-             if (active.length > 0) {
-                 const activeId = active[0]['.id'];
-                 await client.api().menu('/ppp/active').remove(activeId);
+             // There might be multiple sessions (though unlikely for PPPoE unless allowed)
+             for (const session of active) {
+                 await client.api().menu('/ppp/active').remove(session['.id']);
              }
          } catch (kickErr) {
              console.warn('Mikrotik: Failed to kick active user', kickErr.message);
@@ -98,7 +174,7 @@ class MikrotikService {
 
       return { success: true, enabled: enable, message: `Successfully ${enable ? 'Enabled' : 'Disabled'}` };
     } catch (error) {
-      console.error(`Mikrotik Error (${config.host}):`, error.message);
+      console.error(`Mikrotik Toggle Error (${config.host}):`, error.message);
       return { success: false, message: error.message };
     } finally {
       if (shouldClose && client) {
@@ -107,8 +183,49 @@ class MikrotikService {
     }
   }
 
+  /**
+   * Delete PPPoE Secret
+   */
+  async deleteSecret(config, username) {
+    if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
+
+    username = username?.trim();
+    if (!username) return { success: false, message: 'Invalid Username' };
+
+    let client;
+    try {
+        client = await this.connect(config);
+
+        // Find secret
+        const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
+        if (secrets.length > 0) {
+            const id = secrets[0]['.id'];
+            await client.api().menu('/ppp/secret').remove(id);
+        }
+
+        // Kick active sessions
+        try {
+             const active = await client.api().menu('/ppp/active').where({ name: username }).get();
+             for (const session of active) {
+                 await client.api().menu('/ppp/active').remove(session['.id']);
+             }
+        } catch (kickErr) {
+             console.warn('Mikrotik: Failed to kick user on delete', kickErr.message);
+        }
+
+        return { success: true, message: `Deleted PPPoE user '${username}'` };
+    } catch (error) {
+        console.error(`Mikrotik Delete Error (${config.host}):`, error.message);
+        return { success: false, message: error.message };
+    } finally {
+        if (client) client.close();
+    }
+  }
+
   async getPppoeStatus(config, username) {
      if (!this.isConfigured(config)) return { connected: false, message: 'Router Not Configured' };
+     username = username?.trim();
+
      let client;
      try {
        client = await this.connect(config);
@@ -125,7 +242,8 @@ class MikrotikService {
            enabled: isEnabled,
            online: isOnline,
            profile: secrets[0].profile,
-           remoteAddress: active.length > 0 ? active[0].address : null
+           remoteAddress: active.length > 0 ? active[0].address : null,
+           uptime: active.length > 0 ? active[0].uptime : null
        };
      } catch (error) {
        console.error(`Mikrotik Status Error (${config.host}):`, error.message);

@@ -7,7 +7,7 @@ module.exports = (authenticateToken, authorize) => {
     // List all routers
     router.get('/', authenticateToken, authorize('admin'), async (req, res) => {
         try {
-            const routers = await Router.find();
+            const routers = await Router.find().select('-password');
             // Check status for each router? Maybe on demand or in background.
             // For now, return stored status.
             res.json(routers);
@@ -22,7 +22,9 @@ module.exports = (authenticateToken, authorize) => {
             const { name, host, port, username, password } = req.body;
             const router = new Router({ name, host, port, username, password });
             await router.save();
-            res.status(201).json(router);
+            const routerObj = router.toObject();
+            delete routerObj.password;
+            res.status(201).json(routerObj);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -33,7 +35,9 @@ module.exports = (authenticateToken, authorize) => {
         try {
             const router = await Router.findByIdAndUpdate(req.params.id, req.body, { new: true });
             if (!router) return res.status(404).json({ message: 'Router not found' });
-            res.json(router);
+            const routerObj = router.toObject();
+            delete routerObj.password;
+            res.json(routerObj);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }

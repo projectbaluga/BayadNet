@@ -182,6 +182,25 @@ app.post('/api/subscribers', authenticateToken, authorize('admin'), async (req, 
       subscriber.remainingBalance = Math.max(0, subscriber.remainingBalance - initialPayment.amountPaid);
     }
 
+    // Sync Mikrotik on Creation
+    if (subscriber.pppoeUsername && subscriber.router) {
+       try {
+           const routerConfig = await Router.findById(subscriber.router);
+           if (routerConfig && routerConfig.isActive) {
+               const result = await mikrotikService.createOrUpdateSecret(routerConfig, subscriber);
+               if (result.success) {
+                   subscriber.mikrotikSyncStatus = 'Synced';
+               } else {
+                   console.warn(`Mikrotik Sync Failed on Create: ${result.message}`);
+                   subscriber.mikrotikSyncStatus = 'Failed';
+               }
+           }
+       } catch (syncErr) {
+           console.error('Mikrotik Sync Error:', syncErr);
+           subscriber.mikrotikSyncStatus = 'Failed';
+       }
+    }
+
     await subscriber.save();
     res.status(201).json(subscriber);
   } catch (error) {
@@ -216,6 +235,18 @@ app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateO
     if (subscriber.pppoeUsername && subscriber.router && !subscriber.isArchived) {
         const routerConfig = await Router.findById(subscriber.router);
         if (routerConfig && routerConfig.isActive) {
+
+            // Sync Credentials/Profile if changed
+            if (req.body.pppoeUsername || req.body.pppoePassword) {
+                 // Use updated data
+                 const updatedData = { ...subscriber.toObject(), ...req.body };
+                 await mikrotikService.createOrUpdateSecret(routerConfig, updatedData)
+                    .then(res => {
+                        if(!res.success) console.warn('Mikrotik Credential Sync Failed:', res.message);
+                    })
+                    .catch(err => console.error('Mikrotik Credential Sync Error:', err));
+            }
+
             const now = getCurrentDate();
             const settings = await Setting.findOne() || { rebateValue: 30 };
             const processed = processSubscriber(subscriber, now, settings);
@@ -240,6 +271,22 @@ app.delete('/api/subscribers/:id', authenticateToken, authorize('admin'), valida
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    // Sync Mikrotik Deletion
+    if (subscriber.pppoeUsername && subscriber.router) {
+        try {
+            const routerConfig = await Router.findById(subscriber.router);
+            if (routerConfig && routerConfig.isActive) {
+                const result = await mikrotikService.deleteSecret(routerConfig, subscriber.pppoeUsername);
+                if (!result.success) {
+                    console.warn(`Mikrotik Delete Failed: ${result.message}`);
+                    // We continue with archive even if router is unreachable
+                }
+            }
+        } catch (delErr) {
+             console.error('Mikrotik Delete Error:', delErr);
+        }
+    }
 
     subscriber.isArchived = true;
     await subscriber.save();
