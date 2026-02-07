@@ -211,7 +211,7 @@ app.post('/api/subscribers', authenticateToken, checkPermission(PERMISSIONS.MANA
   }
 });
 
-app.get('/api/subscribers', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
+app.get('/api/subscribers', authenticateToken, checkPermission(PERMISSIONS.VIEW_SUBSCRIBERS), async (req, res) => {
   try {
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };

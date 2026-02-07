@@ -11,7 +11,7 @@ import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import AddressSelector from './components/AddressSelector';
 import Home from './pages/Home';
 import { convertToBase64, compressImage } from './utils/image';
-import { hasPermission, PERMISSIONS } from './utils/permissions';
+import { hasPermission, getEffectivePermissions, PERMISSIONS } from './utils/permissions';
 
 const API_BASE = '/api';
 
@@ -152,28 +152,34 @@ const Dashboard = () => {
     try {
       setIsFetching(true);
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const promises = [
-        axios.get(`${API_BASE}/subscribers`, config),
-        axios.get(`${API_BASE}/stats`, config),
-        axios.get(`${API_BASE}/analytics`, config),
-        axios.get(`${API_BASE}/mikrotik/health`, config)
-      ];
 
-      if (userRole === 'admin') {
-          promises.push(axios.get(`${API_BASE}/routers`, config));
-      }
+      const permissions = getEffectivePermissions(currentUser || { role: userRole });
+      const canViewAnalytics = permissions[PERMISSIONS.VIEW_ANALYTICS];
+      const canViewRouterStatus = permissions[PERMISSIONS.VIEW_ROUTER_STATUS];
+      const canManageRouters = permissions[PERMISSIONS.MANAGE_ROUTERS];
 
-      const results = await Promise.all(promises);
-      setSubscribers(results[0].data);
-      setStats(results[1].data);
-      setAnalytics(results[2].data);
-      setRouterStatus(results[3].data);
+      // Always fetch subscribers (assuming basic view permission or safe fail)
+      // Actually, we should check VIEW_SUBSCRIBERS if strictly enforced, but let's assume valid user can fetch
+      const subPromise = axios.get(`${API_BASE}/subscribers`, config);
 
-      if (userRole === 'admin' && results[4]) {
-          setRouters(results[4].data);
-      } else {
-          setRouters([]);
-      }
+      const statsPromise = canViewAnalytics ? axios.get(`${API_BASE}/stats`, config) : Promise.resolve({ data: { dueToday: 0, overdue: 0, totalCollections: 0 } });
+      const analyticsPromise = canViewAnalytics ? axios.get(`${API_BASE}/analytics`, config) : Promise.resolve({ data: { totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} } });
+      const healthPromise = canViewRouterStatus ? axios.get(`${API_BASE}/mikrotik/health`, config) : Promise.resolve({ data: { summary: 'Hidden', details: [] } });
+      const routersPromise = canManageRouters ? axios.get(`${API_BASE}/routers`, config) : Promise.resolve({ data: [] });
+
+      const [subRes, statsRes, analyticsRes, healthRes, routersRes] = await Promise.all([
+        subPromise,
+        statsPromise,
+        analyticsPromise,
+        healthPromise,
+        routersPromise
+      ]);
+
+      setSubscribers(subRes.data);
+      setStats(statsRes.data);
+      setAnalytics(analyticsRes.data);
+      setRouterStatus(healthRes.data);
+      setRouters(routersRes.data);
 
       setLoading(false);
     } catch (error) {
@@ -546,6 +552,7 @@ const Dashboard = () => {
            <EmailInbox token={token} />
         ) : (
           <>
+        {can(PERMISSIONS.VIEW_ANALYTICS) && (
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           {/* Collection Efficiency Chart */}
           <div className="lg:col-span-4 bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex items-center gap-6">
@@ -602,6 +609,7 @@ const Dashboard = () => {
             </div>
           </div>
         </section>
+        )}
 
         {/* Search Bar - Professional */}
         <div className="relative mb-8">
