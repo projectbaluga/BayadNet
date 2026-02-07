@@ -1,4 +1,5 @@
 export const PERMISSIONS = {
+  VIEW_SUBSCRIBERS: 'view_subscribers',
   MANAGE_SUBSCRIBERS: 'manage_subscribers',
   PROCESS_PAYMENTS: 'process_payments',
   VIEW_ANALYTICS: 'view_analytics',
@@ -12,6 +13,7 @@ export const PERMISSIONS = {
 
 export const DEFAULT_PERMISSIONS = {
   admin: {
+    [PERMISSIONS.VIEW_SUBSCRIBERS]: true,
     [PERMISSIONS.MANAGE_SUBSCRIBERS]: true,
     [PERMISSIONS.PROCESS_PAYMENTS]: true,
     [PERMISSIONS.VIEW_ANALYTICS]: true,
@@ -23,6 +25,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.DOWNLOAD_SOA]: true
   },
   staff: {
+    [PERMISSIONS.VIEW_SUBSCRIBERS]: true,
     [PERMISSIONS.MANAGE_SUBSCRIBERS]: false,
     [PERMISSIONS.PROCESS_PAYMENTS]: true,
     [PERMISSIONS.VIEW_ANALYTICS]: true,
@@ -34,6 +37,7 @@ export const DEFAULT_PERMISSIONS = {
     [PERMISSIONS.DOWNLOAD_SOA]: true
   },
   technician: {
+    [PERMISSIONS.VIEW_SUBSCRIBERS]: true,
     [PERMISSIONS.MANAGE_SUBSCRIBERS]: false,
     [PERMISSIONS.PROCESS_PAYMENTS]: false,
     [PERMISSIONS.VIEW_ANALYTICS]: false,
@@ -55,8 +59,6 @@ export const getEffectivePermissions = (user) => {
   const effective = { ...roleDefaults };
 
   // Apply overrides
-  // Note: user.permissions from mongoose might be a Map or Object.
-  // If it's a Map (unlikely over JSON), we'd need loop. JSON is Object.
   Object.keys(overrides).forEach(key => {
     effective[key] = overrides[key];
   });
