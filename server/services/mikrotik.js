@@ -316,13 +316,13 @@ class MikrotikService {
       client = await this.connect(config);
 
       // 1. Create IP Pools
-      // pool-overdue: 10.0.99.2-10.0.99.254
+      // pool-overdue: 10.0.24.1-10.0.31.254
       try {
           const pools = await client.api().menu('/ip/pool').where({ name: 'pool-overdue' }).get();
           if (pools.length === 0) {
               await client.api().menu('/ip/pool').add({
                   name: 'pool-overdue',
-                  ranges: '10.0.99.2-10.0.99.254'
+                  ranges: '10.0.24.1-10.0.31.254'
               });
           }
       } catch (e) {
@@ -360,15 +360,15 @@ class MikrotikService {
       }
 
       // 4. Add Subnet to Firewall Address List
-      // Any IP in 10.0.99.0/24 is considered overdue
+      // Any IP in 10.0.24.0/21 is considered overdue
       try {
           const listEntries = await client.api().menu('/ip/firewall/address-list')
-              .where({ list: 'overdue_users', address: '10.0.99.0/24' }).get();
+              .where({ list: 'overdue_users', address: '10.0.24.0/21' }).get();
 
           if (listEntries.length === 0) {
               await client.api().menu('/ip/firewall/address-list').add({
                   list: 'overdue_users',
-                  address: '10.0.99.0/24',
+                  address: '10.0.24.0/21',
                   comment: 'Overdue Pool Subnet'
               });
           }
