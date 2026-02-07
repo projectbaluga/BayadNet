@@ -1,60 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, User, Phone, MessageSquare, CreditCard, Calendar, AlertTriangle, ShieldCheck, Wifi, Power, RefreshCw } from 'lucide-react';
+import { X, User, Phone, MessageSquare, CreditCard, Calendar, AlertTriangle, ShieldCheck, Wifi, Power } from 'lucide-react';
 
 const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
-  const [mikrotikStatus, setMikrotikStatus] = useState({ loading: false, exists: false, enabled: false, message: '' });
-
-  useEffect(() => {
-    if (isOpen && subscriber && subscriber.pppoeUsername) {
-       fetchMikrotikStatus();
-    } else {
-        setMikrotikStatus({ loading: false, exists: false, enabled: false, message: '' });
-    }
-  }, [isOpen, subscriber]);
-
-  const fetchMikrotikStatus = async () => {
-    setMikrotikStatus(prev => ({ ...prev, loading: true, message: '' }));
-    try {
-        const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const res = await axios.get(`/api/mikrotik/status/${subscriber._id}`, config);
-        setMikrotikStatus({
-            loading: false,
-            exists: res.data.exists,
-            enabled: res.data.enabled,
-            message: res.data.message
-        });
-    } catch (error) {
-        console.error('Failed to fetch Mikrotik status:', error);
-        setMikrotikStatus(prev => ({ ...prev, loading: false, message: 'Failed to check status' }));
-    }
-  };
-
-  const toggleMikrotik = async () => {
-      setMikrotikStatus(prev => ({ ...prev, loading: true }));
-      try {
-        const token = localStorage.getItem('token');
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const newStatus = !mikrotikStatus.enabled;
-        const res = await axios.post(`/api/mikrotik/toggle/${subscriber._id}`, { enable: newStatus }, config);
-
-        if (res.data.success) {
-            setMikrotikStatus({
-                loading: false,
-                exists: true,
-                enabled: res.data.enabled,
-                message: res.data.message
-            });
-        } else {
-            setMikrotikStatus(prev => ({ ...prev, loading: false, message: res.data.message || 'Failed' }));
-        }
-      } catch (error) {
-        console.error('Failed to toggle Mikrotik:', error);
-        setMikrotikStatus(prev => ({ ...prev, loading: false, message: 'Error toggling status' }));
-      }
-  };
-
   if (!isOpen || !subscriber) return null;
 
   const detailItems = [
@@ -114,48 +62,6 @@ const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
             ))}
           </div>
 
-          {subscriber.pppoeUsername && (
-            <div className="bg-slate-900 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500 rounded-full blur-2xl opacity-20 -mr-10 -mt-10"></div>
-
-                <div className="relative z-10 flex justify-between items-center">
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Internet Access</p>
-                        <div className="flex items-center gap-2">
-                             {mikrotikStatus.loading ? (
-                                 <span className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                     <RefreshCw className="w-4 h-4 animate-spin" /> Checking...
-                                 </span>
-                             ) : mikrotikStatus.exists ? (
-                                 <span className={`text-lg font-black flex items-center gap-2 ${mikrotikStatus.enabled ? 'text-emerald-400' : 'text-rose-500'}`}>
-                                    <span className={`w-3 h-3 rounded-full ${mikrotikStatus.enabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}></span>
-                                    {mikrotikStatus.enabled ? 'ONLINE' : 'SUSPENDED'}
-                                 </span>
-                             ) : (
-                                 <span className="text-sm font-bold text-slate-500">Not Found</span>
-                             )}
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={toggleMikrotik}
-                        disabled={mikrotikStatus.loading || !mikrotikStatus.exists}
-                        className={`p-3 rounded-xl transition-all shadow-lg active:scale-95 border border-white/10 ${
-                            !mikrotikStatus.exists ? 'bg-slate-800 text-slate-600 cursor-not-allowed' :
-                            mikrotikStatus.enabled
-                                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/50'
-                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/50'
-                        }`}
-                        title={mikrotikStatus.enabled ? "Disconnect Internet" : "Restore Internet"}
-                    >
-                        <Power className="w-6 h-6" />
-                    </button>
-                </div>
-                {mikrotikStatus.message && (
-                    <p className="text-[10px] text-slate-500 mt-2 font-mono truncate">{mikrotikStatus.message}</p>
-                )}
-            </div>
-          )}
 
           <div className="pt-5 border-t border-dashed border-gray-200">
             <div className="flex justify-between items-end">

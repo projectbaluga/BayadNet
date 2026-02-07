@@ -23,7 +23,23 @@ const PaymentReminder = () => {
       withCredentials: true
     });
     setSocket(newSocket);
-    return () => newSocket.close();
+
+    newSocket.on('report-added', ({ subscriberId, report }) => {
+        setSubscriber(prev => {
+            if (prev && prev._id === subscriberId) {
+                // Check if report already exists to avoid duplicates (optional but safe)
+                const exists = prev.reports?.some(r => r.timestamp === report.timestamp && r.message === report.message);
+                if (exists) return prev;
+                return { ...prev, reports: [...(prev.reports || []), report] };
+            }
+            return prev;
+        });
+    });
+
+    return () => {
+        newSocket.off('report-added');
+        newSocket.close();
+    };
   }, []);
 
   const handleSearch = async (e) => {
