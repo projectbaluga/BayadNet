@@ -57,7 +57,10 @@ const PublicChatModal = ({ isOpen, onClose, subscriber, socket, onRefresh }) => 
 
     setIsSubmitting(true);
     try {
-      await axios.post('/api/public/report', {
+      // Optimistic update - create a temp report object
+      // Note: In a real app we might want the server response to confirm, but for speed we can append locally
+      // actually, let's wait for the server response which gives us the full object, then append it via callback or prop
+      const res = await axios.post('/api/public/report', {
         accountId: subscriber.accountId,
         message: reportMessage,
         attachmentUrl: attachment
@@ -65,7 +68,11 @@ const PublicChatModal = ({ isOpen, onClose, subscriber, socket, onRefresh }) => 
 
       setReportMessage('');
       setAttachment(null);
-      // The socket event in CheckStatus should update the UI
+
+      // If parent doesn't update fast enough via socket, we can force a refresh or rely on socket.
+      // But since we fixed the parent socket listener, let's also do a safe check:
+      if (onRefresh) onRefresh();
+
     } catch (error) {
       console.error('Error sending report:', error);
       alert('Failed to send message. Please try again.');
