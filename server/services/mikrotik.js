@@ -305,8 +305,15 @@ class MikrotikService {
       // We will add the configuration step-by-step using API calls instead of a raw script file
       // to ensure better error handling and compatibility.
 
-      // 1. Create Address List 'overdue_users' (Just dummy entry or check if list exists logic not needed, firewall rule handles list creation)
-      // Actually, we don't need to pre-create the list.
+      // 1. Enable Web Proxy
+      try {
+          await client.api().menu('/ip/proxy').update({
+              enabled: true,
+              port: 8080
+          });
+      } catch (e) {
+          console.warn('Failed to enable web proxy:', e.message);
+      }
 
       // 2. Create Profile 'payment-reminder'
       try {
@@ -323,26 +330,45 @@ class MikrotikService {
           console.warn('Failed to create profile:', e.message);
       }
 
-      // 3. Create NAT Rule
+      // 3. Create Web Proxy Access Rule (The Redirection Logic)
       try {
-          const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Payment Reminder Page' }).get();
+          const accessRules = await client.api().menu('/ip/proxy/access').where({ comment: 'Redirect Overdue' }).get();
+          if (accessRules.length === 0) {
+              await client.api().menu('/ip/proxy/access').add({
+                  'src-address-list': 'overdue_users',
+                  action: 'deny',
+                  'redirect-to': `${serverIp}:3000/payment-reminder`,
+                  comment: 'Redirect Overdue'
+              });
+          } else {
+              // Update redirect URL if needed
+              await client.api().menu('/ip/proxy/access').update({
+                  'redirect-to': `${serverIp}:3000/payment-reminder`
+              }, accessRules[0]['.id']);
+          }
+      } catch (e) {
+          console.warn('Failed to create proxy access rule:', e.message);
+      }
+
+      // 4. Create NAT Rule (Redirect to Web Proxy)
+      try {
+          const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Proxy' }).get();
           if (natRules.length === 0) {
               await client.api().menu('/ip/firewall/nat').add({
                   chain: 'dstnat',
-                  action: 'dst-nat',
-                  'to-addresses': serverIp,
-                  'to-ports': '3000',
+                  action: 'redirect',
+                  'to-ports': '8080',
                   protocol: 'tcp',
                   'dst-port': '80',
                   'src-address-list': 'overdue_users',
-                  comment: 'Redirect Overdue Users to Payment Reminder Page'
+                  comment: 'Redirect Overdue Users to Proxy'
               });
           }
       } catch (e) {
           console.warn('Failed to create NAT rule:', e.message);
       }
 
-      // 4. Create Filter Rule (Block others)
+      // 5. Create Filter Rule (Block others)
       try {
           // Allow DNS
           const dnsRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow DNS for Overdue' }).get();
