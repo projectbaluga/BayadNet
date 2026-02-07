@@ -46,8 +46,10 @@ const RouterSettings = ({ token }) => {
   };
 
   const handlePushConfig = async (id) => {
-    const serverIp = prompt("Please confirm the Server Address (IP or Domain) for the landing page:", window.location.hostname);
+    const serverIp = prompt("Enter Server Address (IP or Domain) for landing page:", window.location.hostname);
     if (!serverIp) return;
+
+    if (!window.confirm(`This will apply the following settings to the router:\n\n1. IP Pool (bayadnet-pool)\n2. PPP Profiles (default & payment-reminder)\n3. NAT Masquerade\n4. Web Proxy & Redirection Rules\n\nProceed?`)) return;
 
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };

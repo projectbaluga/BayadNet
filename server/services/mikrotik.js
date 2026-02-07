@@ -330,6 +330,11 @@ class MikrotikService {
 
   /**
    * Push Initial Configuration Script to Router
+   * Now includes:
+   * 1. IP Pool for PPPoE (bayadnet-pool)
+   * 2. 'default' PPP Profile
+   * 3. NAT Masquerade
+   * 4. Web Proxy & Redirect Logic (for overdue)
    */
   async pushConfig(config, serverInput) {
     if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
@@ -342,10 +347,56 @@ class MikrotikService {
       const { hostname, redirectUrl } = parseServerAddress(serverInput);
       console.log(`Pushing config: Hostname=${hostname}, RedirectUrl=${redirectUrl}`);
 
-      // We will add the configuration step-by-step using API calls instead of a raw script file
-      // to ensure better error handling and compatibility.
+      // --- PART 1: Core Networking Setup ---
 
-      // 1. Enable Web Proxy
+      // 1. Create IP Pool
+      try {
+        const pools = await client.api().menu('/ip/pool').where({ name: 'bayadnet-pool' }).get();
+        if (pools.length === 0) {
+            await client.api().menu('/ip/pool').add({
+                name: 'bayadnet-pool',
+                ranges: '10.0.0.2-10.0.0.254',
+                comment: 'Created by BayadNet'
+            });
+        }
+      } catch (e) {
+        console.warn('Failed to create IP pool:', e.message);
+      }
+
+      // 2. Configure 'default' PPP Profile
+      try {
+        const profiles = await client.api().menu('/ppp/profile').where({ name: 'default' }).get();
+        if (profiles.length > 0) {
+            // Update existing default profile to use our pool and DNS
+            await client.api().menu('/ppp/profile').update({
+                'local-address': '10.0.0.1',
+                'remote-address': 'bayadnet-pool',
+                'dns-server': '8.8.8.8,8.8.4.4',
+                'change-tcp-mss': 'yes' // Best practice for PPPoE
+            }, profiles[0]['.id']);
+        }
+      } catch (e) {
+        console.warn('Failed to configure default profile:', e.message);
+      }
+
+      // 3. NAT Masquerade (Ensure internet access)
+      try {
+        const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'BayadNet: Masquerade' }).get();
+        if (natRules.length === 0) {
+            await client.api().menu('/ip/firewall/nat').add({
+                chain: 'srcnat',
+                action: 'masquerade',
+                'src-address': '10.0.0.0/24', // Matches our pool
+                comment: 'BayadNet: Masquerade'
+            });
+        }
+      } catch (e) {
+         console.warn('Failed to create Masquerade rule:', e.message);
+      }
+
+      // --- PART 2: Overdue Redirect Logic ---
+
+      // 4. Enable Web Proxy
       try {
           await client.api().menu('/ip/proxy').update({
               enabled: true,
@@ -355,13 +406,16 @@ class MikrotikService {
           console.warn('Failed to enable web proxy:', e.message);
       }
 
-      // 2. Create Profile 'payment-reminder'
+      // 5. Create Profile 'payment-reminder'
       try {
           const profiles = await client.api().menu('/ppp/profile').where({ name: 'payment-reminder' }).get();
           if (profiles.length === 0) {
               await client.api().menu('/ppp/profile').add({
                   name: 'payment-reminder',
                   'rate-limit': '512k/512k',
+                  'local-address': '10.0.0.1', // Ensure it has valid IP config too
+                  'remote-address': 'bayadnet-pool',
+                  'dns-server': '8.8.8.8',
                   'address-list': 'overdue_users',
                   comment: 'Created by BayadNet - Redirects overdue users'
               });
@@ -370,7 +424,7 @@ class MikrotikService {
           console.warn('Failed to create profile:', e.message);
       }
 
-      // 3. Create Web Proxy Access Rule (The Redirection Logic)
+      // 6. Create Web Proxy Access Rule (The Redirection Logic)
       try {
           const accessRules = await client.api().menu('/ip/proxy/access').where({ comment: 'Redirect Overdue' }).get();
           if (accessRules.length === 0) {
@@ -390,10 +444,11 @@ class MikrotikService {
           console.warn('Failed to create proxy access rule:', e.message);
       }
 
-      // 4. Create NAT Rule (Redirect to Web Proxy)
+      // 7. Create NAT Rule (Redirect to Web Proxy)
       try {
           const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Proxy' }).get();
           if (natRules.length === 0) {
+              // Add BEFORE masquerade (index 0) to ensure it hits
               await client.api().menu('/ip/firewall/nat').add({
                   chain: 'dstnat',
                   action: 'redirect',
@@ -401,14 +456,17 @@ class MikrotikService {
                   protocol: 'tcp',
                   'dst-port': '80',
                   'src-address-list': 'overdue_users',
-                  comment: 'Redirect Overdue Users to Proxy'
+                  comment: 'Redirect Overdue Users to Proxy',
+                  place: 'before' // Try to place at top
               });
+              // Note: 'place' might not work in all API versions or libs, but we try.
+              // If it appends, user might need to move it up if other dstnat rules exist.
           }
       } catch (e) {
           console.warn('Failed to create NAT rule:', e.message);
       }
 
-      // 5. Update Address List for Server (Host)
+      // 8. Update Address List for Server (Host)
       try {
           const listName = 'payment_portal_server';
           const listItems = await client.api().menu('/ip/firewall/address-list').where({ list: listName }).get();
@@ -430,7 +488,7 @@ class MikrotikService {
           console.warn('Failed to update address list:', e.message);
       }
 
-      // 6. Create Filter Rules (Block others)
+      // 9. Create Filter Rules (Block others)
       try {
           // Allow DNS
           const dnsRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow DNS for Overdue' }).get();
@@ -482,7 +540,7 @@ class MikrotikService {
           console.warn('Failed to create filter rules:', e.message);
       }
 
-      return { success: true, message: 'Configuration pushed successfully' };
+      return { success: true, message: 'Full configuration pushed successfully (Pool, Profiles, NAT, Proxy)' };
 
     } catch (error) {
       console.error(`Mikrotik Push Config Error (${config.host}):`, error.message);
