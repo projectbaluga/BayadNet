@@ -29,9 +29,11 @@ const notificationSound = new Audio(NOTIFICATION_SOUND_URL);
 
 const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
+  const [routers, setRouters] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
+  const [routerStatus, setRouterStatus] = useState({ summary: 'Checking...', details: [] });
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('dashboard'); // 'dashboard', 'users', 'emails'
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -50,6 +52,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     accountId: '',
+    pppoeUsername: '',
     street: '',
     geoAddress: '',
     address: '',
@@ -144,14 +147,29 @@ const Dashboard = () => {
     try {
       setIsFetching(true);
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const [subsRes, statsRes, analyticsRes] = await Promise.all([
+      const promises = [
         axios.get(`${API_BASE}/subscribers`, config),
         axios.get(`${API_BASE}/stats`, config),
-        axios.get(`${API_BASE}/analytics`, config)
-      ]);
-      setSubscribers(subsRes.data);
-      setStats(statsRes.data);
-      setAnalytics(analyticsRes.data);
+        axios.get(`${API_BASE}/analytics`, config),
+        axios.get(`${API_BASE}/mikrotik/health`, config)
+      ];
+
+      if (userRole === 'admin') {
+          promises.push(axios.get(`${API_BASE}/routers`, config));
+      }
+
+      const results = await Promise.all(promises);
+      setSubscribers(results[0].data);
+      setStats(results[1].data);
+      setAnalytics(results[2].data);
+      setRouterStatus(results[3].data);
+
+      if (userRole === 'admin' && results[4]) {
+          setRouters(results[4].data);
+      } else {
+          setRouters([]);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -271,6 +289,8 @@ const Dashboard = () => {
       setFormData({
         name: subscriber.name,
         accountId: subscriber.accountId || '',
+        router: subscriber.router ? (subscriber.router._id || subscriber.router) : '',
+        pppoeUsername: subscriber.pppoeUsername || '',
         street: subscriber.street || '',
         geoAddress: '', // Will be populated by selector or we don't care initially if address is full string
         address: subscriber.address || '',
@@ -296,6 +316,8 @@ const Dashboard = () => {
       setFormData({
         name: '',
         accountId: '',
+        router: '',
+        pppoeUsername: '',
         street: '',
         geoAddress: '',
         address: '',
@@ -468,6 +490,16 @@ const Dashboard = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {(userRole === 'admin' || userRole === 'staff') && (
+               <div
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white border-gray-200 text-gray-700 cursor-help"
+                 title={routerStatus.details ? routerStatus.details.map(d => `${d.name}: ${d.connected ? 'Online' : 'Offline'} (${d.message})`).join('\n') : "Checking..."}
+               >
+                  <span className={`w-2 h-2 rounded-full ${routerStatus.summary && routerStatus.summary.includes('0/') ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`}></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide">{routerStatus.summary || 'Checking...'}</span>
+               </div>
+            )}
+
             {userRole === 'admin' && (
               <>
                 <button
@@ -782,6 +814,32 @@ const Dashboard = () => {
                     onChange={(e) => setFormData({...formData, accountId: e.target.value})}
                     required
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Assigned Router</label>
+                      <select
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        value={formData.router}
+                        onChange={(e) => setFormData({...formData, router: e.target.value})}
+                      >
+                        <option value="">-- Select Router --</option>
+                        {routers.map(r => (
+                            <option key={r._id} value={r._id}>{r.name} ({r.host})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Username</label>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        placeholder="Mikrotik Secret Name"
+                        value={formData.pppoeUsername}
+                        onChange={(e) => setFormData({...formData, pppoeUsername: e.target.value})}
+                      />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
