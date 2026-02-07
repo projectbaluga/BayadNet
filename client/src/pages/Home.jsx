@@ -146,7 +146,6 @@ const Home = () => {
             <div className="hidden md:flex items-center gap-8">
               <a href="#home" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'home' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Home</a>
               <a href="#plans" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'plans' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Plans</a>
-              <a href="#status" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'status' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Check Status</a>
               <a href="#contact" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'contact' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>Contact</a>
               <a href="#no-connection" className={`text-sm font-bold uppercase tracking-wide transition-colors ${activeSection === 'no-connection' ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}>No Connection?</a>
             </div>
@@ -185,13 +184,6 @@ const Home = () => {
                 Plans
               </a>
               <a
-                href="#status"
-                className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Check Status
-              </a>
-              <a
                 href="#contact"
                 className="text-sm font-bold uppercase tracking-wide text-slate-500 hover:text-red-600 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -225,7 +217,7 @@ const Home = () => {
             {/* Left Content */}
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-widest mb-6 border border-red-100">
-                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
                 Now Serving Camarines Sur
               </div>
               <h1 className="text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
