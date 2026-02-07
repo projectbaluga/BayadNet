@@ -222,6 +222,75 @@ class MikrotikService {
     }
   }
 
+  /**
+   * Get all PPP profiles
+   */
+  async getProfiles(config) {
+    if (!this.isConfigured(config)) return [];
+    let client;
+    try {
+      client = await this.connect(config);
+      const profiles = await client.api().menu('/ppp/profile').get();
+      return profiles.map(p => p.name);
+    } catch (error) {
+      console.error(`Mikrotik Get Profiles Error (${config.host}):`, error.message);
+      return [];
+    } finally {
+      if (client) client.close();
+    }
+  }
+
+  /**
+   * Set PPPoE Secret Profile (and kick user to apply)
+   */
+  async setPppoeProfile(config, username, profileName, existingClient = null) {
+    if (!this.isConfigured(config)) {
+        return { success: false, message: 'Router Not Configured' };
+    }
+
+    username = username?.trim();
+    if (!username) return { success: false, message: 'Invalid Username' };
+
+    let client = existingClient;
+    const shouldClose = !existingClient;
+
+    try {
+      if (!client) {
+          client = await this.connect(config);
+      }
+
+      const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
+
+      if (secrets.length === 0) {
+        return { success: false, message: `PPPoE user '${username}' not found in Router` };
+      }
+
+      const id = secrets[0]['.id'];
+
+      // Update profile
+      await client.api().menu('/ppp/secret').update({ profile: profileName }, id);
+
+      // Kick active sessions to apply new profile
+      try {
+           const active = await client.api().menu('/ppp/active').where({ name: username }).get();
+           for (const session of active) {
+               await client.api().menu('/ppp/active').remove(session['.id']);
+           }
+      } catch (kickErr) {
+           console.warn('Mikrotik: Failed to kick user on profile change', kickErr.message);
+      }
+
+      return { success: true, message: `Updated profile for '${username}' to '${profileName}'` };
+    } catch (error) {
+      console.error(`Mikrotik Set Profile Error (${config.host}):`, error.message);
+      return { success: false, message: error.message };
+    } finally {
+      if (shouldClose && client) {
+          client.close();
+      }
+    }
+  }
+
   async getPppoeStatus(config, username) {
      if (!this.isConfigured(config)) return { connected: false, message: 'Router Not Configured' };
      username = username?.trim();
