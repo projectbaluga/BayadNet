@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users, Menu, X, Power, Plug, AlertTriangle, Smartphone } from 'lucide-react';
+import { Search, Loader2, Check, Wifi, Globe, Phone, MapPin, Mail, MessageCircle, Rocket, Shield, Users, Menu, X, Power, Plug, AlertTriangle, Smartphone, Download } from 'lucide-react';
 import PublicChatModal from '../components/PublicChatModal';
 import SubscriptionModal from '../components/SubscriptionModal';
 import { isValidEmail } from '../utils/validators';
@@ -343,90 +343,150 @@ const Home = () => {
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
-                  {/* Plan 1 */}
+                  {/* Plan 1: SIMPLENG SURF */}
                   <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-2 transition-transform duration-300">
                       <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mb-6">
-                          <Wifi className="w-6 h-6" />
+                          <Smartphone className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black text-slate-900 mb-2">Starter</h3>
-                      <p className="text-slate-500 text-sm font-medium mb-6">Sakto para sa browsing at social media.</p>
+                      <h3 className="text-xl font-black text-slate-900 mb-2">SIMPLENG SURF</h3>
+                      <p className="text-slate-500 text-sm font-medium mb-6">Ang pinakamurang paraan para magka-fiber.</p>
                       <div className="flex items-baseline gap-1 mb-8">
-                          <span className="text-4xl font-black text-slate-900">₱999</span>
+                          <span className="text-4xl font-black text-slate-900">₱799</span>
                           <span className="text-slate-400 font-bold text-sm">/mo</span>
                       </div>
                       <ul className="space-y-4 mb-8">
-                          {['Up to 35 Mbps', 'Unlimited Data', 'Free Installation', 'Support na Maasahan'].map((item, i) => (
-                              <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                                      <Check className="w-3 h-3 stroke-[4]" />
-                                  </div>
-                                  {item}
-                              </li>
-                          ))}
+                           {/* Speed */}
+                          <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              Up to 30 Mbps
+                          </li>
+                           {/* Best For */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">Best for:</span> Facebook, TikTok, Chat, & Browsing.</span>
+                          </li>
+                           {/* The Truth */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">The Truth:</span> Mabilis sa cellphone, sakto sa budget.</span>
+                          </li>
+                           {/* Feature */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">Feature:</span> No Lock-in Period & Direct Website Support.</span>
+                          </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('Starter')}
+                        onClick={() => handleSubscribe('SIMPLENG SURF')}
                         className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors"
                       >
                           Subscribe Now
                       </button>
                   </div>
 
-                  {/* Plan 2 - Featured */}
+                  {/* Plan 2: PAMILYANG CONNECT - Featured */}
                   <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl shadow-red-500/20 border border-slate-800 relative transform md:-translate-y-4">
                       <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl rounded-tr-2xl">
                           Best Value
                       </div>
                       <div className="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center text-white mb-6">
-                          <Globe className="w-6 h-6" />
+                          <Users className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black text-white mb-2">Streamer</h3>
-                      <p className="text-slate-400 text-sm font-medium mb-6">Best Seller! Perfect pang-family streaming.</p>
+                      <h3 className="text-xl font-black text-white mb-2">PAMILYANG CONNECT</h3>
+                      <p className="text-slate-400 text-sm font-medium mb-6">Mas maluwag na bandwidth para sa maraming gadgets.</p>
                       <div className="flex items-baseline gap-1 mb-8">
-                          <span className="text-4xl font-black text-white">₱1,499</span>
+                          <span className="text-4xl font-black text-white">₱1,249</span>
                           <span className="text-slate-500 font-bold text-sm">/mo</span>
                       </div>
                       <ul className="space-y-4 mb-8">
-                          {['Up to 50 Mbps', 'Unlimited Data', 'Free WiFi 6 Router', 'Priority Support'].map((item, i) => (
-                              <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-300">
-                                  <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center flex-shrink-0">
-                                      <Check className="w-3 h-3 stroke-[4]" />
-                                  </div>
-                                  {item}
-                              </li>
-                          ))}
+                           {/* Speed */}
+                          <li className="flex items-center gap-3 text-sm font-bold text-slate-300">
+                              <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center flex-shrink-0">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              Up to 65 Mbps
+                          </li>
+                           {/* Best For */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-300">
+                              <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-white">Best for:</span> Sabay-sabay na YouTube, Netflix, at Zoom.</span>
+                          </li>
+                           {/* The Truth */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-300">
+                              <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-white">The Truth:</span> Mas madaming device ang pwedeng kumonekta nang hindi bumabagal.</span>
+                          </li>
+                           {/* Feature */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-300">
+                              <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-white">Feature:</span> No Lock-in Period & Direct Website Support.</span>
+                          </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('Streamer')}
+                        onClick={() => handleSubscribe('PAMILYANG CONNECT')}
                         className="w-full py-4 rounded-xl bg-red-600 text-white font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors shadow-lg shadow-red-900/50"
                       >
                           Subscribe Now
                       </button>
                   </div>
 
-                  {/* Plan 3 */}
+                  {/* Plan 3: BABAD MAX */}
                   <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-2 transition-transform duration-300">
                       <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mb-6">
-                          <Wifi className="w-6 h-6" />
+                          <Download className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black text-slate-900 mb-2">Gamer</h3>
-                      <p className="text-slate-500 text-sm font-medium mb-6">Gaming na walang lag. Panalo ka dito!</p>
+                      <h3 className="text-xl font-black text-slate-900 mb-2">BABAD MAX</h3>
+                      <p className="text-slate-500 text-sm font-medium mb-6">Para sa mga ayaw maghintay ng matagal sa download.</p>
                       <div className="flex items-baseline gap-1 mb-8">
-                          <span className="text-4xl font-black text-slate-900">₱2,499</span>
+                          <span className="text-4xl font-black text-slate-900">₱1,499</span>
                           <span className="text-slate-400 font-bold text-sm">/mo</span>
                       </div>
                       <ul className="space-y-4 mb-8">
-                          {['Up to 100 Mbps', 'Unlimited Data', 'Static IP Included', '24/7 Priority Support'].map((item, i) => (
-                              <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                                      <Check className="w-3 h-3 stroke-[4]" />
-                                  </div>
-                                  {item}
-                              </li>
-                          ))}
+                           {/* Speed */}
+                          <li className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              Up to 100 Mbps
+                          </li>
+                           {/* Best For */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">Best for:</span> Heavy Downloading (Game Updates/Files) via LAN Cable.</span>
+                          </li>
+                           {/* The Truth */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">The Truth:</span> Ito ang kuhanin mo kung gusto mong matapos agad ang download mo.</span>
+                          </li>
+                           {/* Feature */}
+                          <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                              <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="w-3 h-3 stroke-[4]" />
+                              </div>
+                              <span><span className="text-slate-800">Feature:</span> No Lock-in Period & Direct Website Support.</span>
+                          </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('Gamer')}
+                        onClick={() => handleSubscribe('BABAD MAX')}
                         className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors"
                       >
                           Subscribe Now
