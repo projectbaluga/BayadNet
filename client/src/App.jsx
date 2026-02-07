@@ -10,6 +10,7 @@ import IssueChatModal from './components/IssueChatModal';
 import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import AddressSelector from './components/AddressSelector';
 import Home from './pages/Home';
+import PaymentReminder from './pages/PaymentReminder';
 import { convertToBase64, compressImage } from './utils/image';
 import { hasPermission, getEffectivePermissions, PERMISSIONS } from './utils/permissions';
 
@@ -31,6 +32,7 @@ const notificationSound = new Audio(NOTIFICATION_SOUND_URL);
 const Dashboard = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [routers, setRouters] = useState([]);
+  const [profiles, setProfiles] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
@@ -56,6 +58,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     name: '',
     accountId: '',
+    pppoeProfile: 'default',
     pppoeUsername: '',
     street: '',
     geoAddress: '',
@@ -68,8 +71,6 @@ const Dashboard = () => {
     provinceCode: '',
     cityCode: '',
     psgc: '',
-    planName: 'Residential Plan',
-    bandwidth: '50Mbps',
     rate: 0,
     cycle: 1,
     messengerId: '',
@@ -90,6 +91,22 @@ const Dashboard = () => {
     if (!sub) return null;
     return subscribers.find(s => s._id === sub._id) || sub;
   };
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      if (formData.router && isModalOpen) {
+         try {
+             const config = { headers: { Authorization: `Bearer ${token}` } };
+             const res = await axios.get(`${API_BASE}/routers/${formData.router}/profiles`, config);
+             setProfiles(res.data);
+         } catch (err) {
+             console.error('Failed to fetch profiles:', err);
+             setProfiles([]);
+         }
+      }
+    };
+    fetchProfiles();
+  }, [formData.router, isModalOpen, token]);
 
   useEffect(() => {
     if (token) {
@@ -305,6 +322,7 @@ const Dashboard = () => {
         router: subscriber.router ? (subscriber.router._id || subscriber.router) : '',
         pppoeUsername: subscriber.pppoeUsername || '',
         pppoePassword: '',
+        pppoeProfile: subscriber.pppoeProfile || 'default',
         street: subscriber.street || '',
         geoAddress: '', // Will be populated by selector or we don't care initially if address is full string
         address: subscriber.address || '',
@@ -316,8 +334,6 @@ const Dashboard = () => {
         provinceCode: subscriber.provinceCode || '',
         cityCode: subscriber.cityCode || '',
         psgc: subscriber.psgc || '',
-        planName: subscriber.planName || 'Residential Plan',
-        bandwidth: subscriber.bandwidth || '50Mbps',
         rate: subscriber.rate,
         cycle: subscriber.cycle,
         messengerId: subscriber.messengerId || '',
@@ -333,6 +349,7 @@ const Dashboard = () => {
         router: '',
         pppoeUsername: '',
         pppoePassword: '',
+        pppoeProfile: 'default',
         street: '',
         geoAddress: '',
         address: '',
@@ -344,8 +361,6 @@ const Dashboard = () => {
         provinceCode: '',
         cityCode: '',
         psgc: '',
-        planName: 'Residential Plan',
-        bandwidth: '50Mbps',
         rate: 0,
         cycle: 1,
         messengerId: '',
@@ -851,6 +866,22 @@ const Dashboard = () => {
                   </select>
                 </div>
 
+                {formData.router && (
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Profile</label>
+                      <select
+                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
+                        value={formData.pppoeProfile}
+                        onChange={(e) => setFormData({...formData, pppoeProfile: e.target.value})}
+                      >
+                        <option value="default">Default</option>
+                        {profiles.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">PPPoE Username</label>
@@ -874,26 +905,6 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                   <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Plan Name</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                        value={formData.planName}
-                        onChange={(e) => setFormData({...formData, planName: e.target.value})}
-                      />
-                   </div>
-                   <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Bandwidth</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                        value={formData.bandwidth}
-                        onChange={(e) => setFormData({...formData, bandwidth: e.target.value})}
-                      />
-                   </div>
-                </div>
               </div>
 
               <div className="space-y-4">
@@ -1232,6 +1243,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/payment-reminder" element={<PaymentReminder />} />
       <Route path="/team" element={<Dashboard />} />
     </Routes>
   );
