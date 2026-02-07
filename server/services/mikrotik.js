@@ -32,16 +32,21 @@ class MikrotikService {
    * Toggle PPPoE Secret Status
    * @param {string} username - PPPoE Secret Name
    * @param {boolean} enable - True to enable (internet on), False to disable (internet off)
+   * @param {object} [existingClient] - Optional existing RouterOSClient instance to reuse
    */
-  async togglePppoeSecret(username, enable) {
+  async togglePppoeSecret(username, enable, existingClient = null) {
     if (!this.isConfigured()) {
         console.warn('Mikrotik: Not configured, skipping toggle.');
         return { success: false, message: 'Not Configured' };
     }
 
-    let client;
+    let client = existingClient;
+    const shouldClose = !existingClient; // Only close if we created the connection
+
     try {
-      client = await this.connect();
+      if (!client) {
+          client = await this.connect();
+      }
 
       // Get the secret to find its ID
       const secrets = await client.menu('/ppp/secret').where({ name: username }).get();
@@ -80,7 +85,9 @@ class MikrotikService {
       console.error('Mikrotik Error:', error);
       return { success: false, message: error.message };
     } finally {
-      if (client) client.close();
+      if (shouldClose && client) {
+          client.close();
+      }
     }
   }
 

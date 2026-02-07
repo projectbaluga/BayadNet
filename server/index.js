@@ -209,6 +209,29 @@ app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateO
   try {
     const subscriber = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    // Sync Mikrotik state if necessary
+    if (subscriber.pppoeUsername && !subscriber.isArchived) {
+        const now = getCurrentDate();
+        const settings = await Setting.findOne() || { rebateValue: 30 };
+        const processed = processSubscriber(subscriber, now, settings);
+
+        // If Paid (or not overdue) -> Enable
+        // If Overdue -> Disable
+        // If 'Partial' or 'Upcoming', we usually assume Enabled (internet on)
+        // Strictly, we only disable if 'Overdue'.
+
+        if (processed.status === 'Overdue') {
+             mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, false)
+               .catch(err => console.error(`Failed to auto-disable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+        } else {
+             // If they are Paid, Upcoming, or Partial, they should have internet.
+             // We optimistically enable them if they were previously disabled.
+             mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
+               .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+        }
+    }
+
     res.json(subscriber);
   } catch (error) {
     res.status(400).json({ message: error.message });
