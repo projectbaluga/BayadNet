@@ -19,6 +19,8 @@ const publicRoutes = require('./routes/publicRoutes');
 const messageRoutes = require('./routes/messages');
 const routerRoutes = require('./routes/routerRoutes');
 const authenticateToken = require('./middleware/auth');
+const checkPermission = require('./middleware/checkPermission');
+const { PERMISSIONS } = require('./config/permissions');
 const mikrotikService = require('./services/mikrotik');
 const Router = require('./models/Router');
 
@@ -143,7 +145,8 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     role: user.role,
     user: {
       name: user.name || user.username,
-      role: user.role
+      role: user.role,
+      permissions: user.getEffectivePermissions()
     }
   });
 });
@@ -155,7 +158,7 @@ const validateObjectId = (req, res, next) => {
   next();
 };
 
-app.post('/api/subscribers', authenticateToken, authorize('admin'), async (req, res) => {
+app.post('/api/subscribers', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SUBSCRIBERS), async (req, res) => {
   try {
     const { initialPayment, ...subData } = req.body;
     const subscriber = new Subscriber(subData);
@@ -226,7 +229,7 @@ app.get('/api/subscribers', authenticateToken, authorize(['admin', 'staff', 'tec
   }
 });
 
-app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateObjectId, async (req, res) => {
+app.put('/api/subscribers/:id', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SUBSCRIBERS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -267,7 +270,7 @@ app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateO
   }
 });
 
-app.delete('/api/subscribers/:id', authenticateToken, authorize('admin'), validateObjectId, async (req, res) => {
+app.delete('/api/subscribers/:id', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SUBSCRIBERS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -296,7 +299,7 @@ app.delete('/api/subscribers/:id', authenticateToken, authorize('admin'), valida
   }
 });
 
-app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+app.post('/api/subscribers/:id/payments', authenticateToken, checkPermission(PERMISSIONS.PROCESS_PAYMENTS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -360,7 +363,7 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
   }
 });
 
-app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+app.patch('/api/subscribers/:id/pay', authenticateToken, checkPermission(PERMISSIONS.PROCESS_PAYMENTS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -400,7 +403,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
   }
 });
 
-app.get('/api/stats', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
+app.get('/api/stats', authenticateToken, checkPermission(PERMISSIONS.VIEW_ANALYTICS), async (req, res) => {
   try {
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
@@ -412,7 +415,7 @@ app.get('/api/stats', authenticateToken, authorize(['admin', 'staff', 'technicia
   }
 });
 
-app.get('/api/settings', authenticateToken, authorize('admin'), async (req, res) => {
+app.get('/api/settings', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SETTINGS), async (req, res) => {
   try {
     let settings = await Setting.findOne();
     if (!settings) {
@@ -424,7 +427,7 @@ app.get('/api/settings', authenticateToken, authorize('admin'), async (req, res)
   }
 });
 
-app.put('/api/settings', authenticateToken, authorize('admin'), async (req, res) => {
+app.put('/api/settings', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SETTINGS), async (req, res) => {
   try {
     const settings = await Setting.findOneAndUpdate({}, req.body, { new: true, upsert: true });
     res.json(settings);
@@ -433,7 +436,7 @@ app.put('/api/settings', authenticateToken, authorize('admin'), async (req, res)
   }
 });
 
-app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, res) => {
+app.post('/api/bulk/reset', authenticateToken, checkPermission(PERMISSIONS.MANAGE_SETTINGS), async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
@@ -483,7 +486,7 @@ app.post('/api/bulk/reset', authenticateToken, authorize('admin'), async (req, r
   }
 });
 
-app.get('/api/analytics', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
+app.get('/api/analytics', authenticateToken, checkPermission(PERMISSIONS.VIEW_ANALYTICS), async (req, res) => {
   try {
     const now = getCurrentDate();
     const subscribers = await Subscriber.find({ isArchived: false });
@@ -571,13 +574,13 @@ app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), asyn
   }
 });
 
-app.use('/api/users', userRoutes(authenticateToken, authorize));
-app.use('/api/routers', routerRoutes(authenticateToken, authorize));
+app.use('/api/users', userRoutes(authenticateToken, authorize, checkPermission));
+app.use('/api/routers', routerRoutes(authenticateToken, authorize, checkPermission));
 app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
 
 // Mikrotik Control Routes
-app.post('/api/mikrotik/toggle/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+app.post('/api/mikrotik/toggle/:id', authenticateToken, checkPermission(PERMISSIONS.MANAGE_ROUTERS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id).populate('router');
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -597,7 +600,7 @@ app.post('/api/mikrotik/toggle/:id', authenticateToken, authorize(['admin', 'sta
   }
 });
 
-app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
+app.get('/api/mikrotik/status/:id', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id).populate('router');
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
@@ -611,7 +614,7 @@ app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staf
   }
 });
 
-app.get('/api/mikrotik/health', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
+app.get('/api/mikrotik/health', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), async (req, res) => {
   try {
     const routers = await Router.find({ isActive: true });
 
@@ -654,7 +657,7 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/subscribers/:id/resolve', authenticateToken, authorize(['admin', 'staff', 'technician']), validateObjectId, async (req, res) => {
+app.put('/api/subscribers/:id/resolve', authenticateToken, checkPermission(PERMISSIONS.RESOLVE_ISSUES), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Send, User, ShieldCheck, Loader2, Image, XCircle, Eye, Camera, CheckCircle } from 'lucide-react';
 import { convertToBase64, compressImage } from '../utils/image';
+import { hasPermission, PERMISSIONS } from '../utils/permissions';
 
 const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, onRefresh }) => {
   const [reportMessage, setReportMessage] = useState('');
@@ -13,6 +14,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
   const reports = subscriber?.reports || [];
 
   useEffect(() => {
@@ -20,7 +22,6 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
       scrollToBottom();
       // Emit mark-as-read
       if (socket) {
-        const currentUser = JSON.parse(localStorage.getItem('user')) || {};
         if (currentUser.name) {
           socket.emit('mark-as-read', { subscriberId: subscriber._id, user: currentUser });
         }
@@ -126,7 +127,7 @@ const IssueChatModal = ({ isOpen, onClose, subscriber, token, socket, userRole, 
             <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide">{subscriber.name} • {subscriber.accountId}</p>
           </div>
           <div className="flex items-center gap-1">
-            {(userRole === 'admin' || userRole === 'staff') && subscriber.issueStatus === 'Open' && (
+            {hasPermission(currentUser, PERMISSIONS.RESOLVE_ISSUES) && subscriber.issueStatus === 'Open' && (
               <button
                 onClick={handleResolveIssue}
                 disabled={isResolving}
