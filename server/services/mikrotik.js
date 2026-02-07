@@ -2,50 +2,55 @@ const { RouterOSClient } = require('node-routeros');
 
 class MikrotikService {
   constructor() {
-    this.config = {
-      host: process.env.MIKROTIK_HOST,
-      user: process.env.MIKROTIK_USER,
-      password: process.env.MIKROTIK_PASSWORD,
-      port: process.env.MIKROTIK_PORT || 8728,
-      keepalive: false // Close after use to avoid stale connections
-    };
+    // No global config anymore
   }
 
-  isConfigured() {
-    return this.config.host && this.config.user;
+  isConfigured(config) {
+    return config && config.host && config.username;
   }
 
-  async connect() {
-    if (!this.isConfigured()) {
-      throw new Error('Mikrotik configuration missing (MIKROTIK_HOST, MIKROTIK_USER, MIKROTIK_PASSWORD)');
+  async connect(config) {
+    if (!this.isConfigured(config)) {
+      throw new Error('Mikrotik configuration missing (host, username, password)');
     }
-    const client = new RouterOSClient(this.config);
+
+    // Construct config for node-routeros
+    // Note: Router model uses 'username', node-routeros uses 'user'
+    const clientConfig = {
+        host: config.host,
+        user: config.username,
+        password: config.password,
+        port: config.port || 8728,
+        keepalive: false
+    };
+
+    const client = new RouterOSClient(clientConfig);
     try {
         await client.connect();
         return client;
     } catch (err) {
-        throw new Error(`Failed to connect to Mikrotik: ${err.message}`);
+        throw new Error(`Failed to connect to Mikrotik (${config.host}): ${err.message}`);
     }
   }
 
   /**
-   * Check connection health
+   * Check connection health for a specific router config
    */
-  async checkHealth() {
-    if (!this.isConfigured()) return { connected: false, message: 'Not Configured' };
+  async checkHealth(config) {
+    if (!this.isConfigured(config)) return { connected: false, message: 'Not Configured' };
     let client;
     try {
-        client = await this.connect();
-        // Just verify we can run a simple command
+        client = await this.connect(config);
         const identity = await client.menu('/system/identity').get();
         return {
             connected: true,
             name: identity[0]?.name || 'Mikrotik',
-            message: 'Connected'
+            message: 'Connected',
+            host: config.host
         };
     } catch (error) {
-        console.error('Mikrotik Health Check Error:', error.message);
-        return { connected: false, message: error.message };
+        // console.error(`Mikrotik Health Check Error (${config.host}):`, error.message);
+        return { connected: false, message: error.message, host: config.host };
     } finally {
         if (client) client.close();
     }
@@ -53,59 +58,46 @@ class MikrotikService {
 
   /**
    * Toggle PPPoE Secret Status
-   * @param {string} username - PPPoE Secret Name
-   * @param {boolean} enable - True to enable (internet on), False to disable (internet off)
-   * @param {object} [existingClient] - Optional existing RouterOSClient instance to reuse
    */
-  async togglePppoeSecret(username, enable, existingClient = null) {
-    if (!this.isConfigured()) {
-        console.warn('Mikrotik: Not configured, skipping toggle.');
-        return { success: false, message: 'Not Configured' };
+  async togglePppoeSecret(config, username, enable, existingClient = null) {
+    if (!this.isConfigured(config)) {
+        return { success: false, message: 'Router Not Configured' };
     }
 
     let client = existingClient;
-    const shouldClose = !existingClient; // Only close if we created the connection
+    const shouldClose = !existingClient;
 
     try {
       if (!client) {
-          client = await this.connect();
+          client = await this.connect(config);
       }
 
-      // Get the secret to find its ID
       const secrets = await client.menu('/ppp/secret').where({ name: username }).get();
 
       if (secrets.length === 0) {
         return { success: false, message: `PPPoE user '${username}' not found in Router` };
       }
 
-      const id = secrets[0]['.id']; // RouterOS usually uses .id
-
-      // disabled=yes means Internet OFF.
-      // If we want enable=true, we set disabled=false (no).
-      // If we want enable=false, we set disabled=true (yes).
+      const id = secrets[0]['.id'];
       const disabled = !enable;
 
-      // Update
       await client.menu('/ppp/secret').set({ '.id': id, disabled: disabled });
 
-      // If we disable, we should also kick the active connection so they disconnect immediately
       if (!enable) {
          try {
              const active = await client.menu('/ppp/active').where({ name: username }).get();
              if (active.length > 0) {
                  const activeId = active[0]['.id'];
                  await client.menu('/ppp/active').remove(activeId);
-                 console.log(`Mikrotik: Kicked active session for ${username}`);
              }
          } catch (kickErr) {
-             console.warn('Mikrotik: Failed to kick active user (might be already offline)', kickErr.message);
+             console.warn('Mikrotik: Failed to kick active user', kickErr.message);
          }
       }
 
-      console.log(`Mikrotik: ${username} set to ${enable ? 'Enabled' : 'Disabled'}`);
       return { success: true, enabled: enable, message: `Successfully ${enable ? 'Enabled' : 'Disabled'}` };
     } catch (error) {
-      console.error('Mikrotik Error:', error);
+      console.error(`Mikrotik Error (${config.host}):`, error.message);
       return { success: false, message: error.message };
     } finally {
       if (shouldClose && client) {
@@ -114,20 +106,16 @@ class MikrotikService {
     }
   }
 
-  async getPppoeStatus(username) {
-     if (!this.isConfigured()) return { connected: false, message: 'Not Configured' };
+  async getPppoeStatus(config, username) {
+     if (!this.isConfigured(config)) return { connected: false, message: 'Router Not Configured' };
      let client;
      try {
-       client = await this.connect();
+       client = await this.connect(config);
        const secrets = await client.menu('/ppp/secret').where({ name: username }).get();
 
        if (secrets.length === 0) return { exists: false, message: 'User not found in Mikrotik' };
 
-       // disabled=true -> Enabled=False
-       // disabled=false -> Enabled=True
        const isEnabled = String(secrets[0].disabled) === 'false';
-
-       // Check if currently active (online)
        const active = await client.menu('/ppp/active').where({ name: username }).get();
        const isOnline = active.length > 0;
 
@@ -139,7 +127,7 @@ class MikrotikService {
            remoteAddress: active.length > 0 ? active[0].address : null
        };
      } catch (error) {
-       console.error('Mikrotik Status Error:', error);
+       console.error(`Mikrotik Status Error (${config.host}):`, error.message);
        return { error: error.message };
      } finally {
        if (client) client.close();

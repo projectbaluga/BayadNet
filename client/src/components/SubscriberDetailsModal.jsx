@@ -61,6 +61,7 @@ const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
     { icon: <User className="w-4 h-4" />, label: 'Full Name', value: subscriber.name },
     { icon: <ShieldCheck className="w-4 h-4" />, label: 'Account ID', value: subscriber.accountId || 'N/A' },
     { icon: <Wifi className="w-4 h-4" />, label: 'PPPoE User', value: subscriber.pppoeUsername || 'Not Configured' },
+    { icon: <Power className="w-4 h-4" />, label: 'Router', value: subscriber.router ? (subscriber.router.name || 'Unknown') : 'Not Assigned' },
     { icon: <Phone className="w-4 h-4" />, label: 'Contact No.', value: subscriber.contactNo || 'N/A' },
     { icon: <MessageSquare className="w-4 h-4" />, label: 'Messenger ID', value: subscriber.messengerId || 'N/A' },
     { icon: <CreditCard className="w-4 h-4" />, label: 'Monthly Rate', value: `₱${subscriber.rate?.toLocaleString()}` },

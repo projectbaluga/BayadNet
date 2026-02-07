@@ -1,90 +1,98 @@
 const cron = require('node-cron');
 const Subscriber = require('../models/Subscriber');
 const Setting = require('../models/Setting');
+const Router = require('../models/Router');
 const { processSubscriber } = require('../utils/logic');
 const mikrotikService = require('../services/mikrotik');
 const { getCurrentDate } = require('../config/time');
 
 const checkOverdueSubscribers = async () => {
-  console.log('Cron: Checking for overdue subscribers...');
-  let client = null;
-  try {
-    // 1. Fetch relevant subscribers
-    const subscribers = await Subscriber.find({
-        isArchived: false,
-        pppoeUsername: { $exists: true, $ne: '' }
-    });
+  console.log('Cron: Checking for overdue subscribers across all routers...');
 
-    if (subscribers.length === 0) {
-        console.log('Cron: No PPPoE subscribers to check.');
+  try {
+    const activeRouters = await Router.find({ isActive: true });
+    if (activeRouters.length === 0) {
+        console.log('Cron: No active routers found.');
         return;
     }
 
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
 
-    // 2. Identify who needs to be disabled
-    // We only connect to Mikrotik if we actually need to change something
-    // BUT since we don't know the CURRENT state in Mikrotik without asking,
-    // and we want to ENFORCE state, we should probably connect if there are ANY overdue users.
-    // Optimization: Only toggle if status is Overdue.
+    for (const router of activeRouters) {
+        console.log(`Cron: Processing Router ${router.name} (${router.host})...`);
+        let client = null;
 
-    const overdueUsers = [];
-    for (const sub of subscribers) {
-        const processed = processSubscriber(sub, now, settings);
-        if (processed.status === 'Overdue') {
-            overdueUsers.push(sub.pppoeUsername);
-        }
-    }
-
-    if (overdueUsers.length === 0) {
-         console.log('Cron: No overdue PPPoE subscribers found.');
-         return;
-    }
-
-    console.log(`Cron: Found ${overdueUsers.length} overdue users. Connecting to Mikrotik...`);
-
-    // 3. Connect once
-    if (mikrotikService.isConfigured()) {
         try {
-            client = await mikrotikService.connect();
-        } catch (connErr) {
-            console.error('Cron: Failed to connect to Mikrotik:', connErr.message);
-            return; // Abort if can't connect
-        }
+            // 1. Fetch relevant subscribers for THIS router
+            const subscribers = await Subscriber.find({
+                isArchived: false,
+                router: router._id,
+                pppoeUsername: { $exists: true, $ne: '' }
+            });
 
-        // 4. Batch Process
-        let successCount = 0;
-        for (const username of overdueUsers) {
-             try {
-                 // Pass the existing client
-                 const result = await mikrotikService.togglePppoeSecret(username, false, client);
-                 if (result.success) successCount++;
-             } catch (actionErr) {
-                 console.error(`Cron: Failed to disable ${username}:`, actionErr.message);
-             }
+            if (subscribers.length === 0) {
+                console.log(`Cron: No PPPoE subscribers for router ${router.name}.`);
+                continue;
+            }
+
+            // 2. Identify overdue users
+            const overdueUsers = [];
+            for (const sub of subscribers) {
+                const processed = processSubscriber(sub, now, settings);
+                if (processed.status === 'Overdue') {
+                    overdueUsers.push(sub.pppoeUsername);
+                }
+            }
+
+            if (overdueUsers.length === 0) {
+                console.log(`Cron: No overdue users for router ${router.name}.`);
+                continue;
+            }
+
+            console.log(`Cron: Found ${overdueUsers.length} overdue users on ${router.name}. Connecting...`);
+
+            // 3. Connect to THIS router
+            try {
+                // We don't check isConfigured globally anymore, we check per router
+                client = await mikrotikService.connect(router);
+            } catch (connErr) {
+                console.error(`Cron: Failed to connect to ${router.name}:`, connErr.message);
+                continue;
+            }
+
+            // 4. Batch Disable
+            let successCount = 0;
+            for (const username of overdueUsers) {
+                 try {
+                     // Pass the router config AND the existing client connection
+                     // The service method expects (config, username, enable, existingClient)
+                     await mikrotikService.togglePppoeSecret(router, username, false, client);
+                     successCount++;
+                 } catch (actionErr) {
+                     console.error(`Cron: Failed to disable ${username} on ${router.name}:`, actionErr.message);
+                 }
+            }
+            console.log(`Cron: Successfully processed ${successCount}/${overdueUsers.length} overdue users on ${router.name}.`);
+
+        } catch (routerErr) {
+            console.error(`Cron: Error processing router ${router.name}:`, routerErr);
+        } finally {
+            if (client) {
+                try {
+                    client.close();
+                } catch (e) { /* ignore */ }
+            }
         }
-        console.log(`Cron: Successfully processed ${successCount}/${overdueUsers.length} overdue users.`);
-    } else {
-        console.log('Cron: Mikrotik not configured.');
     }
 
   } catch (error) {
     console.error('Cron Error:', error);
-  } finally {
-      // 5. Cleanup
-      if (client) {
-          try {
-              client.close();
-              console.log('Cron: Mikrotik connection closed.');
-          } catch (e) { /* ignore */ }
-      }
   }
 };
 
 // Schedule: Daily at 12:00 AM
 const startCron = () => {
-    // Run every day at midnight
     cron.schedule('0 0 * * *', checkOverdueSubscribers);
     console.log('Cron: Overdue check scheduled (Daily at 00:00).');
 };

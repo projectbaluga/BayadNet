@@ -17,8 +17,10 @@ const { processSubscriber, calculateStats } = require('./utils/logic');
 const userRoutes = require('./routes/userRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const messageRoutes = require('./routes/messages');
+const routerRoutes = require('./routes/routerRoutes');
 const authenticateToken = require('./middleware/auth');
 const mikrotikService = require('./services/mikrotik');
+const Router = require('./models/Router');
 
 const app = express();
 const server = http.createServer(app);
@@ -191,7 +193,7 @@ app.get('/api/subscribers', authenticateToken, authorize(['admin', 'staff', 'tec
   try {
     const now = getCurrentDate();
     const settings = await Setting.findOne() || { rebateValue: 30 };
-    const subscribers = await Subscriber.find({ isArchived: false });
+    const subscribers = await Subscriber.find({ isArchived: false }).populate('router', 'name host');
     const processedSubscribers = subscribers.map(sub => {
       const processed = processSubscriber(sub, now, settings);
       return {
@@ -211,24 +213,20 @@ app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateO
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
 
     // Sync Mikrotik state if necessary
-    if (subscriber.pppoeUsername && !subscriber.isArchived) {
-        const now = getCurrentDate();
-        const settings = await Setting.findOne() || { rebateValue: 30 };
-        const processed = processSubscriber(subscriber, now, settings);
+    if (subscriber.pppoeUsername && subscriber.router && !subscriber.isArchived) {
+        const routerConfig = await Router.findById(subscriber.router);
+        if (routerConfig && routerConfig.isActive) {
+            const now = getCurrentDate();
+            const settings = await Setting.findOne() || { rebateValue: 30 };
+            const processed = processSubscriber(subscriber, now, settings);
 
-        // If Paid (or not overdue) -> Enable
-        // If Overdue -> Disable
-        // If 'Partial' or 'Upcoming', we usually assume Enabled (internet on)
-        // Strictly, we only disable if 'Overdue'.
-
-        if (processed.status === 'Overdue') {
-             mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, false)
-               .catch(err => console.error(`Failed to auto-disable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
-        } else {
-             // If they are Paid, Upcoming, or Partial, they should have internet.
-             // We optimistically enable them if they were previously disabled.
-             mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
-               .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+            if (processed.status === 'Overdue') {
+                 mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, false)
+                   .catch(err => console.error(`Failed to auto-disable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+            } else {
+                 mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
+                   .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername} on update:`, err.message));
+            }
         }
     }
 
@@ -282,9 +280,12 @@ app.post('/api/subscribers/:id/payments', authenticateToken, authorize(['admin',
       subscriber[legacyPaidField] = true;
 
       // Re-enable internet if fully paid
-      if (subscriber.pppoeUsername) {
-        mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
-          .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+      if (subscriber.pppoeUsername && subscriber.router) {
+        const routerConfig = await Router.findById(subscriber.router);
+        if (routerConfig && routerConfig.isActive) {
+            mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
+              .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+        }
       }
     }
 
@@ -337,9 +338,12 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, authorize(['admin', 'st
     subscriber[legacyPaidField] = true;
 
     // Re-enable internet
-    if (subscriber.pppoeUsername) {
-      mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, true)
-        .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+    if (subscriber.pppoeUsername && subscriber.router) {
+      const routerConfig = await Router.findById(subscriber.router);
+      if (routerConfig && routerConfig.isActive) {
+          mikrotikService.togglePppoeSecret(routerConfig, subscriber.pppoeUsername, true)
+            .catch(err => console.error(`Failed to auto-enable Mikrotik user ${subscriber.pppoeUsername}:`, err));
+      }
     }
 
     await subscriber.save();
@@ -521,20 +525,22 @@ app.post('/api/public/report', rateLimit({ windowMs: 60 * 1000, max: 10 }), asyn
 });
 
 app.use('/api/users', userRoutes(authenticateToken, authorize));
+app.use('/api/routers', routerRoutes(authenticateToken, authorize));
 app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
 
 // Mikrotik Control Routes
 app.post('/api/mikrotik/toggle/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
   try {
-    const subscriber = await Subscriber.findById(req.params.id);
+    const subscriber = await Subscriber.findById(req.params.id).populate('router');
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
     if (!subscriber.pppoeUsername) return res.status(400).json({ message: 'Subscriber has no PPPoE Username configured' });
+    if (!subscriber.router) return res.status(400).json({ message: 'Subscriber has no assigned Router' });
 
     const { enable } = req.body; // true or false
     if (enable === undefined) return res.status(400).json({ message: 'Enable status is required' });
 
-    const result = await mikrotikService.togglePppoeSecret(subscriber.pppoeUsername, enable);
+    const result = await mikrotikService.togglePppoeSecret(subscriber.router, subscriber.pppoeUsername, enable);
     if (!result.success) {
       return res.status(502).json({ message: result.message || 'Failed to communicate with Mikrotik' });
     }
@@ -546,11 +552,12 @@ app.post('/api/mikrotik/toggle/:id', authenticateToken, authorize(['admin', 'sta
 
 app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staff']), validateObjectId, async (req, res) => {
   try {
-    const subscriber = await Subscriber.findById(req.params.id);
+    const subscriber = await Subscriber.findById(req.params.id).populate('router');
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
     if (!subscriber.pppoeUsername) return res.json({ exists: false, message: 'No PPPoE Username configured' });
+    if (!subscriber.router) return res.json({ exists: false, message: 'No assigned Router' });
 
-    const status = await mikrotikService.getPppoeStatus(subscriber.pppoeUsername);
+    const status = await mikrotikService.getPppoeStatus(subscriber.router, subscriber.pppoeUsername);
     res.json(status);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -559,8 +566,29 @@ app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staf
 
 app.get('/api/mikrotik/health', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
   try {
-    const health = await mikrotikService.checkHealth();
-    res.json(health);
+    const routers = await Router.find({ isActive: true });
+
+    // Check all routers in parallel
+    const checks = await Promise.all(routers.map(async (router) => {
+        const result = await mikrotikService.checkHealth(router);
+        // Update status in DB (non-blocking for response)
+        Router.findByIdAndUpdate(router._id, {
+            status: result.connected ? 'Online' : 'Offline',
+            lastChecked: new Date()
+        }).catch(() => {});
+        return {
+            _id: router._id,
+            name: router.name,
+            connected: result.connected,
+            message: result.message
+        };
+    }));
+
+    const onlineCount = checks.filter(c => c.connected).length;
+    res.json({
+        summary: `${onlineCount}/${routers.length} Online`,
+        details: checks
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
