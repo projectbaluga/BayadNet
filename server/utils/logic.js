@@ -21,9 +21,8 @@ const processSubscriber = (sub, now, settings = { rebateValue: 30 }) => {
     .filter(p => p.month === currentMonthName)
     .reduce((sum, p) => sum + (p.amountPaid || 0), 0);
 
-  // For backward compatibility with the hardcoded field if it exists
-  const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
-  const isPaid = sub[legacyPaidField] || monthPayments >= amountDue || (amountDue === 0);
+  // Billing Logic Cleanup: Removed legacy hardcoded field support
+  const isPaid = monthPayments >= amountDue || (amountDue === 0);
 
   let status = isPaid ? 'Paid' : 'Unpaid';
 
@@ -113,8 +112,7 @@ const calculateStats = (subscribers, now, settings = { rebateValue: 30 }) => {
     totalCollections += monthPayments;
 
     // Dynamic check for status
-    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
-    const isPaid = sub[legacyPaidField] || monthPayments >= amountDue || (amountDue === 0);
+    const isPaid = monthPayments >= amountDue || (amountDue === 0);
 
     if (!isPaid) {
       if (status === 'Overdue') overdue++;

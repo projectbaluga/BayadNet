@@ -326,8 +326,7 @@ app.post('/api/subscribers/:id/payments', authenticateToken, checkPermission(PER
     subscriber.remainingBalance = Math.max(0, subscriber.remainingBalance - amountPaid);
 
     if (subscriber.remainingBalance <= 0) {
-      const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
-      subscriber[legacyPaidField] = true;
+      // Cleaned up legacy fields
 
       // Re-enable internet if fully paid
       if (subscriber.pppoeUsername && subscriber.router) {
@@ -384,8 +383,7 @@ app.patch('/api/subscribers/:id/pay', authenticateToken, checkPermission(PERMISS
     });
 
     subscriber.remainingBalance = 0;
-    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
-    subscriber[legacyPaidField] = true;
+    // Cleaned up legacy fields
 
     // Re-enable internet
     if (subscriber.pppoeUsername && subscriber.router) {
@@ -469,10 +467,8 @@ app.post('/api/bulk/reset', authenticateToken, checkPermission(PERMISSIONS.MANAG
       subscriberCount: subscribers.length
     });
 
-    // Start New Month logic
-    const legacyPaidField = `isPaid${currentMonthName.replace(' ', '')}`;
+    // Start New Month logic - Cleaned up legacy fields
     const updateObj = { daysDown: 0 };
-    updateObj[legacyPaidField] = false;
 
     await Subscriber.updateMany({ isArchived: false }, {
       $set: updateObj

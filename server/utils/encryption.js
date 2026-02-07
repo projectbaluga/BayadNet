@@ -32,7 +32,7 @@ function decrypt(text) {
   if (!text) return text;
   try {
     const textParts = text.split(':');
-    if (textParts.length < 2) return text; // Not encrypted format
+    if (textParts.length < 2) return text; // Not encrypted format (Lazy Migration)
 
     const iv = Buffer.from(textParts.shift(), 'hex');
     const encryptedText = Buffer.from(textParts.join(':'), 'hex');
@@ -41,8 +41,8 @@ function decrypt(text) {
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
   } catch (err) {
-    console.error('Decryption error:', err);
-    return text; // Return original if fails
+    // console.error('Decryption error (might be plaintext):', err.message);
+    return text; // Return original if fails or is plaintext
   }
 }
 
