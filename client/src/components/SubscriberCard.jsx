@@ -13,6 +13,7 @@ import { hasPermission, PERMISSIONS } from '../utils/permissions';
 
 const SubscriberCard = ({
   subscriber,
+  activeSession,
   onPay,
   onHistory,
   onOpenChat,
@@ -101,6 +102,11 @@ const SubscriberCard = ({
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {activeSession ? (
+             <span title={`Online: ${activeSession.uptime}`} className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          ) : (
+             <span title="Offline" className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+          )}
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusStyle(subscriber.status)}`}>
             {subscriber.status}
           </span>
