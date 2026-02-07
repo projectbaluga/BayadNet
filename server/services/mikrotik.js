@@ -82,14 +82,14 @@ class MikrotikService {
       const disabled = !enable;
 
       // Use .update() with the found ID
-      await client.api().menu('/ppp/secret').where({'.id': id}).update({ disabled: disabled });
+      await client.api().menu('/ppp/secret').update({ disabled: disabled }, id);
 
       if (!enable) {
          try {
              const active = await client.api().menu('/ppp/active').where({ name: username }).get();
              if (active.length > 0) {
                  const activeId = active[0]['.id'];
-                 await client.api().menu('/ppp/active').where({'.id': activeId}).remove();
+                 await client.api().menu('/ppp/active').remove(activeId);
              }
          } catch (kickErr) {
              console.warn('Mikrotik: Failed to kick active user', kickErr.message);
