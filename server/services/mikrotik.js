@@ -1,4 +1,4 @@
-const { RouterOSClient } = require('node-routeros');
+const { RouterOSClient } = require('routeros-client');
 
 class MikrotikService {
   constructor() {
