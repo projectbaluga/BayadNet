@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const subscriberSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -54,7 +55,18 @@ subscriberSchema.pre('save', function(next) {
   if (this.isNew && this.remainingBalance === undefined) {
     this.remainingBalance = this.rate;
   }
+
+  // Encrypt PPPoE Password if modified
+  if (this.isModified('pppoePassword') && this.pppoePassword) {
+      this.pppoePassword = encrypt(this.pppoePassword);
+  }
+
   next();
 });
+
+// Helper to get decrypted password
+subscriberSchema.methods.getDecryptedPppoePassword = function() {
+    return decrypt(this.pppoePassword);
+};
 
 module.exports = mongoose.model('Subscriber', subscriberSchema);

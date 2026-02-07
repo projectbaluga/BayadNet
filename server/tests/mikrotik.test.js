@@ -106,4 +106,18 @@ describe('MikrotikService', () => {
              expect(mockApi.update).toHaveBeenCalledWith({ disabled: false }, '*2');
         });
     });
+
+    describe('deleteSecret', () => {
+        it('should delete a user and kick active sessions', async () => {
+            mockApi.get
+                .mockResolvedValueOnce([{ '.id': '*2' }]) // secret
+                .mockResolvedValueOnce([{ '.id': '*3' }]); // active
+
+            const result = await mikrotikService.deleteSecret(config, 'user1');
+
+            expect(result.success).toBe(true);
+            expect(mockApi.remove).toHaveBeenCalledWith('*2'); // remove secret
+            expect(mockApi.remove).toHaveBeenCalledWith('*3'); // remove active
+        });
+    });
 });

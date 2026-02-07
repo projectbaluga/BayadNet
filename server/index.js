@@ -238,7 +238,9 @@ app.put('/api/subscribers/:id', authenticateToken, authorize('admin'), validateO
 
             // Sync Credentials/Profile if changed
             if (req.body.pppoeUsername || req.body.pppoePassword) {
-                 await mikrotikService.createOrUpdateSecret(routerConfig, subscriber)
+                 // Use updated data
+                 const updatedData = { ...subscriber.toObject(), ...req.body };
+                 await mikrotikService.createOrUpdateSecret(routerConfig, updatedData)
                     .then(res => {
                         if(!res.success) console.warn('Mikrotik Credential Sync Failed:', res.message);
                     })
@@ -269,6 +271,22 @@ app.delete('/api/subscribers/:id', authenticateToken, authorize('admin'), valida
   try {
     const subscriber = await Subscriber.findById(req.params.id);
     if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+
+    // Sync Mikrotik Deletion
+    if (subscriber.pppoeUsername && subscriber.router) {
+        try {
+            const routerConfig = await Router.findById(subscriber.router);
+            if (routerConfig && routerConfig.isActive) {
+                const result = await mikrotikService.deleteSecret(routerConfig, subscriber.pppoeUsername);
+                if (!result.success) {
+                    console.warn(`Mikrotik Delete Failed: ${result.message}`);
+                    // We continue with archive even if router is unreachable
+                }
+            }
+        } catch (delErr) {
+             console.error('Mikrotik Delete Error:', delErr);
+        }
+    }
 
     subscriber.isArchived = true;
     await subscriber.save();

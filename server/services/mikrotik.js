@@ -1,4 +1,5 @@
 const { RouterOSClient } = require('routeros-client');
+const { decrypt } = require('../utils/encryption');
 
 class MikrotikService {
   constructor() {
@@ -72,7 +73,13 @@ class MikrotikService {
       }
 
       const username = subscriberData.pppoeUsername?.trim();
-      const password = subscriberData.pppoePassword;
+      let password = subscriberData.pppoePassword;
+
+      // Decrypt if necessary (if it looks like IV:Encrypted)
+      if (password && password.includes(':')) {
+          password = decrypt(password);
+      }
+
       const profile = subscriberData.pppoeProfile || 'default'; // Or determine based on plan
       const service = 'pppoe';
 
@@ -173,6 +180,45 @@ class MikrotikService {
       if (shouldClose && client) {
           client.close();
       }
+    }
+  }
+
+  /**
+   * Delete PPPoE Secret
+   */
+  async deleteSecret(config, username) {
+    if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
+
+    username = username?.trim();
+    if (!username) return { success: false, message: 'Invalid Username' };
+
+    let client;
+    try {
+        client = await this.connect(config);
+
+        // Find secret
+        const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
+        if (secrets.length > 0) {
+            const id = secrets[0]['.id'];
+            await client.api().menu('/ppp/secret').remove(id);
+        }
+
+        // Kick active sessions
+        try {
+             const active = await client.api().menu('/ppp/active').where({ name: username }).get();
+             for (const session of active) {
+                 await client.api().menu('/ppp/active').remove(session['.id']);
+             }
+        } catch (kickErr) {
+             console.warn('Mikrotik: Failed to kick user on delete', kickErr.message);
+        }
+
+        return { success: true, message: `Deleted PPPoE user '${username}'` };
+    } catch (error) {
+        console.error(`Mikrotik Delete Error (${config.host}):`, error.message);
+        return { success: false, message: error.message };
+    } finally {
+        if (client) client.close();
     }
   }
 
