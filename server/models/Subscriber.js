@@ -5,6 +5,8 @@ const subscriberSchema = new mongoose.Schema({
   accountId: { type: String, required: true, unique: true },
   router: { type: mongoose.Schema.Types.ObjectId, ref: 'Router', default: null },
   pppoeUsername: { type: String, default: '' },
+  pppoePassword: { type: String, default: '' },
+  mikrotikSyncStatus: { type: String, enum: ['Synced', 'Pending', 'Failed'], default: 'Synced' },
   street: { type: String, default: '' },
   address: { type: String, default: '' },
   region: { type: String, default: '' },
