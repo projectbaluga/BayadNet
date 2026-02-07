@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
+  const [routerStatus, setRouterStatus] = useState({ connected: false, message: 'Checking...' });
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('dashboard'); // 'dashboard', 'users', 'emails'
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -153,6 +154,12 @@ const Dashboard = () => {
       setSubscribers(subsRes.data);
       setStats(statsRes.data);
       setAnalytics(analyticsRes.data);
+
+      // Check Mikrotik Health (non-blocking if possible, but here we await it for simplicity or fire separately)
+      axios.get(`${API_BASE}/mikrotik/health`, config)
+        .then(res => setRouterStatus(res.data))
+        .catch(() => setRouterStatus({ connected: false, message: 'Offline' }));
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -471,6 +478,13 @@ const Dashboard = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {(userRole === 'admin' || userRole === 'staff') && (
+               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${routerStatus.connected ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
+                  <span className={`w-2 h-2 rounded-full ${routerStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wide">{routerStatus.connected ? 'Router Online' : 'Router Offline'}</span>
+               </div>
+            )}
+
             {userRole === 'admin' && (
               <>
                 <button

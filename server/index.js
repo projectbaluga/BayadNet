@@ -557,6 +557,15 @@ app.get('/api/mikrotik/status/:id', authenticateToken, authorize(['admin', 'staf
   }
 });
 
+app.get('/api/mikrotik/health', authenticateToken, authorize(['admin', 'staff', 'technician']), async (req, res) => {
+  try {
+    const health = await mikrotikService.checkHealth();
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Image Upload Route
 app.post('/api/upload', authenticateToken, async (req, res) => {
   try {

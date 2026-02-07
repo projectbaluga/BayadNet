@@ -29,6 +29,29 @@ class MikrotikService {
   }
 
   /**
+   * Check connection health
+   */
+  async checkHealth() {
+    if (!this.isConfigured()) return { connected: false, message: 'Not Configured' };
+    let client;
+    try {
+        client = await this.connect();
+        // Just verify we can run a simple command
+        const identity = await client.menu('/system/identity').get();
+        return {
+            connected: true,
+            name: identity[0]?.name || 'Mikrotik',
+            message: 'Connected'
+        };
+    } catch (error) {
+        console.error('Mikrotik Health Check Error:', error.message);
+        return { connected: false, message: error.message };
+    } finally {
+        if (client) client.close();
+    }
+  }
+
+  /**
    * Toggle PPPoE Secret Status
    * @param {string} username - PPPoE Secret Name
    * @param {boolean} enable - True to enable (internet on), False to disable (internet off)
