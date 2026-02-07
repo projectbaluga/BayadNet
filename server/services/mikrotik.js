@@ -15,12 +15,15 @@ class MikrotikService {
       throw new Error('Mikrotik configuration missing (host, username, password)');
     }
 
+    // Decrypt password
+    const password = decrypt(config.password);
+
     // Construct config for node-routeros
     // Note: Router model uses 'username', node-routeros uses 'user'
     const clientConfig = {
         host: config.host,
         user: config.username,
-        password: config.password,
+        password: password, // Use decrypted password
         port: config.port || 8728,
         keepalive: false
     };
@@ -259,6 +262,15 @@ class MikrotikService {
           client = await this.connect(config);
       }
 
+      // Check if profile exists first (Safety Check)
+      if (profileName !== 'default') {
+          const profiles = await client.api().menu('/ppp/profile').where({ name: profileName }).get();
+          if (profiles.length === 0) {
+              console.warn(`Mikrotik: Target profile '${profileName}' not found. Falling back to default.`);
+              profileName = 'default';
+          }
+      }
+
       const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
 
       if (secrets.length === 0) {
@@ -270,7 +282,7 @@ class MikrotikService {
       // Update profile
       await client.api().menu('/ppp/secret').update({ profile: profileName }, id);
 
-      // Kick active sessions to apply new profile
+      // Kick active sessions to apply new profile and new IP pool
       try {
            const active = await client.api().menu('/ppp/active').where({ name: username }).get();
            for (const session of active) {
@@ -293,6 +305,7 @@ class MikrotikService {
 
   /**
    * Push Initial Configuration Script to Router
+   * Implements Pool-Based Soft Disconnect Logic
    */
   async pushConfig(config, serverIp) {
     if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
@@ -302,10 +315,21 @@ class MikrotikService {
     try {
       client = await this.connect(config);
 
-      // We will add the configuration step-by-step using API calls instead of a raw script file
-      // to ensure better error handling and compatibility.
+      // 1. Create IP Pools
+      // pool-overdue: 10.0.24.1-10.0.31.254
+      try {
+          const pools = await client.api().menu('/ip/pool').where({ name: 'pool-overdue' }).get();
+          if (pools.length === 0) {
+              await client.api().menu('/ip/pool').add({
+                  name: 'pool-overdue',
+                  ranges: '10.0.24.1-10.0.31.254'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create pool-overdue:', e.message);
+      }
 
-      // 1. Enable Web Proxy
+      // 2. Enable Web Proxy
       try {
           await client.api().menu('/ip/proxy').update({
               enabled: true,
@@ -315,60 +339,83 @@ class MikrotikService {
           console.warn('Failed to enable web proxy:', e.message);
       }
 
-      // 2. Create Profile 'payment-reminder'
+      // 3. Create Profile 'payment-reminder' linked to 'pool-overdue'
       try {
           const profiles = await client.api().menu('/ppp/profile').where({ name: 'payment-reminder' }).get();
+          const profileConfig = {
+              name: 'payment-reminder',
+              'rate-limit': '512k/512k',
+              'remote-address': 'pool-overdue', // FORCE IP from overdue pool
+              comment: 'Created by BayadNet - Redirects overdue users via Pool'
+          };
+
           if (profiles.length === 0) {
-              await client.api().menu('/ppp/profile').add({
-                  name: 'payment-reminder',
-                  'rate-limit': '512k/512k',
-                  'address-list': 'overdue_users',
-                  comment: 'Created by BayadNet - Redirects overdue users'
+              await client.api().menu('/ppp/profile').add(profileConfig);
+          } else {
+              // Update existing profile to ensure it uses the pool
+              await client.api().menu('/ppp/profile').update(profileConfig, profiles[0]['.id']);
+          }
+      } catch (e) {
+          console.warn('Failed to create/update profile:', e.message);
+      }
+
+      // 4. Add Subnet to Firewall Address List
+      // Any IP in 10.0.24.0/21 is considered overdue
+      try {
+          const listEntries = await client.api().menu('/ip/firewall/address-list')
+              .where({ list: 'overdue_users', address: '10.0.24.0/21' }).get();
+
+          if (listEntries.length === 0) {
+              await client.api().menu('/ip/firewall/address-list').add({
+                  list: 'overdue_users',
+                  address: '10.0.24.0/21',
+                  comment: 'Overdue Pool Subnet'
               });
           }
       } catch (e) {
-          console.warn('Failed to create profile:', e.message);
+          console.warn('Failed to add subnet to address list:', e.message);
       }
 
-      // 3. Create Web Proxy Access Rule (The Redirection Logic)
+      // 5. Create Web Proxy Access Rule
       try {
           const accessRules = await client.api().menu('/ip/proxy/access').where({ comment: 'Redirect Overdue' }).get();
+          const ruleConfig = {
+              'src-address-list': 'overdue_users',
+              action: 'deny',
+              'redirect-to': `${serverIp}:3000/payment-reminder`,
+              comment: 'Redirect Overdue'
+          };
+
           if (accessRules.length === 0) {
-              await client.api().menu('/ip/proxy/access').add({
-                  'src-address-list': 'overdue_users',
-                  action: 'deny',
-                  'redirect-to': `${serverIp}:3000/payment-reminder`,
-                  comment: 'Redirect Overdue'
-              });
+              await client.api().menu('/ip/proxy/access').add(ruleConfig);
           } else {
-              // Update redirect URL if needed
-              await client.api().menu('/ip/proxy/access').update({
-                  'redirect-to': `${serverIp}:3000/payment-reminder`
-              }, accessRules[0]['.id']);
+              await client.api().menu('/ip/proxy/access').update(ruleConfig, accessRules[0]['.id']);
           }
       } catch (e) {
           console.warn('Failed to create proxy access rule:', e.message);
       }
 
-      // 4. Create NAT Rule (Redirect to Web Proxy)
+      // 6. Create NAT Rule
       try {
           const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Proxy' }).get();
+          const natConfig = {
+              chain: 'dstnat',
+              action: 'redirect',
+              'to-ports': '8080',
+              protocol: 'tcp',
+              'dst-port': '80',
+              'src-address-list': 'overdue_users',
+              comment: 'Redirect Overdue Users to Proxy'
+          };
+
           if (natRules.length === 0) {
-              await client.api().menu('/ip/firewall/nat').add({
-                  chain: 'dstnat',
-                  action: 'redirect',
-                  'to-ports': '8080',
-                  protocol: 'tcp',
-                  'dst-port': '80',
-                  'src-address-list': 'overdue_users',
-                  comment: 'Redirect Overdue Users to Proxy'
-              });
+              await client.api().menu('/ip/firewall/nat').add(natConfig);
           }
       } catch (e) {
           console.warn('Failed to create NAT rule:', e.message);
       }
 
-      // 5. Create Filter Rule (Block others)
+      // 7. Create Filter Rules
       try {
           // Allow DNS
           const dnsRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow DNS for Overdue' }).get();
@@ -409,7 +456,7 @@ class MikrotikService {
           console.warn('Failed to create filter rules:', e.message);
       }
 
-      return { success: true, message: 'Configuration pushed successfully' };
+      return { success: true, message: 'Configuration pushed successfully (Pool-Based)' };
 
     } catch (error) {
       console.error(`Mikrotik Push Config Error (${config.host}):`, error.message);

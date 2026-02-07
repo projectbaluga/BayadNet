@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const routerSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -11,5 +12,18 @@ const routerSchema = new mongoose.Schema({
   lastChecked: { type: Date },
   status: { type: String, enum: ['Online', 'Offline', 'Unknown'], default: 'Unknown' }
 });
+
+// Encrypt Password if modified
+routerSchema.pre('save', function(next) {
+  if (this.isModified('password') && this.password) {
+      this.password = encrypt(this.password);
+  }
+  next();
+});
+
+// Helper to get decrypted password
+routerSchema.methods.getDecryptedPassword = function() {
+    return decrypt(this.password);
+};
 
 module.exports = mongoose.model('Router', routerSchema);
