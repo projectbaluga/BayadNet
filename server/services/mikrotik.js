@@ -343,7 +343,12 @@ class MikrotikService {
     try {
       client = await this.connect(config);
       // Fetch all active ppp connections
+      // Ensure we are robust to the response format of the library
       const active = await client.api().menu('/ppp/active').get();
+
+      if (!Array.isArray(active)) {
+         return [];
+      }
 
       // Return a simplified map or list
       return active.map(session => ({
