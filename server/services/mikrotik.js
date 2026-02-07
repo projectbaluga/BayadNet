@@ -291,6 +291,108 @@ class MikrotikService {
     }
   }
 
+  /**
+   * Push Initial Configuration Script to Router
+   */
+  async pushConfig(config, serverIp) {
+    if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
+    if (!serverIp) return { success: false, message: 'Server IP required' };
+
+    let client;
+    try {
+      client = await this.connect(config);
+
+      // We will add the configuration step-by-step using API calls instead of a raw script file
+      // to ensure better error handling and compatibility.
+
+      // 1. Create Address List 'overdue_users' (Just dummy entry or check if list exists logic not needed, firewall rule handles list creation)
+      // Actually, we don't need to pre-create the list.
+
+      // 2. Create Profile 'payment-reminder'
+      try {
+          const profiles = await client.api().menu('/ppp/profile').where({ name: 'payment-reminder' }).get();
+          if (profiles.length === 0) {
+              await client.api().menu('/ppp/profile').add({
+                  name: 'payment-reminder',
+                  'rate-limit': '512k/512k',
+                  'address-list': 'overdue_users',
+                  comment: 'Created by BayadNet - Redirects overdue users'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create profile:', e.message);
+      }
+
+      // 3. Create NAT Rule
+      try {
+          const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Payment Reminder Page' }).get();
+          if (natRules.length === 0) {
+              await client.api().menu('/ip/firewall/nat').add({
+                  chain: 'dstnat',
+                  action: 'dst-nat',
+                  'to-addresses': serverIp,
+                  'to-ports': '3000',
+                  protocol: 'tcp',
+                  'dst-port': '80',
+                  'src-address-list': 'overdue_users',
+                  comment: 'Redirect Overdue Users to Payment Reminder Page'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create NAT rule:', e.message);
+      }
+
+      // 4. Create Filter Rule (Block others)
+      try {
+          // Allow DNS
+          const dnsRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow DNS for Overdue' }).get();
+          if (dnsRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'accept',
+                  'src-address-list': 'overdue_users',
+                  protocol: 'udp',
+                  'dst-port': '53',
+                  comment: 'Allow DNS for Overdue'
+              });
+          }
+
+          // Allow Server
+          const serverRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow Access to Server for Overdue' }).get();
+          if (serverRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'accept',
+                  'src-address-list': 'overdue_users',
+                  'dst-address': serverIp,
+                  comment: 'Allow Access to Server for Overdue'
+              });
+          }
+
+          // Drop Everything Else
+          const dropRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Block Everything Else for Overdue' }).get();
+          if (dropRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'drop',
+                  'src-address-list': 'overdue_users',
+                  comment: 'Block Everything Else for Overdue'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create filter rules:', e.message);
+      }
+
+      return { success: true, message: 'Configuration pushed successfully' };
+
+    } catch (error) {
+      console.error(`Mikrotik Push Config Error (${config.host}):`, error.message);
+      return { success: false, message: error.message };
+    } finally {
+      if (client) client.close();
+    }
+  }
+
   async getPppoeStatus(config, username) {
      if (!this.isConfigured(config)) return { connected: false, message: 'Router Not Configured' };
      username = username?.trim();
