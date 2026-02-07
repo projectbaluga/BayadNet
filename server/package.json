@@ -18,7 +18,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
     "node-cron": "^4.2.1",
-    "node-routeros": "^1.6.8",
+    "routeros-client": "^1.1.1",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
