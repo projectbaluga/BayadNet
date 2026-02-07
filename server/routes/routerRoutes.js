@@ -73,25 +73,5 @@ module.exports = (authenticateToken, authorize, checkPermission) => {
         }
     });
 
-    // Push Config
-    router.post('/:id/push-config', authenticateToken, checkPermission(PERMISSIONS.MANAGE_ROUTERS), async (req, res) => {
-        try {
-            const { serverIp } = req.body;
-            if (!serverIp) return res.status(400).json({ message: 'Server IP is required' });
-
-            const router = await Router.findById(req.params.id);
-            if (!router) return res.status(404).json({ message: 'Router not found' });
-
-            const result = await mikrotikService.pushConfig(router, serverIp);
-            if (result.success) {
-                res.json(result);
-            } else {
-                res.status(502).json(result);
-            }
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    });
-
     return router;
 };
