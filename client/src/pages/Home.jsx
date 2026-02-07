@@ -337,12 +337,12 @@ const Home = () => {
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
-                  {/* Plan 1: SIMPLENG SURF */}
+                  {/* Plan 1: SULIT START */}
                   <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-2 transition-transform duration-300">
                       <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mb-6">
                           <Smartphone className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black text-slate-900 mb-2">SIMPLENG SURF</h3>
+                      <h3 className="text-xl font-black text-slate-900 mb-2">SULIT START</h3>
                       <p className="text-slate-500 text-sm font-medium mb-6">Ang pinakamurang paraan para magka-fiber.</p>
                       <div className="flex items-baseline gap-1 mb-8">
                           <span className="text-4xl font-black text-slate-900">₱799</span>
@@ -379,14 +379,14 @@ const Home = () => {
                           </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('SIMPLENG SURF')}
+                        onClick={() => handleSubscribe('SULIT START')}
                         className="w-full py-4 rounded-xl border-2 border-slate-100 text-slate-900 font-bold text-sm uppercase tracking-wide hover:border-red-600 hover:text-red-600 transition-colors"
                       >
                           Subscribe Now
                       </button>
                   </div>
 
-                  {/* Plan 2: PAMILYANG CONNECT - Featured */}
+                  {/* Plan 2: BARKADA BUNDLE - Featured */}
                   <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl shadow-red-500/20 border border-slate-800 relative transform md:-translate-y-4">
                       <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl rounded-tr-2xl">
                           Best Value
@@ -394,7 +394,7 @@ const Home = () => {
                       <div className="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center text-white mb-6">
                           <Users className="w-6 h-6" />
                       </div>
-                      <h3 className="text-xl font-black text-white mb-2">PAMILYANG CONNECT</h3>
+                      <h3 className="text-xl font-black text-white mb-2">BARKADA BUNDLE</h3>
                       <p className="text-slate-400 text-sm font-medium mb-6">Mas maluwag na bandwidth para sa maraming gadgets.</p>
                       <div className="flex items-baseline gap-1 mb-8">
                           <span className="text-4xl font-black text-white">₱1,249</span>
@@ -431,7 +431,7 @@ const Home = () => {
                           </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('PAMILYANG CONNECT')}
+                        onClick={() => handleSubscribe('BARKADA BUNDLE')}
                         className="w-full py-4 rounded-xl bg-red-600 text-white font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition-colors shadow-lg shadow-red-900/50"
                       >
                           Subscribe Now
