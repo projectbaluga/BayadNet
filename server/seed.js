@@ -5,6 +5,10 @@ require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/bayadnet';
 
+const seedData = [
+  { name: 'Juan Dela Cruz', accountId: '19080922', planName: 'Residential Plus', bandwidth: '50Mbps', rate: 500, cycle: 7, daysDown: 0 },
+];
+
 const seedDB = async () => {
   try {
     await mongoose.connect(MONGO_URI);
