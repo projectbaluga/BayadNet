@@ -1,25 +1,74 @@
-# Mikrotik Configuration for Payment Reminder Redirect
+################################################################################
+# Mikrotik Full Configuration for BayadNet Overdue Landing Page
+#
+# This configuration enables the redirection of overdue subscribers to a
+# payment reminder page using the Web Proxy feature.
+#
+# INSTRUCTIONS:
+# 1. Replace <YOUR_SERVER_ADDRESS_OR_DOMAIN> with your server's IP (e.g., 192.168.88.254)
+#    or Domain Name (e.g., http://bojex.online).
+# 2. Copy and paste the script below into your Mikrotik Terminal.
+# 3. Alternatively, use the "Push Configuration" button in the BayadNet Admin Dashboard.
+################################################################################
 
-# 1. Create the Payment Reminder Profile
-# This profile limits bandwidth (optional) and adds the user to an address list.
-# Ensure 'pppoe-pool' is the name of your IP pool.
+# 1. Enable Web Proxy
+# This allows us to intercept HTTP requests and redirect them.
+/ip proxy
+set enabled=yes port=8080
+
+# 2. Create the "payment-reminder" PPP Profile
+# Overdue users will be switched to this profile automatically by BayadNet.
+# The key feature is adding them to the 'overdue_users' address list.
 /ppp profile
 add name="payment-reminder" rate-limit=512k/512k address-list=overdue_users \
-    comment="Profile for overdue subscribers - redirects to payment reminder"
+    comment="Created by BayadNet - Redirects overdue users"
 
-# 2. Create a NAT Rule to Redirect HTTP Traffic
-# Redirects TCP port 80 traffic from 'overdue_users' to your server's Payment Reminder Page.
-# Replace <YOUR_SERVER_IP> with the IP address of your server running the BayadNet app (e.g., 192.168.88.254).
-# Ensure your server accepts connections on port 3000 (or 80 if behind Nginx).
+# 3. Add Server Address to Firewall Address List
+# This ensures the router knows where to allow traffic (to the landing page).
+# REPLACE <YOUR_SERVER_ADDRESS_OR_DOMAIN> BELOW!
+# Example: add list=payment_portal_server address=192.168.88.254 comment="BayadNet Server"
+/ip firewall address-list
+add list=payment_portal_server address=<YOUR_SERVER_ADDRESS_OR_DOMAIN> comment="BayadNet Portal Server"
 
+# 4. Create Web Proxy Access Rule (The Redirection Logic)
+# Denies access for overdue users and redirects them to the reminder page.
+# Note: Mikrotik automatically handles the HTTP 302 redirect here.
+# REPLACE <YOUR_SERVER_ADDRESS_OR_DOMAIN> BELOW!
+# Example: redirect-to="http://192.168.88.254:3000/payment-reminder"
+/ip proxy access
+add src-address-list=overdue_users action=deny \
+    redirect-to="<YOUR_SERVER_ADDRESS_OR_DOMAIN>/payment-reminder" \
+    comment="Redirect Overdue"
+
+# 5. Create NAT Rule (Intercept HTTP Traffic)
+# Redirects all TCP port 80 traffic from overdue users to the internal Web Proxy (port 8080).
 /ip firewall nat
-add chain=dstnat action=dst-nat to-addresses=<YOUR_SERVER_IP> to-ports=3000 \
-    protocol=tcp dst-port=80 src-address-list=overdue_users \
-    comment="Redirect Overdue Users to Payment Reminder Page"
+add chain=dstnat action=redirect to-ports=8080 protocol=tcp dst-port=80 \
+    src-address-list=overdue_users comment="Redirect Overdue Users to Proxy"
 
-# 3. Create a Filter Rule to Block Other Traffic (Optional)
-# Block everything else for overdue users except DNS and the connection to your server.
+# 6. Create Firewall Filter Rules (Security)
+# Ensure overdue users can only access DNS and the Payment Portal.
+
+# Allow DNS (UDP 53)
 /ip firewall filter
-add chain=forward action=accept src-address-list=overdue_users protocol=udp dst-port=53 comment="Allow DNS"
-add chain=forward action=accept src-address-list=overdue_users dst-address=<YOUR_SERVER_IP> comment="Allow Access to Server"
-add chain=forward action=drop src-address-list=overdue_users comment="Block Everything Else for Overdue"
+add chain=forward action=accept src-address-list=overdue_users protocol=udp dst-port=53 \
+    comment="Allow DNS for Overdue"
+
+# Allow Access to Payment Portal Server
+/ip firewall filter
+add chain=forward action=accept src-address-list=overdue_users dst-address-list=payment_portal_server \
+    comment="Allow Access to Server for Overdue"
+
+# Drop Everything Else for Overdue Users
+/ip firewall filter
+add chain=forward action=drop src-address-list=overdue_users \
+    comment="Block Everything Else for Overdue"
+
+################################################################################
+# Verification:
+# - Check /ppp profile print: "payment-reminder" should exist.
+# - Check /ip proxy print: Enabled should be yes.
+# - Check /ip proxy access print: Should show the redirect rule.
+# - Check /ip firewall nat print: Should show the dstnat redirect rule.
+# - Check /ip firewall filter print: Should show the 3 allow/drop rules.
+################################################################################
