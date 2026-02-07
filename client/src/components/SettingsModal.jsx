@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X } from 'lucide-react';
+import RouterSettings from './RouterSettings';
 
 const API_BASE = '/api';
 
@@ -144,6 +145,11 @@ const SettingsModal = ({ isOpen, onClose, onRefresh }) => {
             </div>
           </section>
         </div>
+
+        {/* Router Management */}
+        <section className="mb-8 pt-6 border-t border-gray-100">
+           <RouterSettings token={token} />
+        </section>
 
         {/* Bulk Action */}
         <section className="pt-6 border-t border-gray-200">
