@@ -41,7 +41,7 @@ class MikrotikService {
     let client;
     try {
         client = await this.connect(config);
-        const identity = await client.menu('/system/identity').get();
+        const identity = await client.api().menu('/system/identity').get();
         return {
             connected: true,
             name: identity[0]?.name || 'Mikrotik',
@@ -72,7 +72,7 @@ class MikrotikService {
           client = await this.connect(config);
       }
 
-      const secrets = await client.menu('/ppp/secret').where({ name: username }).get();
+      const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
 
       if (secrets.length === 0) {
         return { success: false, message: `PPPoE user '${username}' not found in Router` };
@@ -81,14 +81,14 @@ class MikrotikService {
       const id = secrets[0]['.id'];
       const disabled = !enable;
 
-      await client.menu('/ppp/secret').set({ '.id': id, disabled: disabled });
+      await client.api().menu('/ppp/secret').set({ '.id': id, disabled: disabled });
 
       if (!enable) {
          try {
-             const active = await client.menu('/ppp/active').where({ name: username }).get();
+             const active = await client.api().menu('/ppp/active').where({ name: username }).get();
              if (active.length > 0) {
                  const activeId = active[0]['.id'];
-                 await client.menu('/ppp/active').remove(activeId);
+                 await client.api().menu('/ppp/active').remove(activeId);
              }
          } catch (kickErr) {
              console.warn('Mikrotik: Failed to kick active user', kickErr.message);
@@ -111,12 +111,12 @@ class MikrotikService {
      let client;
      try {
        client = await this.connect(config);
-       const secrets = await client.menu('/ppp/secret').where({ name: username }).get();
+       const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
 
        if (secrets.length === 0) return { exists: false, message: 'User not found in Mikrotik' };
 
        const isEnabled = String(secrets[0].disabled) === 'false';
-       const active = await client.menu('/ppp/active').where({ name: username }).get();
+       const active = await client.api().menu('/ppp/active').where({ name: username }).get();
        const isOnline = active.length > 0;
 
        return {
