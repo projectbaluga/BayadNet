@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ dueToday: 0, overdue: 0, totalCollections: 0 });
   const [analytics, setAnalytics] = useState({ totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} });
   const [routerStatus, setRouterStatus] = useState({ summary: 'Checking...', details: [] });
+  const [activeSessions, setActiveSessions] = useState({});
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('dashboard'); // 'dashboard', 'users', 'emails'
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -169,13 +170,15 @@ const Dashboard = () => {
       const analyticsPromise = canViewAnalytics ? axios.get(`${API_BASE}/analytics`, config) : Promise.resolve({ data: { totalExpected: 0, totalCollected: 0, currentProfit: 0, providerCost: 0, groupCounts: {} } });
       const healthPromise = canViewRouterStatus ? axios.get(`${API_BASE}/mikrotik/health`, config) : Promise.resolve({ data: { summary: 'Hidden', details: [] } });
       const routersPromise = canManageRouters ? axios.get(`${API_BASE}/routers`, config) : Promise.resolve({ data: [] });
+      const sessionsPromise = canViewRouterStatus ? axios.get(`${API_BASE}/mikrotik/active-sessions`, config) : Promise.resolve({ data: {} });
 
-      const [subRes, statsRes, analyticsRes, healthRes, routersRes] = await Promise.all([
+      const [subRes, statsRes, analyticsRes, healthRes, routersRes, sessionsRes] = await Promise.all([
         subPromise,
         statsPromise,
         analyticsPromise,
         healthPromise,
-        routersPromise
+        routersPromise,
+        sessionsPromise
       ]);
 
       setSubscribers(subRes.data);
@@ -183,6 +186,7 @@ const Dashboard = () => {
       setAnalytics(analyticsRes.data);
       setRouterStatus(healthRes.data);
       setRouters(routersRes.data);
+      setActiveSessions(sessionsRes.data || {});
 
       setLoading(false);
     } catch (error) {
@@ -645,6 +649,7 @@ const Dashboard = () => {
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
+                    activeSession={activeSessions[sub.pppoeUsername]}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
                     onOpenChat={handleOpenChatModal}
@@ -683,6 +688,7 @@ const Dashboard = () => {
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
+                    activeSession={activeSessions[sub.pppoeUsername]}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
                     onOpenChat={handleOpenChatModal}
@@ -721,6 +727,7 @@ const Dashboard = () => {
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
+                    activeSession={activeSessions[sub.pppoeUsername]}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
                     onOpenChat={handleOpenChatModal}
@@ -759,6 +766,7 @@ const Dashboard = () => {
                   <SubscriberCard
                     key={sub._id}
                     subscriber={sub}
+                    activeSession={activeSessions[sub.pppoeUsername]}
                     onPay={handleOpenPaymentModal}
                     onHistory={handleOpenHistoryModal}
                     onOpenChat={handleOpenChatModal}
