@@ -295,15 +295,9 @@ const Home = () => {
                                      </div>
                                  </div>
 
-                                 <div className="grid grid-cols-2 gap-4 mb-6">
-                                      <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Plan</p>
-                                          <p className="font-bold text-slate-800 text-xs">{subscriber.planName}</p>
-                                      </div>
-                                      <div className="bg-white p-3 rounded-xl border border-slate-200">
-                                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Bandwidth</p>
-                                          <p className="font-bold text-red-600 text-xs">{subscriber.bandwidth}</p>
-                                      </div>
+                                 <div className="bg-white p-3 rounded-xl border border-slate-200 mb-6">
+                                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Internet Profile</p>
+                                      <p className="font-bold text-slate-800 text-sm">{subscriber.pppoeProfile || 'Standard'}</p>
                                  </div>
 
                                  <div className="pt-4 border-t border-slate-200 flex justify-center">

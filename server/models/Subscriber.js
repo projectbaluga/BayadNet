@@ -19,8 +19,6 @@ const subscriberSchema = new mongoose.Schema({
   provinceCode: { type: String, default: '' },
   cityCode: { type: String, default: '' },
   psgc: { type: String, default: '' },
-  planName: { type: String, default: 'Residential Plan' },
-  bandwidth: { type: String, default: '50Mbps' },
   rate: { type: Number, required: true }, // Base monthly rate
   cycle: { type: Number, required: true },
   messengerId: { type: String, default: '' },

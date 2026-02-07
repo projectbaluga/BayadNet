@@ -71,8 +71,6 @@ const Dashboard = () => {
     provinceCode: '',
     cityCode: '',
     psgc: '',
-    planName: 'Residential Plan',
-    bandwidth: '50Mbps',
     rate: 0,
     cycle: 1,
     messengerId: '',
@@ -336,8 +334,6 @@ const Dashboard = () => {
         provinceCode: subscriber.provinceCode || '',
         cityCode: subscriber.cityCode || '',
         psgc: subscriber.psgc || '',
-        planName: subscriber.planName || 'Residential Plan',
-        bandwidth: subscriber.bandwidth || '50Mbps',
         rate: subscriber.rate,
         cycle: subscriber.cycle,
         messengerId: subscriber.messengerId || '',
@@ -365,8 +361,6 @@ const Dashboard = () => {
         provinceCode: '',
         cityCode: '',
         psgc: '',
-        planName: 'Residential Plan',
-        bandwidth: '50Mbps',
         rate: 0,
         cycle: 1,
         messengerId: '',
@@ -911,26 +905,6 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                   <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Plan Name</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                        value={formData.planName}
-                        onChange={(e) => setFormData({...formData, planName: e.target.value})}
-                      />
-                   </div>
-                   <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Bandwidth</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 text-sm"
-                        value={formData.bandwidth}
-                        onChange={(e) => setFormData({...formData, bandwidth: e.target.value})}
-                      />
-                   </div>
-                </div>
               </div>
 
               <div className="space-y-4">
