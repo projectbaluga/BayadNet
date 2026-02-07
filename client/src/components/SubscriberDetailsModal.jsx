@@ -1,9 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, User, Phone, MessageSquare, CreditCard, Calendar, AlertTriangle, ShieldCheck, Wifi, Power } from 'lucide-react';
+import { X, User, Phone, MessageSquare, CreditCard, Calendar, AlertTriangle, ShieldCheck, Wifi, Power, Activity, Upload, Download, Clock } from 'lucide-react';
 
 const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
+  const [traffic, setTraffic] = useState(null);
+  const [loadingTraffic, setLoadingTraffic] = useState(false);
+
+  useEffect(() => {
+      if (isOpen && subscriber && subscriber.pppoeUsername) {
+          setLoadingTraffic(true);
+          setTraffic(null);
+          const token = localStorage.getItem('token');
+          axios.get(`/api/subscribers/${subscriber._id}/traffic`, {
+              headers: { Authorization: `Bearer ${token}` }
+          })
+          .then(res => setTraffic(res.data))
+          .catch(err => console.error('Failed to fetch traffic:', err))
+          .finally(() => setLoadingTraffic(false));
+      }
+  }, [isOpen, subscriber]);
+
   if (!isOpen || !subscriber) return null;
+
+  const formatBytes = (bytes, decimals = 2) => {
+      if (!bytes) return '0 B';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
 
   const detailItems = [
     { icon: <User className="w-4 h-4" />, label: 'Full Name', value: subscriber.name },
@@ -42,10 +68,58 @@ const SubscriberDetailsModal = ({ isOpen, onClose, subscriber }) => {
         </div>
 
         <div className="space-y-6">
-          <div className="flex justify-center">
+          <div className="flex justify-center flex-col items-center gap-2">
             <span className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusStyle(subscriber.status)}`}>
               {subscriber.status}
             </span>
+
+            {/* Traffic Status Section */}
+            {subscriber.pppoeUsername && (
+                <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 mt-2">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-indigo-500" />
+                            <span className="text-xs font-bold text-slate-500 uppercase">Traffic Status</span>
+                        </div>
+                        {loadingTraffic ? (
+                            <span className="text-[10px] text-slate-400 animate-pulse">Checking...</span>
+                        ) : traffic?.online ? (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Online
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                                Offline
+                            </span>
+                        )}
+                    </div>
+
+                    {traffic?.online && (
+                        <div className="grid grid-cols-3 gap-2 mt-3">
+                            <div className="bg-white p-2 rounded border border-slate-100 flex flex-col items-center">
+                                <span className="text-[10px] text-slate-400 font-semibold mb-0.5 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Uptime
+                                </span>
+                                <span className="text-xs font-bold text-slate-700">{traffic.uptime}</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border border-slate-100 flex flex-col items-center">
+                                <span className="text-[10px] text-slate-400 font-semibold mb-0.5 flex items-center gap-1">
+                                    <Download className="w-3 h-3 text-indigo-500" /> Download
+                                </span>
+                                <span className="text-xs font-bold text-slate-700">{formatBytes(traffic.download)}</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border border-slate-100 flex flex-col items-center">
+                                <span className="text-[10px] text-slate-400 font-semibold mb-0.5 flex items-center gap-1">
+                                    <Upload className="w-3 h-3 text-emerald-500" /> Upload
+                                </span>
+                                <span className="text-xs font-bold text-slate-700">{formatBytes(traffic.upload)}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

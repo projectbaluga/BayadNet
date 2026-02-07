@@ -576,30 +576,15 @@ app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
 
 // Mikrotik Control Routes
-app.get('/api/mikrotik/active-sessions', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), async (req, res) => {
+app.get('/api/subscribers/:id/traffic', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), validateObjectId, async (req, res) => {
   try {
-    const routers = await Router.find({ isActive: true });
+    const subscriber = await Subscriber.findById(req.params.id).populate('router');
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    if (!subscriber.pppoeUsername) return res.json({ online: false, message: 'No PPPoE Username' });
+    if (!subscriber.router) return res.json({ online: false, message: 'No assigned Router' });
 
-    // Fetch active sessions from all routers in parallel
-    const allSessions = await Promise.all(routers.map(async (router) => {
-        const sessions = await mikrotikService.getActiveSessions(router);
-        return sessions;
-    }));
-
-    // Flatten and Map by Username for O(1) Lookup
-    const sessionMap = {};
-    allSessions.flat().forEach(session => {
-        if (session.username) {
-            sessionMap[session.username] = {
-                online: true,
-                uptime: session.uptime,
-                address: session.address,
-                mac: session.callerId
-            };
-        }
-    });
-
-    res.json(sessionMap);
+    const stats = await mikrotikService.getSubscriberTraffic(subscriber.router, subscriber.pppoeUsername);
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
