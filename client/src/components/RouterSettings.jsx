@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trash2, Edit, Plus, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Trash2, Edit, Plus, Wifi, WifiOff, RefreshCw, UploadCloud } from 'lucide-react';
 
 const API_BASE = '/api';
 
@@ -42,6 +42,19 @@ const RouterSettings = ({ token }) => {
       fetchRouters(); // Refresh status
     } catch (err) {
       alert(`Error testing connection: ${err.message}`);
+    }
+  };
+
+  const handlePushConfig = async (id) => {
+    const serverIp = prompt("Please confirm the Server Address (IP or Domain) for the landing page:", window.location.hostname);
+    if (!serverIp) return;
+
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.post(`${API_BASE}/routers/${id}/push-config`, { serverIp }, config);
+      alert(`Success: ${res.data.message}`);
+    } catch (err) {
+      alert(`Error pushing config: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -147,6 +160,9 @@ const RouterSettings = ({ token }) => {
                <p className="text-[10px] text-gray-400 font-medium ml-4">{router.host}:{router.port}</p>
             </div>
             <div className="flex items-center gap-2">
+               <button onClick={() => handlePushConfig(router._id)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Push Configuration">
+                  <UploadCloud className="w-3 h-3" />
+               </button>
                <button onClick={() => handleTestConnection(router._id)} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded" title="Test Connection">
                   <RefreshCw className="w-3 h-3" />
                </button>

@@ -7,6 +7,7 @@ const subscriberSchema = new mongoose.Schema({
   router: { type: mongoose.Schema.Types.ObjectId, ref: 'Router', default: null },
   pppoeUsername: { type: String, default: '' },
   pppoePassword: { type: String, default: '' },
+  pppoeProfile: { type: String, default: 'default' },
   mikrotikSyncStatus: { type: String, enum: ['Synced', 'Pending', 'Failed'], default: 'Synced' },
   street: { type: String, default: '' },
   address: { type: String, default: '' },
@@ -18,8 +19,6 @@ const subscriberSchema = new mongoose.Schema({
   provinceCode: { type: String, default: '' },
   cityCode: { type: String, default: '' },
   psgc: { type: String, default: '' },
-  planName: { type: String, default: 'Residential Plan' },
-  bandwidth: { type: String, default: '50Mbps' },
   rate: { type: Number, required: true }, // Base monthly rate
   cycle: { type: Number, required: true },
   messengerId: { type: String, default: '' },

@@ -1,5 +1,42 @@
 const { RouterOSClient } = require('routeros-client');
 const { decrypt } = require('../utils/encryption');
+const { URL } = require('url');
+
+function parseServerAddress(input) {
+  let urlStr = input.trim();
+  // Ensure protocol for parsing
+  if (!urlStr.match(/^https?:\/\//)) {
+      urlStr = 'http://' + urlStr;
+  }
+
+  try {
+      const url = new URL(urlStr);
+      const hostname = url.hostname;
+      const port = url.port;
+
+      let redirectUrl;
+      const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
+
+      if (input.trim().match(/^https?:\/\//)) {
+           redirectUrl = input.trim();
+           if (!redirectUrl.includes('/payment-reminder')) {
+                redirectUrl = redirectUrl.replace(/\/$/, '') + '/payment-reminder';
+           }
+      } else {
+          if (isIp && !port) {
+              redirectUrl = `http://${hostname}:3000/payment-reminder`;
+          } else {
+              redirectUrl = `http://${hostname}${port ? ':' + port : ''}/payment-reminder`;
+          }
+      }
+
+      return { hostname, redirectUrl };
+
+  } catch (e) {
+      // Fallback
+      return { hostname: input.trim(), redirectUrl: `http://${input.trim()}:3000/payment-reminder` };
+  }
+}
 
 class MikrotikService {
   constructor() {
@@ -219,6 +256,239 @@ class MikrotikService {
         return { success: false, message: error.message };
     } finally {
         if (client) client.close();
+    }
+  }
+
+  /**
+   * Get all PPP profiles
+   */
+  async getProfiles(config) {
+    if (!this.isConfigured(config)) return [];
+    let client;
+    try {
+      client = await this.connect(config);
+      const profiles = await client.api().menu('/ppp/profile').get();
+      return profiles.map(p => p.name);
+    } catch (error) {
+      console.error(`Mikrotik Get Profiles Error (${config.host}):`, error.message);
+      return [];
+    } finally {
+      if (client) client.close();
+    }
+  }
+
+  /**
+   * Set PPPoE Secret Profile (and kick user to apply)
+   */
+  async setPppoeProfile(config, username, profileName, existingClient = null) {
+    if (!this.isConfigured(config)) {
+        return { success: false, message: 'Router Not Configured' };
+    }
+
+    username = username?.trim();
+    if (!username) return { success: false, message: 'Invalid Username' };
+
+    let client = existingClient;
+    const shouldClose = !existingClient;
+
+    try {
+      if (!client) {
+          client = await this.connect(config);
+      }
+
+      const secrets = await client.api().menu('/ppp/secret').where({ name: username }).get();
+
+      if (secrets.length === 0) {
+        return { success: false, message: `PPPoE user '${username}' not found in Router` };
+      }
+
+      const id = secrets[0]['.id'];
+
+      // Update profile
+      await client.api().menu('/ppp/secret').update({ profile: profileName }, id);
+
+      // Kick active sessions to apply new profile
+      try {
+           const active = await client.api().menu('/ppp/active').where({ name: username }).get();
+           for (const session of active) {
+               await client.api().menu('/ppp/active').remove(session['.id']);
+           }
+      } catch (kickErr) {
+           console.warn('Mikrotik: Failed to kick user on profile change', kickErr.message);
+      }
+
+      return { success: true, message: `Updated profile for '${username}' to '${profileName}'` };
+    } catch (error) {
+      console.error(`Mikrotik Set Profile Error (${config.host}):`, error.message);
+      return { success: false, message: error.message };
+    } finally {
+      if (shouldClose && client) {
+          client.close();
+      }
+    }
+  }
+
+  /**
+   * Push Initial Configuration Script to Router
+   */
+  async pushConfig(config, serverInput) {
+    if (!this.isConfigured(config)) return { success: false, message: 'Router Not Configured' };
+    if (!serverInput) return { success: false, message: 'Server Address required' };
+
+    let client;
+    try {
+      client = await this.connect(config);
+
+      const { hostname, redirectUrl } = parseServerAddress(serverInput);
+      console.log(`Pushing config: Hostname=${hostname}, RedirectUrl=${redirectUrl}`);
+
+      // We will add the configuration step-by-step using API calls instead of a raw script file
+      // to ensure better error handling and compatibility.
+
+      // 1. Enable Web Proxy
+      try {
+          await client.api().menu('/ip/proxy').update({
+              enabled: true,
+              port: 8080
+          });
+      } catch (e) {
+          console.warn('Failed to enable web proxy:', e.message);
+      }
+
+      // 2. Create Profile 'payment-reminder'
+      try {
+          const profiles = await client.api().menu('/ppp/profile').where({ name: 'payment-reminder' }).get();
+          if (profiles.length === 0) {
+              await client.api().menu('/ppp/profile').add({
+                  name: 'payment-reminder',
+                  'rate-limit': '512k/512k',
+                  'address-list': 'overdue_users',
+                  comment: 'Created by BayadNet - Redirects overdue users'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create profile:', e.message);
+      }
+
+      // 3. Create Web Proxy Access Rule (The Redirection Logic)
+      try {
+          const accessRules = await client.api().menu('/ip/proxy/access').where({ comment: 'Redirect Overdue' }).get();
+          if (accessRules.length === 0) {
+              await client.api().menu('/ip/proxy/access').add({
+                  'src-address-list': 'overdue_users',
+                  action: 'deny',
+                  'redirect-to': redirectUrl,
+                  comment: 'Redirect Overdue'
+              });
+          } else {
+              // Update redirect URL if needed
+              await client.api().menu('/ip/proxy/access').update({
+                  'redirect-to': redirectUrl
+              }, accessRules[0]['.id']);
+          }
+      } catch (e) {
+          console.warn('Failed to create proxy access rule:', e.message);
+      }
+
+      // 4. Create NAT Rule (Redirect to Web Proxy)
+      try {
+          const natRules = await client.api().menu('/ip/firewall/nat').where({ comment: 'Redirect Overdue Users to Proxy' }).get();
+          if (natRules.length === 0) {
+              await client.api().menu('/ip/firewall/nat').add({
+                  chain: 'dstnat',
+                  action: 'redirect',
+                  'to-ports': '8080',
+                  protocol: 'tcp',
+                  'dst-port': '80',
+                  'src-address-list': 'overdue_users',
+                  comment: 'Redirect Overdue Users to Proxy'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create NAT rule:', e.message);
+      }
+
+      // 5. Update Address List for Server (Host)
+      try {
+          const listName = 'payment_portal_server';
+          const listItems = await client.api().menu('/ip/firewall/address-list').where({ list: listName }).get();
+
+          if (listItems.length > 0) {
+              // Check if address matches
+              const item = listItems[0];
+              if (item.address !== hostname) {
+                  await client.api().menu('/ip/firewall/address-list').update({ address: hostname }, item['.id']);
+              }
+          } else {
+              await client.api().menu('/ip/firewall/address-list').add({
+                  list: listName,
+                  address: hostname,
+                  comment: 'BayadNet Portal Server'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to update address list:', e.message);
+      }
+
+      // 6. Create Filter Rules (Block others)
+      try {
+          // Allow DNS
+          const dnsRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow DNS for Overdue' }).get();
+          if (dnsRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'accept',
+                  'src-address-list': 'overdue_users',
+                  protocol: 'udp',
+                  'dst-port': '53',
+                  comment: 'Allow DNS for Overdue'
+              });
+          }
+
+          // Allow Server (Using Address List now)
+          let serverRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Allow Access to Server for Overdue' }).get();
+          const targetList = 'payment_portal_server';
+
+          if (serverRules.length > 0) {
+              const rule = serverRules[0];
+              // If it uses dst-address or doesn't use our target list, remove it to replace with cleaner rule
+              if (rule['dst-address'] || rule['dst-address-list'] !== targetList) {
+                  await client.api().menu('/ip/firewall/filter').remove(rule['.id']);
+                  serverRules = []; // Reset so we create new one below
+              }
+          }
+
+          if (serverRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'accept',
+                  'src-address-list': 'overdue_users',
+                  'dst-address-list': targetList,
+                  comment: 'Allow Access to Server for Overdue'
+              });
+          }
+
+          // Drop Everything Else
+          const dropRules = await client.api().menu('/ip/firewall/filter').where({ comment: 'Block Everything Else for Overdue' }).get();
+          if (dropRules.length === 0) {
+              await client.api().menu('/ip/firewall/filter').add({
+                  chain: 'forward',
+                  action: 'drop',
+                  'src-address-list': 'overdue_users',
+                  comment: 'Block Everything Else for Overdue'
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to create filter rules:', e.message);
+      }
+
+      return { success: true, message: 'Configuration pushed successfully' };
+
+    } catch (error) {
+      console.error(`Mikrotik Push Config Error (${config.host}):`, error.message);
+      return { success: false, message: error.message };
+    } finally {
+      if (client) client.close();
     }
   }
 
