@@ -11,11 +11,11 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, password, role, name, email } = req.body;
+    const { username, password, role, name, email, permissions } = req.body;
     const existingUser = await User.findOne({ username });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const user = new User({ username, password, role, name, email });
+    const user = new User({ username, password, role, name, email, permissions });
     await user.save();
 
     const userResponse = user.toObject();
@@ -28,8 +28,8 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { username, role, name, email, password } = req.body;
-    const updateData = { username, role, name, email };
+    const { username, role, name, email, password, permissions } = req.body;
+    const updateData = { username, role, name, email, permissions };
 
     // Only update password if provided
     if (password && password.trim() !== '') {
@@ -40,6 +40,7 @@ exports.updateUser = async (req, res) => {
       user.role = role || user.role;
       user.name = name || user.name;
       user.email = email || user.email;
+      if (permissions) user.permissions = permissions;
       await user.save();
       const userResponse = user.toObject();
       delete userResponse.password;

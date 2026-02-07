@@ -11,6 +11,7 @@ import SubscriberDetailsModal from './components/SubscriberDetailsModal';
 import AddressSelector from './components/AddressSelector';
 import Home from './pages/Home';
 import { convertToBase64, compressImage } from './utils/image';
+import { hasPermission, PERMISSIONS } from './utils/permissions';
 
 const API_BASE = '/api';
 
@@ -38,8 +39,11 @@ const Dashboard = () => {
   const [view, setView] = useState('dashboard'); // 'dashboard', 'users', 'emails'
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('role'));
+  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem('user')) || {});
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const can = (permission) => hasPermission(currentUser, permission);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -192,6 +196,7 @@ const Dashboard = () => {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setToken(res.data.token);
       setUserRole(res.data.role);
+      setCurrentUser(res.data.user);
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -204,6 +209,7 @@ const Dashboard = () => {
     localStorage.removeItem('user');
     setToken(null);
     setUserRole(null);
+    setCurrentUser({});
     setSubscribers([]);
     setView('dashboard');
   };
@@ -482,7 +488,7 @@ const Dashboard = () => {
                  Email
                </button>
             )}
-            {userRole === 'admin' && (
+            {can(PERMISSIONS.MANAGE_USERS) && (
               <button
                 onClick={() => setView('users')}
                 className={`text-xs font-semibold uppercase tracking-wide transition-all ${view === 'users' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
@@ -493,7 +499,7 @@ const Dashboard = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            {(userRole === 'admin' || userRole === 'staff') && (
+            {can(PERMISSIONS.VIEW_ROUTER_STATUS) && (
                <div
                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white border-gray-200 text-gray-700 cursor-help"
                  title={routerStatus.details ? routerStatus.details.map(d => `${d.name}: ${d.connected ? 'Online' : 'Offline'} (${d.message})`).join('\n') : "Checking..."}
@@ -503,8 +509,7 @@ const Dashboard = () => {
                </div>
             )}
 
-            {userRole === 'admin' && (
-              <>
+            {can(PERMISSIONS.MANAGE_SETTINGS) && (
                 <button
                   onClick={() => setIsSettingsModalOpen(true)}
                   className="p-2.5 bg-white text-gray-500 rounded-md hover:bg-gray-50 hover:text-indigo-600 transition-all border border-gray-200 shadow-sm"
@@ -515,13 +520,14 @@ const Dashboard = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </button>
+            )}
+            {can(PERMISSIONS.MANAGE_SUBSCRIBERS) && (
                 <button
                   onClick={() => handleOpenModal()}
                   className="bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-md shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all flex items-center gap-2"
                 >
                   + Add Subscriber
                 </button>
-              </>
             )}
             <button
               onClick={handleLogout}
@@ -638,6 +644,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
+                    currentUser={currentUser}
                     token={token}
                     socket={socket}
                     onRefresh={fetchData}
@@ -675,6 +682,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
+                    currentUser={currentUser}
                     token={token}
                     socket={socket}
                     onRefresh={fetchData}
@@ -712,6 +720,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
+                    currentUser={currentUser}
                     token={token}
                     socket={socket}
                     onRefresh={fetchData}
@@ -749,6 +758,7 @@ const Dashboard = () => {
                     onDelete={handleDelete}
                     onViewDetails={handleOpenDetailsModal}
                     userRole={userRole}
+                    currentUser={currentUser}
                     token={token}
                     socket={socket}
                     onRefresh={fetchData}

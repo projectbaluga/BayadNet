@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   AlertCircle
 } from 'lucide-react';
+import { hasPermission, PERMISSIONS } from '../utils/permissions';
 
 const SubscriberCard = ({
   subscriber,
@@ -19,8 +20,11 @@ const SubscriberCard = ({
   onEdit,
   onDelete,
   onViewDetails,
-  userRole
+  userRole,
+  currentUser
 }) => {
+  const can = (permission) => hasPermission(currentUser, permission);
+
   const handleDownloadSOA = (e) => {
     e.stopPropagation();
     const amount = subscriber.status === 'Partial' ? subscriber.remainingBalance : subscriber.amountDue;
@@ -130,7 +134,7 @@ const SubscriberCard = ({
             <Clock className="w-4 h-4" />
           </button>
 
-          {userRole === 'admin' && (
+          {can(PERMISSIONS.MANAGE_SUBSCRIBERS) && (
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(subscriber); }}
               className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
@@ -148,16 +152,14 @@ const SubscriberCard = ({
             <MessageCircle className="w-4 h-4" />
           </button>
 
-          {(userRole === 'admin' || userRole === 'staff') && (
-            <>
-              <button
-                onClick={handleDownloadSOA}
-                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
-                title="SOA"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
-            </>
+          {can(PERMISSIONS.DOWNLOAD_SOA) && (
+            <button
+              onClick={handleDownloadSOA}
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-gray-50 rounded-md transition-all border border-transparent hover:border-gray-200"
+              title="SOA"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
           )}
 
           {subscriber.hasReceipt && (
@@ -176,7 +178,7 @@ const SubscriberCard = ({
             </button>
           )}
 
-          {userRole === 'admin' && (
+          {can(PERMISSIONS.MANAGE_SUBSCRIBERS) && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(subscriber._id); }}
               className="p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-md transition-all border border-transparent hover:border-red-100"
@@ -188,7 +190,7 @@ const SubscriberCard = ({
         </div>
 
         {!isPaid ? (
-          (userRole === 'admin' || userRole === 'staff') && (
+          can(PERMISSIONS.PROCESS_PAYMENTS) && (
             <button
               onClick={(e) => { e.stopPropagation(); onPay(subscriber); }}
               className="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-md hover:bg-indigo-700 shadow-sm active:scale-95 transition-all uppercase tracking-wide ml-1"

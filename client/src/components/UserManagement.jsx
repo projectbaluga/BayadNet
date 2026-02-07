@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { UserPlus, Edit2, Trash2, X, Shield, Mail, User as UserIcon, Loader2, AlertTriangle } from 'lucide-react';
+import { PERMISSIONS, getEffectivePermissions, DEFAULT_PERMISSIONS } from '../utils/permissions';
 
 const API_BASE = '/api';
 
@@ -18,7 +19,8 @@ const UserManagement = ({ token }) => {
     email: '',
     username: '',
     password: '',
-    role: 'staff'
+    role: 'staff',
+    permissions: {}
   });
 
   const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -47,16 +49,19 @@ const UserManagement = ({ token }) => {
         email: user.email || '',
         username: user.username,
         password: '', // Don't show password
-        role: user.role
+        role: user.role,
+        permissions: getEffectivePermissions(user)
       });
     } else {
       setEditingUser(null);
+      const defaultRole = 'staff';
       setFormData({
         name: '',
         email: '',
         username: '',
         password: '',
-        role: 'staff'
+        role: defaultRole,
+        permissions: { ...DEFAULT_PERMISSIONS[defaultRole] }
       });
     }
     setIsModalOpen(true);
@@ -242,7 +247,14 @@ const UserManagement = ({ token }) => {
                   <select
                     className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium text-gray-900 appearance-none bg-white text-sm"
                     value={formData.role}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    onChange={(e) => {
+                       const newRole = e.target.value;
+                       setFormData({
+                           ...formData,
+                           role: newRole,
+                           permissions: { ...DEFAULT_PERMISSIONS[newRole] }
+                       });
+                    }}
                   >
                     <option value="admin">Admin</option>
                     <option value="staff">Staff</option>
@@ -250,6 +262,33 @@ const UserManagement = ({ token }) => {
                   </select>
                 </div>
               </div>
+
+              {/* Permissions Section */}
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Permissions</h4>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                    {Object.values(PERMISSIONS).map(perm => (
+                        <label key={perm} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                                checked={formData.permissions[perm] || false}
+                                onChange={(e) => {
+                                    setFormData({
+                                        ...formData,
+                                        permissions: {
+                                            ...formData.permissions,
+                                            [perm]: e.target.checked
+                                        }
+                                    });
+                                }}
+                            />
+                            <span className="text-xs font-medium text-gray-700 uppercase">{perm.replace(/_/g, ' ')}</span>
+                        </label>
+                    ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                   {editingUser ? 'New Password' : 'Password'}
