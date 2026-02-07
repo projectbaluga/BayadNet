@@ -333,6 +333,33 @@ class MikrotikService {
        if (client) client.close();
      }
   }
+
+  /**
+   * Get all active sessions
+   */
+  async getActiveSessions(config) {
+    if (!this.isConfigured(config)) return [];
+    let client;
+    try {
+      client = await this.connect(config);
+      // Fetch all active ppp connections
+      const active = await client.api().menu('/ppp/active').get();
+
+      // Return a simplified map or list
+      return active.map(session => ({
+        username: session.name,
+        address: session.address,
+        uptime: session.uptime,
+        callerId: session['caller-id'], // MAC Address usually
+        service: session.service
+      }));
+    } catch (error) {
+      console.error(`Mikrotik Get Active Sessions Error (${config.host}):`, error.message);
+      return [];
+    } finally {
+      if (client) client.close();
+    }
+  }
 }
 
 module.exports = new MikrotikService();

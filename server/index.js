@@ -576,6 +576,35 @@ app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
 
 // Mikrotik Control Routes
+app.get('/api/mikrotik/active-sessions', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), async (req, res) => {
+  try {
+    const routers = await Router.find({ isActive: true });
+
+    // Fetch active sessions from all routers in parallel
+    const allSessions = await Promise.all(routers.map(async (router) => {
+        const sessions = await mikrotikService.getActiveSessions(router);
+        return sessions;
+    }));
+
+    // Flatten and Map by Username for O(1) Lookup
+    const sessionMap = {};
+    allSessions.flat().forEach(session => {
+        if (session.username) {
+            sessionMap[session.username] = {
+                online: true,
+                uptime: session.uptime,
+                address: session.address,
+                mac: session.callerId
+            };
+        }
+    });
+
+    res.json(sessionMap);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.post('/api/mikrotik/toggle/:id', authenticateToken, checkPermission(PERMISSIONS.MANAGE_ROUTERS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id).populate('router');
