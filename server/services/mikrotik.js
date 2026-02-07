@@ -333,6 +333,76 @@ class MikrotikService {
        if (client) client.close();
      }
   }
+
+  /**
+   * Get traffic stats for a specific user
+   */
+  async getSubscriberTraffic(config, username) {
+    if (!this.isConfigured(config)) return { online: false, message: 'Router Not Configured' };
+    username = username?.trim();
+    if (!username) return { online: false, message: 'No Username' };
+
+    let client;
+    try {
+      client = await this.connect(config);
+
+      // 1. Check if user is active in PPP
+      const active = await client.api().menu('/ppp/active').where({ name: username }).get();
+
+      if (!active || active.length === 0) {
+          return { online: false, message: 'User is offline' };
+      }
+
+      const session = active[0];
+      const interfaceName = `<pppoe-${username}>`;
+
+      let tx = 0;
+      let rx = 0;
+
+      // 2. Get Interface Stats
+      try {
+          // Attempt to find the interface by name (standard naming convention)
+          const interfaces = await client.api().menu('/interface').where({ name: interfaceName }).get();
+
+          if (interfaces.length > 0) {
+             // Mikrotik Interface Stats:
+             // rx-byte = Download (from client perspective? No, from Router perspective usually)
+             // Wait, for PPPoE Server interface:
+             // RX = Received from Client (Upload)
+             // TX = Transmitted to Client (Download)
+             rx = parseInt(interfaces[0]['rx-byte'] || 0);
+             tx = parseInt(interfaces[0]['tx-byte'] || 0);
+          } else {
+             // Fallback: Try just username
+             const interfaces2 = await client.api().menu('/interface').where({ name: username }).get();
+             if (interfaces2.length > 0) {
+                 rx = parseInt(interfaces2[0]['rx-byte'] || 0);
+                 tx = parseInt(interfaces2[0]['tx-byte'] || 0);
+             }
+          }
+      } catch (err) {
+          console.warn(`Failed to fetch interface stats for ${username}:`, err.message);
+      }
+
+      return {
+          online: true,
+          uptime: session.uptime,
+          address: session.address,
+          callerId: session['caller-id'],
+          // For ISP context:
+          // TX (Router -> Client) = Download
+          // RX (Client -> Router) = Upload
+          download: tx,
+          upload: rx
+      };
+
+    } catch (error) {
+      console.error(`Mikrotik Traffic Error (${config.host}):`, error.message);
+      return { online: false, error: error.message };
+    } finally {
+      if (client) client.close();
+    }
+  }
 }
 
 module.exports = new MikrotikService();

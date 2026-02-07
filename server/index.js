@@ -576,6 +576,20 @@ app.use('/api/public', publicRoutes);
 app.use('/api', messageRoutes);
 
 // Mikrotik Control Routes
+app.get('/api/subscribers/:id/traffic', authenticateToken, checkPermission(PERMISSIONS.VIEW_ROUTER_STATUS), validateObjectId, async (req, res) => {
+  try {
+    const subscriber = await Subscriber.findById(req.params.id).populate('router');
+    if (!subscriber) return res.status(404).json({ message: 'Subscriber not found' });
+    if (!subscriber.pppoeUsername) return res.json({ online: false, message: 'No PPPoE Username' });
+    if (!subscriber.router) return res.json({ online: false, message: 'No assigned Router' });
+
+    const stats = await mikrotikService.getSubscriberTraffic(subscriber.router, subscriber.pppoeUsername);
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.post('/api/mikrotik/toggle/:id', authenticateToken, checkPermission(PERMISSIONS.MANAGE_ROUTERS), validateObjectId, async (req, res) => {
   try {
     const subscriber = await Subscriber.findById(req.params.id).populate('router');
