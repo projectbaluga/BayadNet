@@ -61,16 +61,16 @@ const checkOverdueSubscribers = async () => {
                 continue;
             }
 
-            // 4. Batch Disable
+            // 4. Batch Shift Profile
             let successCount = 0;
             for (const username of overdueUsers) {
                  try {
                      // Pass the router config AND the existing client connection
-                     // The service method expects (config, username, enable, existingClient)
-                     await mikrotikService.togglePppoeSecret(router, username, false, client);
+                     // The service method expects (config, username, profileName, existingClient)
+                     await mikrotikService.setPppoeProfile(router, username, 'payment-reminder', client);
                      successCount++;
                  } catch (actionErr) {
-                     console.error(`Cron: Failed to disable ${username} on ${router.name}:`, actionErr.message);
+                     console.error(`Cron: Failed to set profile for ${username} on ${router.name}:`, actionErr.message);
                  }
             }
             console.log(`Cron: Successfully processed ${successCount}/${overdueUsers.length} overdue users on ${router.name}.`);
